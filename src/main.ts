@@ -20,8 +20,15 @@ if (cluster.isPrimary) {
   // Workers can share any TCP connection
   // In this case it is an HTTP server
   http.createServer((req, res) => {
-    res.writeHead(200);
-    res.end(`hello ${req.url}\n`);
+    let body = '';
+    req.on('data', chunk => {
+      body += chunk;
+    });
+    req.on('end', async () => {
+      const obj = JSON.parse(body);
+      res.writeHead(200);
+      res.end(`${obj.weight}\n`);
+    });
   }).listen(8000);
 
   console.log(`Worker ${process.pid} started`);

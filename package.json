@@ -36,6 +36,7 @@
   "author": "Michiel de Jong <michiel@unhosted.org>",
   "license": "Apache-2.0",
   "dependencies": {
+    "redis": "^4.7.0",
     "tslib": "~2.6"
   },
   "volta": {

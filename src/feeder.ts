@@ -1,0 +1,43 @@
+
+import { readFileSync } from 'fs';
+import cluster from 'node:cluster';
+import { availableParallelism } from 'node:os';
+import process from 'node:process';
+
+const numCPUs = availableParallelism();
+const TESTNET_CSV = '../strategy-pit/__tests__/fixtures/testnet-sarafu.csv';
+
+if (cluster.isPrimary) {
+  console.log(`Primary ${process.pid} is running`);
+
+  // Fork workers.
+  for (let i = 0; i < numCPUs; i++) {
+    cluster.fork({ CHUNK: i });
+  }
+  cluster.on('online', worker => {
+   console.info(`worker process ${worker.process.pid} is online`)
+  })
+  cluster.on('exit', (worker, code, signal) => {
+    console.log(`worker ${worker.process.pid} exited ${code} ${signal}`);
+  });
+} else {
+  let cumm = 0;
+  const mod = parseInt(process.env.CHUNK);
+  console.log(`Worker ${process.pid} started for chunk ${mod}`);
+  console.log("Feeding the server...");
+  const data = readFileSync(TESTNET_CSV, 'utf8')
+  const lines = data.split('\n').map(line => {
+    const [ from, to, weight ] = line.split(' ')
+    return { from, to, weight }
+  }).filter(line => line.from !== 'from' && line.from !== '');
+  for (let lineNo = mod; lineNo < lines.length; lineNo += numCPUs) {
+    // console.log(process.pid, mod, lineNo, cumm);
+    const result = await fetch('http://localhost:8000', {
+      method: 'POST',
+      body: JSON.stringify(lines[lineNo])
+    });
+    cumm += parseFloat(await result.text());
+  }
+  console.log(`Worker ${process.pid} done ${cumm}`);
+  process.exit();
+}
