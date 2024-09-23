@@ -18,4 +18,5 @@ STORE=tigerbeetle node build/src/main.js
 * Third window: Run the feeder
 ```
 time node build/src/feeder.js
+curl -d'{}' http://localhost:8000/report
 ```
