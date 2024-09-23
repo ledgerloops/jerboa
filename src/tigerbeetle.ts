@@ -171,9 +171,14 @@ export class TigerBeetleStores implements Stores {
           limit: 100000,
           flags: 0,
         });
-        console.log(i, ledgerBalances.map(({ id, debits_posted, credits_posted }) => {
-          return `${id - BigInt(i)*BigInt(1000000)}:${(BigInt(debits_posted) - BigInt(credits_posted))/(BigInt(1000000)*BigInt(1000000))}`;
-        }));
+        const balances = {};
+        ledgerBalances
+        .filter(id => (Number(id - BigInt(i)*BigInt(1000000)) !== 0)) // filter out bank
+        .filter(id => (Number(id - BigInt(i)*BigInt(1000000)) !== i)) // filter out self
+        .map(({ id, debits_posted, credits_posted }) => {
+          balances[Number(id - BigInt(i)*BigInt(1000000))] = Number((BigInt(debits_posted) - BigInt(credits_posted))/(BigInt(1000000)*BigInt(1000000)));
+        })
+        console.log(i, balances);
       }
     }
     async logLedgers(): Promise<void> {
