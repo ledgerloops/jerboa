@@ -7,7 +7,7 @@ export class InMemStores {
   constructor() {
     this.balances = {};
   }
-  ensureBalance(thisParty: string, otherParty: string): void {
+  ensureBalance(thisParty: number, otherParty: number): void {
     if (typeof this.balances[thisParty] === 'undefined') {
         this.balances[thisParty] = {};
     }
@@ -21,7 +21,7 @@ export class InMemStores {
   async disconnect(): Promise<void> {
     // noop
 }
-  async storeTransaction({ thisParty, otherParty, amount }: { thisParty: string, otherParty: string, amount: number }): Promise<number> {
+  async storeTransaction({ thisParty, otherParty, amount }: { thisParty: number, otherParty: number, amount: number }): Promise<number> {
     this.ensureBalance(thisParty, otherParty);
     this.balances[thisParty][otherParty] += amount;
     return this.balances[thisParty][otherParty];

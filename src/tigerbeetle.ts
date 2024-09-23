@@ -4,7 +4,7 @@ export class TigerBeetleStores {
     client;
     constructor() {
     }
-    async ensureBalance(thisParty: string, otherParty: string): Promise<{ ledgerId: bigint, thisPartyId: bigint, otherPartyId: bigint}> {
+    async ensureBalance(thisParty: number, otherParty: number): Promise<{ ledgerId: bigint, thisPartyId: bigint, otherPartyId: bigint}> {
       // `thisParty` is 1,2,3,... and is multiplied by 1,000,000 to create the ledgerId.
       // It is multiplied by 1,000,001 to create thisPartyId.
       // `otherParty` is 0,1,2,3,... (where 0 is the bank for DISBURSEMENT and RECLAMATION) and
@@ -13,9 +13,9 @@ export class TigerBeetleStores {
       // ledgerId: 37,000,000
       // thisPartyId: 37,000,037
       // otherPartyId: 37,054,235
-      const ledgerId = BigInt(parseInt(thisParty)) * BigInt(1000 * 1000);
-      const thisPartyId = BigInt(parseInt(thisParty)) * BigInt(1000 * 1000 + 1);
-      const otherPartyId = BigInt(parseInt(otherParty)) * BigInt(1000 * 1000 + 1);
+      const ledgerId = BigInt(thisParty) * BigInt(1000 * 1000);
+      const thisPartyId = BigInt(thisParty) * BigInt(1000 * 1000 + 1);
+      const otherPartyId = BigInt(otherParty) * BigInt(1000 * 1000 + 1);
       
       const mainAccount = {
         id: thisPartyId,
@@ -71,7 +71,7 @@ export class TigerBeetleStores {
     async disconnect(): Promise<void> {
       // noop
   }
-    async storeTransaction({ thisParty, otherParty, amount }: { thisParty: string, otherParty: string, amount: number }): Promise<number> {
+    async storeTransaction({ thisParty, otherParty, amount }: { thisParty: number, otherParty: number, amount: number }): Promise<number> {
       const absAmount = Math.abs(amount);
       const firstChunk = Math.round(absAmount);
       const afterFirst = 1000 * 1000 * (absAmount - firstChunk);

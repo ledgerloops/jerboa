@@ -28,15 +28,19 @@ if (cluster.isPrimary) {
   console.log("Feeding the server...");
   const data = readFileSync(TESTNET_CSV, 'utf8')
   const lines = data.split('\n').map(line => {
-    const [ from, to, weight ] = line.split(' ')
-    return { from, to, weight }
-  }).filter(line => line.from !== 'from' && line.from !== '');
+    const [ fromStr, toStr, amountStr ] = line.split(' ')
+    return {
+      from: parseInt(fromStr),
+      to: parseInt(toStr),
+      amount: parseFloat(amountStr)
+    };
+  }).filter(obj => !isNaN(obj.from) && !isNaN(obj.to) && !isNaN(obj.amount));
   for (let lineNo = mod; lineNo < lines.length; lineNo += numCPUs) {
     // console.log(process.pid, mod, lineNo, cumm);
     let cmd;
-    if (lines[lineNo].from === '0') {
+    if (lines[lineNo].from === 0) {
       cmd = 'DISBURSEMENT';
-    } else if (lines[lineNo].to === '0') {
+    } else if (lines[lineNo].to === 0) {
       cmd = 'RECLAMATION';
     } else {
       cmd = 'STANDARD';

@@ -14,7 +14,7 @@ export class RedisStores {
   async disconnect(): Promise<void> {
     await this.client.quit();
   }
-  async storeTransaction({ thisParty, otherParty, amount }: { thisParty: string, otherParty: string, amount: number }): Promise<number> {
+  async storeTransaction({ thisParty, otherParty, amount }: { thisParty: number, otherParty: number, amount: number }): Promise<number> {
     // don't wait for this to finish:
     this.client.incrByFloat(`${thisParty}:${otherParty}`, amount);
     // console.log('stored transaction', thisParty, otherParty, amount, newValueString);
