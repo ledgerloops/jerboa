@@ -69,6 +69,6 @@ if (cluster.isPrimary) {
       });
     }).listen(8000);
     
-    console.log(`Worker ${process.pid} started`);
+    console.log(`Worker ${process.pid} started with store '${process.env.STORE}'`);
   });
 }
