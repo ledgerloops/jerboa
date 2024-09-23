@@ -159,7 +159,7 @@ export class TigerBeetleStores implements Stores {
       }) => console.log(`${ledger}:${(BigInt(debits_posted) - BigInt(credits_posted))/(BigInt(1000000)*BigInt(1000000))}`));
     }
     async logBestPairs(): Promise<void> {
-      for (let i = 0; i < 10; i++) {
+      for (let i = 1; i < 10; i++) {
         const ledgerBalances = await this.client.queryAccounts({
           user_data_128: 0n,
           user_data_64: 0n,
@@ -172,7 +172,7 @@ export class TigerBeetleStores implements Stores {
           flags: 0,
         });
         console.log(i, ledgerBalances.map(({ id, debits_posted, credits_posted }) => {
-          return `${id}:${(BigInt(debits_posted) - BigInt(credits_posted))/(BigInt(1000000)*BigInt(1000000))}`;
+          return `${id - BigInt(i)*BigInt(1000000)}:${(BigInt(debits_posted) - BigInt(credits_posted))/(BigInt(1000000)*BigInt(1000000))}`;
         }));
       }
     }
