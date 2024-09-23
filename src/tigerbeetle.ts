@@ -5,8 +5,8 @@ export class TigerBeetleStores {
     constructor() {
     }
     async ensureBalance(thisParty: string, otherParty: string): Promise<{ thisPartyId: bigint, otherPartyId: bigint}> {
-      const thisPartyId = BigInt(isNaN(parseInt(thisParty)) ? 0 : parseInt(thisParty));
-      const otherPartyId = BigInt(isNaN(parseInt(otherParty)) ? 0 : parseInt(otherParty));
+      const thisPartyId = BigInt(isNaN(parseInt(thisParty)) ? 1 : parseInt(thisParty) + 1);
+      const otherPartyId = BigInt(isNaN(parseInt(otherParty)) ? 1 : parseInt(otherParty) + 1);
       
       const id = BigInt(1000 * 1000) * thisPartyId + otherPartyId;
       const account = {
@@ -48,8 +48,9 @@ export class TigerBeetleStores {
       // noop
   }
     async storeTransaction({ thisParty, otherParty, amount }: { thisParty: string, otherParty: string, amount: number }): Promise<number> {
-      const firstChunk = Math.round(Math.abs(amount));
-      const afterFirst = 1000 * 1000 * (amount - firstChunk);
+      const absAmount = Math.abs(amount);
+      const firstChunk = Math.round(absAmount);
+      const afterFirst = 1000 * 1000 * (absAmount - firstChunk);
       const secondChunk = Math.round(afterFirst);
       const afterSecond = 1000 * 1000 * (afterFirst - secondChunk);
       const lastChunk = Math.round(afterSecond);
@@ -79,13 +80,13 @@ export class TigerBeetleStores {
         user_data_64: 0n,
         user_data_32: 0,
         timeout: 0,
-        ledger: 1,
+        ledger: thisPartyId,
         code: 720,
         flags: 0,
         timestamp: 0n,
       }];
       const transferErrors = await this.client.createTransfers(transfers);
-      console.log(transferErrors);
+      console.log(thisParty, otherParty, amount, thisPartyId, debit_account_id, credit_account_id, scaledAmount, transferErrors);
       return amount;
     }
   }
