@@ -4,7 +4,7 @@ export class TigerBeetleStores {
     client;
     constructor() {
     }
-    async ensureBalance(thisParty: number, otherParty: number): Promise<{ ledgerId: bigint, thisPartyId: bigint, otherPartyId: bigint}> {
+    async ensureBalance(thisParty: number, otherParty: number): Promise<{ ledgerId: number, thisPartyId: bigint, otherPartyId: bigint}> {
       // `thisParty` is 1,2,3,... and is multiplied by 1,000,000 to create the ledgerId.
       // It is multiplied by 1,000,001 to create thisPartyId.
       // `otherParty` is 0,1,2,3,... (where 0 is the bank for DISBURSEMENT and RECLAMATION) and
@@ -13,10 +13,10 @@ export class TigerBeetleStores {
       // ledgerId: 37,000,000
       // thisPartyId: 37,000,037
       // otherPartyId: 37,054,235
-      const ledgerId = BigInt(thisParty) * BigInt(1000 * 1000);
+      const ledgerId = thisParty;
       const thisPartyId = BigInt(thisParty) * BigInt(1000 * 1000 + 1);
       const otherPartyId = BigInt(otherParty) * BigInt(1000 * 1000 + 1);
-      
+      console.log('creating accounts', ledgerId, thisPartyId, otherPartyId);
       const mainAccount = {
         id: thisPartyId,
         debits_pending: 0n,
@@ -72,6 +72,7 @@ export class TigerBeetleStores {
       // noop
   }
     async storeTransaction({ thisParty, otherParty, amount }: { thisParty: number, otherParty: number, amount: number }): Promise<number> {
+      console.log('storeTransaction', thisParty, otherParty, amount);
       const absAmount = Math.abs(amount);
       const firstChunk = Math.round(absAmount);
       const afterFirst = 1000 * 1000 * (absAmount - firstChunk);
@@ -109,6 +110,7 @@ export class TigerBeetleStores {
         flags: 0,
         timestamp: 0n,
       }];
+      console.log('creating transfer', debit_account_id, credit_account_id, ledgerId);
       const transferErrors = await this.client.createTransfers(transfers);
       console.log(thisParty, otherParty, amount, thisPartyId, debit_account_id, credit_account_id, scaledAmount, transferErrors);
       return amount;
