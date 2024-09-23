@@ -3,7 +3,9 @@ import { Stores } from './stores.js';
 
 export class TigerBeetleStores implements Stores {
     client;
-    accountCache;
+    accountCache: {
+      [ledgerId: number]: object[]
+    };
     constructor() {
     }
     async ensureBalance(thisParty: number, otherParty: number): Promise<{ ledgerId: number, thisPartyId: bigint, otherPartyId: bigint}> {
@@ -197,19 +199,13 @@ export class TigerBeetleStores implements Stores {
     }
     async logBestPairs(): Promise<void> {
       await this.updateAccountCache();
-      for (let i = 1; i < 100000; i++) {
-        if (i % 1000 === 0) {
-          console.log(i);
-        }
+      let numBestPairs = 0;
+      Object.keys(this.accountCache).forEach(i => {
         const ledgerBalances = this.accountCache[i];
-        if (typeof ledgerBalances === 'undefined') {
-          // console.log(i, 'no accounts found on this ledger');
-          continue;
-        }
         const balances = {};
         ledgerBalances
           .filter(({ id }) => (Number(id - BigInt(i)*BigInt(1000000)) !== 0)) // filter out bank
-          .filter(({ id }) => (Number(id - BigInt(i)*BigInt(1000000)) !== i)) // filter out self
+          .filter(({ id }) => (Number(id - BigInt(i)*BigInt(1000000)) !== parseInt(i))) // filter out self
           .map(({ id, debits_posted, credits_posted }) => {
             balances[Number(id - BigInt(i)*BigInt(1000000))] = Number((BigInt(debits_posted) - BigInt(credits_posted))/(BigInt(1000000)*BigInt(1000000)));
           });
@@ -231,10 +227,11 @@ export class TigerBeetleStores implements Stores {
           // console.log('No winner', i, min, otherParty, balances[otherParty], max);
         });
         if ((min < 0.0) &&(max > 0.0)) {
+          numBestPairs++;
           console.log(`Node ${i} has best pair with node ${minParty} (${min}) and ${maxParty} (${max})`);
         }
-      }
-      console.log('logBestPairs done');
+      });
+      console.log(`logBestPairs found ${numBestPairs} out of ${Object.keys(this.accountCache).length} ledgers that have both incoming and outgoing balances`);
     }
     async logPaths(): Promise<void> {
   
