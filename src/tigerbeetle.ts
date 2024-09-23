@@ -170,10 +170,10 @@ export class TigerBeetleStores implements Stores {
           timestamp_max: 0n,
           limit: 100000,
           flags: 0,
-        }).map(({ id, debits_posted, credits_posted }) => {
-          return `${id}:${(BigInt(debits_posted) - BigInt(credits_posted))/(BigInt(1000000)*BigInt(1000000))}`;
         });
-        console.log(i, ledgerBalances);
+        console.log(i, ledgerBalances.map(({ id, debits_posted, credits_posted }) => {
+          return `${id}:${(BigInt(debits_posted) - BigInt(credits_posted))/(BigInt(1000000)*BigInt(1000000))}`;
+        }));
       }
     }
     async logLedgers(): Promise<void> {
