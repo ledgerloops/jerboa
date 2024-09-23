@@ -123,19 +123,21 @@ export class TigerBeetleStores implements Stores {
       }
       return amount;
     }
-    async logLedgers(): Promise<void> {
-      // const query_transfers = await this.client.queryTransfers({
-      //   user_data_128: 0n,
-      //   user_data_64: 0n,
-      //   user_data_32: 0,
-      //   code: 0,
-      //   ledger: 0,
-      //   timestamp_min: 0n,
-      //   timestamp_max: 0n,
-      //   limit: 10000000,
-      //   flags: 0,
-      // });
-      // console.log(query_transfers);
+    async logTransfers(): Promise<void> {
+      const query_transfers = await this.client.queryTransfers({
+        user_data_128: 0n,
+        user_data_64: 0n,
+        user_data_32: 0,
+        code: 0,
+        ledger: 0,
+        timestamp_min: 0n,
+        timestamp_max: 0n,
+        limit: 10000000,
+        flags: 0,
+      });
+      console.log(query_transfers);
+    }
+    async logBalances(): Promise<void> {
       const query_accounts = await this.client.queryAccounts({
         user_data_128: 0n,
         user_data_64: 0n,
@@ -149,32 +151,34 @@ export class TigerBeetleStores implements Stores {
       });
       query_accounts.filter(({
         id,
-        // debits_pending,
-        // debits_posted,
-        // credits_pending,
-        // credits_posted,
-        // user_data_128,
-        // user_data_64,
-        // user_data_32,
-        // reserved,
         ledger,
-        // code,
-        // flags,
-        // timestamp,
      }) => (BigInt(ledger) * BigInt(1000001) === id)).forEach(({
-        // id,
-        // debits_pending,
         debits_posted,
-        // credits_pending,
         credits_posted,
-        // user_data_128,
-        // user_data_64,
-        // user_data_32,
-        // reserved,
         ledger,
-        // code,
-        // flags,
-        // timestamp,
-      }) => console.log(`${(ledger)}:${(BigInt(debits_posted) - BigInt(credits_posted))/(BigInt(1000000)*BigInt(1000000))}`));
+      }) => console.log(`${ledger}:${(BigInt(debits_posted) - BigInt(credits_posted))/(BigInt(1000000)*BigInt(1000000))}`));
+    }
+    async logBestPairs(): Promise<void> {
+      for (let i = 0; i < 10; i++) {
+        const ledgerBalances = await this.client.queryAccounts({
+          user_data_128: 0n,
+          user_data_64: 0n,
+          user_data_32: 0,
+          code: 0,
+          ledger: i,
+          timestamp_min: 0n,
+          timestamp_max: 0n,
+          limit: 100000,
+          flags: 0,
+        }).map(({ id, debits_posted, credits_posted }) => {
+          return `${id}:${(BigInt(debits_posted) - BigInt(credits_posted))/(BigInt(1000000)*BigInt(1000000))}`;
+        });
+        console.log(i, ledgerBalances);
+      }
+    }
+    async logLedgers(): Promise<void> {
+      // await this.logTransfers();
+      // await this.logBalances();
+      await this.logBestPairs();
     }
   }
