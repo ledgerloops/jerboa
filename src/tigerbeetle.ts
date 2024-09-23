@@ -173,12 +173,31 @@ export class TigerBeetleStores implements Stores {
         });
         const balances = {};
         ledgerBalances
-        .filter(id => (Number(id - BigInt(i)*BigInt(1000000)) !== 0)) // filter out bank
-        .filter(id => (Number(id - BigInt(i)*BigInt(1000000)) !== i)) // filter out self
+        .filter(({ id }) => (Number(id - BigInt(i)*BigInt(1000000)) !== 0)) // filter out bank
+        .filter(({ id }) => (Number(id - BigInt(i)*BigInt(1000000)) !== i)) // filter out self
         .map(({ id, debits_posted, credits_posted }) => {
           balances[Number(id - BigInt(i)*BigInt(1000000))] = Number((BigInt(debits_posted) - BigInt(credits_posted))/(BigInt(1000000)*BigInt(1000000)));
-        })
-        console.log(i, balances);
+        });
+        let min = Infinity;
+        let minParty;
+        let max = -Infinity;
+        let maxParty;
+        Object.keys(balances).forEach(otherParty => {
+          if (balances[otherParty] < min) {
+            // console.log('New min', i, min, otherParty, balances[otherParty], max);
+            min = balances[otherParty];
+            minParty = otherParty;
+          }
+          if (balances[otherParty] > max) {
+            // console.log('New max', i, min, otherParty, balances[otherParty], max);
+            max = balances[otherParty];
+            maxParty = otherParty;
+          }
+          // console.log('No winner', i, min, otherParty, balances[otherParty], max);
+        });
+        if ((min < 0.0) &&(max > 0.0)) {
+          console.log(i, minParty, min, maxParty, max);
+        }
       }
     }
     async logLedgers(): Promise<void> {
