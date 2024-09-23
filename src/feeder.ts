@@ -36,7 +36,7 @@ if (cluster.isPrimary) {
     };
   }).filter(obj => !isNaN(obj.from) && !isNaN(obj.to) && !isNaN(obj.amount));
   for (let lineNo = mod; lineNo < lines.length; lineNo += numCPUs) {
-    // console.log(process.pid, mod, lineNo, cumm);
+    console.log(process.pid, lines[lineNo]);
     let cmd;
     if (lines[lineNo].from === 0) {
       cmd = 'DISBURSEMENT';

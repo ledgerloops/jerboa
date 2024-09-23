@@ -34,17 +34,17 @@ if (cluster.isPrimary) {
       stores = new InMemStores();
   }
   stores.connect().then(() => {
-    async function processDisbursement(obj: { from: string, to: string, weight: number }): Promise<number> {
-      return stores.storeTransaction({ thisParty: obj.to, otherParty: 0, amount: obj.weight });
+    async function processDisbursement(obj: { from: string, to: string, amount: number }): Promise<number> {
+      return stores.storeTransaction({ thisParty: obj.to, otherParty: 0, amount: obj.amount });
     }
-    async function processReclamation(obj: { from: string, to: string, weight: number }): Promise<number> {
-      return stores.storeTransaction({ thisParty: obj.from, otherParty: 0, amount: -obj.weight });
+    async function processReclamation(obj: { from: string, to: string, amount: number }): Promise<number> {
+      return stores.storeTransaction({ thisParty: obj.from, otherParty: 0, amount: -obj.amount });
     }
-    async function processStandard(obj: { from: string, to: string, weight: number }): Promise<number> {
-      return stores.storeTransaction({ thisParty: obj.from, otherParty: obj.to, amount: -obj.weight });
+    async function processStandard(obj: { from: string, to: string, amount: number }): Promise<number> {
+      return stores.storeTransaction({ thisParty: obj.from, otherParty: obj.to, amount: -obj.amount });
     }
-    async function processCredit(obj: { from: string, to: string, weight: number }): Promise<number> {
-      return stores.storeTransaction({ thisParty: obj.to, otherParty: obj.from, amount: obj.weight });
+    async function processCredit(obj: { from: string, to: string, amount: number }): Promise<number> {
+      return stores.storeTransaction({ thisParty: obj.to, otherParty: obj.from, amount: obj.amount });
     }
     
     http.createServer((req, res) => {
