@@ -110,7 +110,7 @@ export class TigerBeetleStores {
         flags: 0,
         timestamp: 0n,
       }];
-      console.log('creating transfer', debit_account_id, credit_account_id, ledgerId);
+      // console.log('creating transfer', debit_account_id, credit_account_id, ledgerId);
       const transferErrors = await this.client.createTransfers(transfers);
       console.log(thisParty, otherParty, amount, thisPartyId, debit_account_id, credit_account_id, scaledAmount, transferErrors.map(error => {
         return {
