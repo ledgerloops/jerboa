@@ -196,7 +196,7 @@ export class TigerBeetleStores implements Stores {
           // console.log('No winner', i, min, otherParty, balances[otherParty], max);
         });
         if ((min < 0.0) &&(max > 0.0)) {
-          console.log(i, minParty, min, maxParty, max);
+          console.log(`Node ${i} has best pair with node ${minParty} (${min}) and ${maxParty} (${max})`);
         }
       }
     }
