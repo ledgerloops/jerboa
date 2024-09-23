@@ -5,7 +5,7 @@ export class TigerBeetleStores {
     constructor() {
     }
     async ensureBalance(thisParty: string, otherParty: string): Promise<void> {
-      const id = 1000 * 1000 * parseInt(thisParty) + parseInt(otherParty);
+      const id = BigInt(1000 * 1000 * parseInt(thisParty) + parseInt(otherParty));
       const account = {
         id,
         debits_pending: 0n,
