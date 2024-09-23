@@ -1,8 +1,5 @@
 import { createClient } from 'redis';
 
-
-
-
 export class RedisStores {
   client;
   constructor() {

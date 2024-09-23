@@ -20,7 +20,7 @@ if (cluster.isPrimary) {
 } else {
   // Workers can share any TCP connection
   // In this case it is an HTTP server
-  const stores = new RedisStores();
+  const stores = (process.env.STORE === 'redis' ? new RedisStores() : new InMemStores());
   stores.connect().then(() => {
     async function processDisbursement(obj: { from: string, to: string, weight: number }): Promise<number> {
       return stores.storeTransaction({ thisParty: obj.to, otherParty: null, amount: obj.weight });
