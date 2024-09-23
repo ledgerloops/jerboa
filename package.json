@@ -37,6 +37,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "redis": "^4.7.0",
+    "tigerbeetle-node": "^0.16.2",
     "tslib": "~2.6"
   },
   "volta": {

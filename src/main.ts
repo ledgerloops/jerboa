@@ -4,6 +4,7 @@ import { availableParallelism } from 'node:os';
 import process from 'node:process';
 import { RedisStores } from './redis.js';
 import { InMemStores } from './inmem.js';
+import { TigerBeetleStores } from './tigerbeetle.js';
 
 const numCPUs = availableParallelism() * (parseFloat(process.env.TURBO) || 1);
 
@@ -21,7 +22,17 @@ if (cluster.isPrimary) {
 } else {
   // Workers can share any TCP connection
   // In this case it is an HTTP server
-  const stores = (process.env.STORE === 'redis' ? new RedisStores() : new InMemStores());
+  let stores;
+  switch(process.env.STORE) {
+    case 'redis':
+      stores = new RedisStores();
+      break;
+    case 'tigerbeetle':
+      stores = new TigerBeetleStores();
+      break;
+    default:
+      stores = new InMemStores();
+  }
   stores.connect().then(() => {
     async function processDisbursement(obj: { from: string, to: string, weight: number }): Promise<number> {
       return stores.storeTransaction({ thisParty: obj.to, otherParty: null, amount: obj.weight });
