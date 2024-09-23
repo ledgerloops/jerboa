@@ -2,6 +2,7 @@ import cluster from 'node:cluster';
 import http from 'node:http';
 import { availableParallelism } from 'node:os';
 import process from 'node:process';
+import { RedisStores } from './redis.js';
 
 const numCPUs = availableParallelism();
 
@@ -19,17 +20,54 @@ if (cluster.isPrimary) {
 } else {
   // Workers can share any TCP connection
   // In this case it is an HTTP server
-  http.createServer((req, res) => {
-    let body = '';
-    req.on('data', chunk => {
-      body += chunk;
-    });
-    req.on('end', async () => {
-      const obj = JSON.parse(body);
-      res.writeHead(200);
-      res.end(`${obj.weight}\n`);
-    });
-  }).listen(8000);
-
-  console.log(`Worker ${process.pid} started`);
+  const stores = new RedisStores();
+  stores.connect().then(() => {
+    async function processDisbursement(obj: { from: string, to: string, weight: number }): Promise<number> {
+      return stores.storeTransaction({ thisParty: obj.to, otherParty: null, amount: obj.weight });
+    }
+    async function processReclamation(obj: { from: string, to: string, weight: number }): Promise<number> {
+      return stores.storeTransaction({ thisParty: obj.from, otherParty: null, amount: -obj.weight });
+    }
+    async function processStandard(obj: { from: string, to: string, weight: number }): Promise<number> {
+      return stores.storeTransaction({ thisParty: obj.from, otherParty: obj.to, amount: -obj.weight });
+    }
+    async function processCredit(obj: { from: string, to: string, weight: number }): Promise<number> {
+      return stores.storeTransaction({ thisParty: obj.to, otherParty: obj.from, amount: obj.weight });
+    }
+    
+    http.createServer((req, res) => {
+      let body = '';
+      req.on('data', chunk => {
+        body += chunk;
+      });
+      req.on('end', async () => {
+        const obj = JSON.parse(body);
+        let result;
+        switch (req.url) {
+          case '/DISBURSEMENT':
+            result = await processDisbursement(obj);
+            break;
+          case '/RECLAMATION':
+            result = await processReclamation(obj);
+            break;
+          case '/STANDARD':
+            result = await processStandard(obj);
+            await fetch('http://localhost:8000/credit', {
+              method: 'POST',
+              body: JSON.stringify(obj)
+            });
+            break;
+          case '/credit':
+            result = await processCredit(obj);
+            break;
+          default:
+            console.error('Unknown command', req.url);
+          }
+        res.writeHead(200);
+        res.end(`${result}\n`);
+      });
+    }).listen(8000);
+    
+    console.log(`Worker ${process.pid} started`);
+  });
 }

@@ -32,7 +32,15 @@ if (cluster.isPrimary) {
   }).filter(line => line.from !== 'from' && line.from !== '');
   for (let lineNo = mod; lineNo < lines.length; lineNo += numCPUs) {
     // console.log(process.pid, mod, lineNo, cumm);
-    const result = await fetch('http://localhost:8000', {
+    let cmd;
+    if (lines[lineNo].from === '0') {
+      cmd = 'DISBURSEMENT';
+    } else if (lines[lineNo].to === '0') {
+      cmd = 'RECLAMATION';
+    } else {
+      cmd = 'STANDARD';
+    }
+    const result = await fetch(`http://localhost:8000/${cmd}`, {
       method: 'POST',
       body: JSON.stringify(lines[lineNo])
     });
