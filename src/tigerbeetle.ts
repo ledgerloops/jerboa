@@ -4,13 +4,21 @@ export class TigerBeetleStores {
     client;
     constructor() {
     }
-    async ensureBalance(thisParty: string, otherParty: string): Promise<{ thisPartyId: bigint, otherPartyId: bigint}> {
-      const thisPartyId = BigInt(isNaN(parseInt(thisParty)) ? 1 : parseInt(thisParty) + 1);
-      const otherPartyId = BigInt(isNaN(parseInt(otherParty)) ? 1 : parseInt(otherParty) + 1);
+    async ensureBalance(thisParty: string, otherParty: string): Promise<{ ledgerId: bigint, thisPartyId: bigint, otherPartyId: bigint}> {
+      // `thisParty` is 1,2,3,... and is multiplied by 1,000,000 to create the ledgerId.
+      // It is multiplied by 1,000,001 to create thisPartyId.
+      // `otherParty` is 0,1,2,3,... (where 0 is the bank for DISBURSEMENT and RECLAMATION) and
+      // it is likewise multiplied by 1,000,001 to create otherPartyId.
+      // So for example a transfer from account 37 to account 54235 on the ledger of account 37 would have:
+      // ledgerId: 37,000,000
+      // thisPartyId: 37,000,037
+      // otherPartyId: 37,054,235
+      const ledgerId = BigInt(parseInt(thisParty)) * BigInt(1000 * 1000);
+      const thisPartyId = BigInt(parseInt(thisParty)) * BigInt(1000 * 1000 + 1);
+      const otherPartyId = BigInt(parseInt(otherParty)) * BigInt(1000 * 1000 + 1);
       
-      const id = BigInt(1000 * 1000) * thisPartyId + otherPartyId;
-      const account = {
-        id,
+      const mainAccount = {
+        id: thisPartyId,
         debits_pending: 0n,
         debits_posted: 0n,
         credits_pending: 0n,
@@ -19,13 +27,28 @@ export class TigerBeetleStores {
         user_data_64: 0n,
         user_data_32: 0,
         reserved: 0,
-        ledger: parseInt(thisParty),
+        ledger: ledgerId,
+        code: 1,
+        flags: 0,
+        timestamp: 0n,
+      };
+      const otherAccount = {
+        id: otherPartyId,
+        debits_pending: 0n,
+        debits_posted: 0n,
+        credits_pending: 0n,
+        credits_posted: 0n,
+        user_data_128: 0n,
+        user_data_64: 0n,
+        user_data_32: 0,
+        reserved: 0,
+        ledger: ledgerId,
         code: 1,
         flags: 0,
         timestamp: 0n,
       };
       
-      const accountErrors: { index: number, result: number}[] = await this.client.createAccounts([account]);
+      const accountErrors: { index: number, result: number}[] = await this.client.createAccounts([mainAccount, otherAccount]);
       accountErrors.forEach(({ index, result }: { index: number, result: number})  => {
         if (result !== CreateAccountError["exists"]) {
           throw new Error(`error creating TigerBeetle account ${index} ${result}`);
@@ -33,6 +56,7 @@ export class TigerBeetleStores {
       });
       // console.log('account created', accountErrors, );
       return {
+        ledgerId,
         thisPartyId,
         otherPartyId
       }
@@ -60,7 +84,7 @@ export class TigerBeetleStores {
         BigInt(secondChunk) * BigInt(1000 * 1000) +
         BigInt(lastChunk);
 
-      const { thisPartyId, otherPartyId } = await this.ensureBalance(thisParty, otherParty);
+      const { ledgerId, thisPartyId, otherPartyId } = await this.ensureBalance(thisParty, otherParty);
       // this.balances[thisParty][otherParty] += amount;
       let debit_account_id, credit_account_id;
       if (amount >= 0) {
@@ -80,7 +104,7 @@ export class TigerBeetleStores {
         user_data_64: 0n,
         user_data_32: 0,
         timeout: 0,
-        ledger: thisPartyId,
+        ledger: ledgerId,
         code: 720,
         flags: 0,
         timestamp: 0n,
