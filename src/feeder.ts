@@ -4,11 +4,12 @@ import cluster from 'node:cluster';
 import { availableParallelism } from 'node:os';
 import process from 'node:process';
 
-const numCPUs = availableParallelism();
+
+const numCPUs = availableParallelism() * (parseFloat(process.env.TURBO) || 1);
 const TESTNET_CSV = '../strategy-pit/__tests__/fixtures/testnet-sarafu.csv';
 
 if (cluster.isPrimary) {
-  console.log(`Primary ${process.pid} is running`);
+  console.log(`Primary ${process.pid} is running, forking ${numCPUs} threads`);
 
   // Fork workers.
   for (let i = 0; i < numCPUs; i++) {

@@ -5,10 +5,10 @@ import process from 'node:process';
 import { RedisStores } from './redis.js';
 import { InMemStores } from './inmem.js';
 
-const numCPUs = availableParallelism();
+const numCPUs = availableParallelism() * (parseFloat(process.env.TURBO) || 1);
 
 if (cluster.isPrimary) {
-  console.log(`Primary ${process.pid} is running`);
+  console.log(`Primary ${process.pid} is running, forking ${numCPUs} threads`);
 
   // Fork workers.
   for (let i = 0; i < numCPUs; i++) {
