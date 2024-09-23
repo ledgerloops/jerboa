@@ -1,21 +1,41 @@
+import { createClient } from 'tigerbeetle-node';
+
 export class TigerBeetleStores {
-    balances: {
-      [thisNode: string]: {
-        [otherNode: string]: number
-      }
-    };
+    client;
     constructor() {
-      this.balances = {};
     }
-    ensureBalance(thisParty: string, otherParty: string): void {
-      if (typeof this.balances[thisParty] === 'undefined') {
-          this.balances[thisParty] = {};
-      }
-      if (typeof this.balances[thisParty][otherParty] === 'undefined') {
-          this.balances[thisParty][otherParty] = 0.0;
+    async ensureBalance(thisParty: string, otherParty: string): Promise<void> {
+      const id = 1000 * 1000 * parseInt(thisParty) + parseInt(otherParty);
+      const accounts = await this.client.lookupAccounts([id]);
+      // FIXME: this check is not atomic!
+      if (accounts.length === 0) {
+        const account = {
+          id,
+          debits_pending: 0n,
+          debits_posted: 0n,
+          credits_pending: 0n,
+          credits_posted: 0n,
+          user_data_128: 0n,
+          user_data_64: 0n,
+          user_data_32: 0,
+          reserved: 0,
+          ledger: parseInt(thisParty),
+          code: 1,
+          flags: 0,
+          timestamp: 0n,
+        };
+        
+        const accountErrors = await this.client.createAccounts([account]);
+        console.log('account created', accountErrors);
+      } else {
+        console.log('account already exists');
       }
     }
     async connect(): Promise<void> {
+      this.client = createClient({
+        cluster_id: 0n,
+        replica_addresses: [process.env.TB_ADDRESS || "3000"],
+      });
       // noop
     } 
     async disconnect(): Promise<void> {
@@ -23,7 +43,7 @@ export class TigerBeetleStores {
   }
     async storeTransaction({ thisParty, otherParty, amount }: { thisParty: string, otherParty: string, amount: number }): Promise<number> {
       this.ensureBalance(thisParty, otherParty);
-      this.balances[thisParty][otherParty] += amount;
-      return this.balances[thisParty][otherParty];
+      // this.balances[thisParty][otherParty] += amount;
+      return amount;
     }
   }
