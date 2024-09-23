@@ -14,8 +14,8 @@ export class TigerBeetleStores {
       // thisPartyId: 37,000,037
       // otherPartyId: 37,054,235
       const ledgerId = thisParty;
-      const thisPartyId = BigInt(thisParty) * BigInt(1000 * 1000 + 1);
-      const otherPartyId = BigInt(otherParty) * BigInt(1000 * 1000 + 1);
+      const thisPartyId = BigInt(1000 * 1000 * ledgerId) + BigInt(thisParty);
+      const otherPartyId = BigInt(1000 * 1000 * ledgerId) + BigInt(otherParty);
       console.log('creating accounts', ledgerId, thisPartyId, otherPartyId);
       const mainAccount = {
         id: thisPartyId,
