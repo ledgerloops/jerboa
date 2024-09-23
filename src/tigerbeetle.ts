@@ -3,6 +3,7 @@ import { Stores } from './stores.js';
 
 export class TigerBeetleStores implements Stores {
     client;
+    accountCache;
     constructor() {
     }
     async ensureBalance(thisParty: number, otherParty: number): Promise<{ ledgerId: number, thisPartyId: bigint, otherPartyId: bigint}> {
@@ -158,26 +159,60 @@ export class TigerBeetleStores implements Stores {
         ledger,
       }) => console.log(`${ledger}:${(BigInt(debits_posted) - BigInt(credits_posted))/(BigInt(1000000)*BigInt(1000000))}`));
     }
-    async logBestPairs(): Promise<void> {
+    async updateAccountCache(): Promise<void> {
+      console.log('querying all accounts on all ledgers...');
+      const allAccounts = await this.client.queryAccounts({
+        user_data_128: 0n,
+        user_data_64: 0n,
+        user_data_32: 0,
+        code: 0,
+        ledger: 0,
+        timestamp_min: 0n,
+        timestamp_max: 0n,
+        limit: 1000000,
+        flags: 0,
+      });
+      console.log('accounts found', allAccounts.length);
+      this.accountCache = {};
+      let numLedgers = 0;
+      let highestLedger = 0;
+      allAccounts.forEach(x => {
+        if (typeof this.accountCache[x.ledger] === 'undefined') {
+          this.accountCache[x.ledger] = [];
+          numLedgers++;
+          if (x.ledger > highestLedger) {
+            highestLedger = x.ledger;
+          }
+        }
+        // console.log('account found on ledger', x.ledger);
+        this.accountCache[x.ledger].push(x);
+      });
+      console.log(`${allAccounts.length} accounts cached across ${numLedgers} ledgers ranging up to ${highestLedger}`);
+    }
+    async logLedgerSizes(): Promise<void> {
+      await this.updateAccountCache();
       for (let i = 1; i < 100000; i++) {
-        const ledgerBalances = await this.client.queryAccounts({
-          user_data_128: 0n,
-          user_data_64: 0n,
-          user_data_32: 0,
-          code: 0,
-          ledger: i,
-          timestamp_min: 0n,
-          timestamp_max: 0n,
-          limit: 100000,
-          flags: 0,
-        });
+        console.log(i,  this.accountCache[i]?.length);
+      }
+    }
+    async logBestPairs(): Promise<void> {
+      await this.updateAccountCache();
+      for (let i = 1; i < 100000; i++) {
+        if (i % 1000 === 0) {
+          console.log(i);
+        }
+        const ledgerBalances = this.accountCache[i];
+        if (typeof ledgerBalances === 'undefined') {
+          // console.log(i, 'no accounts found on this ledger');
+          continue;
+        }
         const balances = {};
         ledgerBalances
-        .filter(({ id }) => (Number(id - BigInt(i)*BigInt(1000000)) !== 0)) // filter out bank
-        .filter(({ id }) => (Number(id - BigInt(i)*BigInt(1000000)) !== i)) // filter out self
-        .map(({ id, debits_posted, credits_posted }) => {
-          balances[Number(id - BigInt(i)*BigInt(1000000))] = Number((BigInt(debits_posted) - BigInt(credits_posted))/(BigInt(1000000)*BigInt(1000000)));
-        });
+          .filter(({ id }) => (Number(id - BigInt(i)*BigInt(1000000)) !== 0)) // filter out bank
+          .filter(({ id }) => (Number(id - BigInt(i)*BigInt(1000000)) !== i)) // filter out self
+          .map(({ id, debits_posted, credits_posted }) => {
+            balances[Number(id - BigInt(i)*BigInt(1000000))] = Number((BigInt(debits_posted) - BigInt(credits_posted))/(BigInt(1000000)*BigInt(1000000)));
+          });
         let min = Infinity;
         let minParty;
         let max = -Infinity;
@@ -199,6 +234,7 @@ export class TigerBeetleStores implements Stores {
           console.log(`Node ${i} has best pair with node ${minParty} (${min}) and ${maxParty} (${max})`);
         }
       }
+      console.log('logBestPairs done');
     }
     async logPaths(): Promise<void> {
   
@@ -207,5 +243,6 @@ export class TigerBeetleStores implements Stores {
       // await this.logTransfers();
       // await this.logBalances();
       await this.logBestPairs();
+      // await this.logLedgerSizes();
     }
   }

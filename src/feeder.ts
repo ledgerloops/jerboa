@@ -6,8 +6,8 @@ import process from 'node:process';
 
 
 const numCPUs = availableParallelism() * (parseFloat(process.env.TURBO) || 1);
-// const TESTNET_CSV = '../strategy-pit/__tests__/fixtures/testnet-sarafu.csv';
-const TESTNET_CSV = './testnet-sarafu-first-10k.csv';
+const TESTNET_CSV = '../strategy-pit/__tests__/fixtures/testnet-sarafu.csv';
+// const TESTNET_CSV = './testnet-sarafu-first-10k.csv';
 
 if (cluster.isPrimary) {
   console.log(`Primary ${process.pid} is running, forking ${numCPUs} threads`);
