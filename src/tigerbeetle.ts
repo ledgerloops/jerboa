@@ -112,12 +112,14 @@ export class TigerBeetleStores {
       }];
       // console.log('creating transfer', debit_account_id, credit_account_id, ledgerId);
       const transferErrors = await this.client.createTransfers(transfers);
-      console.log(thisParty, otherParty, amount, thisPartyId, debit_account_id, credit_account_id, scaledAmount, transferErrors.map(error => {
-        return {
-          index: error.index,
-          result: CreateTransferError[error.result]
-        }
-      }));
+      if (transferErrors.length > 0) {
+        console.log(thisParty, otherParty, amount, thisPartyId, debit_account_id, credit_account_id, scaledAmount, transferErrors.map(error => {
+          return {
+            index: error.index,
+            result: CreateTransferError[error.result]
+          }
+        }));
+      }
       return amount;
     }
   }
