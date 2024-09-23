@@ -16,7 +16,7 @@ export class TigerBeetleStores {
       const ledgerId = thisParty;
       const thisPartyId = BigInt(1000 * 1000 * ledgerId) + BigInt(thisParty);
       const otherPartyId = BigInt(1000 * 1000 * ledgerId) + BigInt(otherParty);
-      console.log('creating accounts', ledgerId, thisPartyId, otherPartyId);
+      // console.log('creating accounts', ledgerId, thisPartyId, otherPartyId);
       const mainAccount = {
         id: thisPartyId,
         debits_pending: 0n,
@@ -72,7 +72,7 @@ export class TigerBeetleStores {
       // noop
   }
     async storeTransaction({ thisParty, otherParty, amount }: { thisParty: number, otherParty: number, amount: number }): Promise<number> {
-      console.log('storeTransaction', thisParty, otherParty, amount);
+      // console.log('storeTransaction', thisParty, otherParty, amount);
       const absAmount = Math.abs(amount);
       const firstChunk = Math.round(absAmount);
       const afterFirst = 1000 * 1000 * (absAmount - firstChunk);

@@ -35,16 +35,24 @@ if (cluster.isPrimary) {
   }
   stores.connect().then(() => {
     async function processDisbursement(obj: { from: string, to: string, amount: number }): Promise<number> {
-      return stores.storeTransaction({ thisParty: obj.to, otherParty: 0, amount: obj.amount });
+      // don't wait for this to complete:
+      stores.storeTransaction({ thisParty: obj.to, otherParty: 0, amount: obj.amount });
+      return obj.amount;
     }
     async function processReclamation(obj: { from: string, to: string, amount: number }): Promise<number> {
-      return stores.storeTransaction({ thisParty: obj.from, otherParty: 0, amount: -obj.amount });
+      // don't wait for this to complete:
+      stores.storeTransaction({ thisParty: obj.from, otherParty: 0, amount: -obj.amount });
+      return obj.amount;
     }
     async function processStandard(obj: { from: string, to: string, amount: number }): Promise<number> {
-      return stores.storeTransaction({ thisParty: obj.from, otherParty: obj.to, amount: -obj.amount });
+      // don't wait for this to complete:
+      stores.storeTransaction({ thisParty: obj.from, otherParty: obj.to, amount: -obj.amount });
+      return obj.amount;
     }
     async function processCredit(obj: { from: string, to: string, amount: number }): Promise<number> {
-      return stores.storeTransaction({ thisParty: obj.to, otherParty: obj.from, amount: obj.amount });
+      // don't wait for this to complete:
+      stores.storeTransaction({ thisParty: obj.to, otherParty: obj.from, amount: obj.amount });
+      return obj.amount;
     }
     
     http.createServer((req, res) => {
