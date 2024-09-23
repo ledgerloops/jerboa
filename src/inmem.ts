@@ -1,4 +1,6 @@
-export class InMemStores {
+import { Stores } from "./stores.js";
+
+export class InMemStores implements Stores {
   balances: {
     [thisNode: string]: {
       [otherNode: string]: number
@@ -25,5 +27,8 @@ export class InMemStores {
     this.ensureBalance(thisParty, otherParty);
     this.balances[thisParty][otherParty] += amount;
     return this.balances[thisParty][otherParty];
+  }
+  async logLedgers(): Promise<void> {
+    console.log(this.balances);
   }
 }

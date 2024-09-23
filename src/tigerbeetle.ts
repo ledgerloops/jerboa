@@ -1,6 +1,7 @@
 import { CreateAccountError, createClient, CreateTransferError, id } from 'tigerbeetle-node';
+import { Stores } from './stores.js';
 
-export class TigerBeetleStores {
+export class TigerBeetleStores implements Stores {
     client;
     constructor() {
     }
@@ -121,5 +122,9 @@ export class TigerBeetleStores {
         }));
       }
       return amount;
+    }
+    async logLedgers(): Promise<void> {
+      const query_transfers = await this.client.queryTransfers({});
+      console.log(query_transfers);
     }
   }

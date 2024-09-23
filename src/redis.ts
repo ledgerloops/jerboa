@@ -1,6 +1,7 @@
 import { createClient } from 'redis';
+import { Stores } from './stores.js';
 
-export class RedisStores {
+export class RedisStores implements Stores {
   client;
   constructor() {
     this.client = createClient();
@@ -17,5 +18,8 @@ export class RedisStores {
   async storeTransaction({ thisParty, otherParty, amount }: { thisParty: number, otherParty: number, amount: number }): Promise<number> {
     // console.log('storing transaction', thisParty, otherParty, amount);
     return this.client.incrByFloat(`${thisParty}:${otherParty}`, amount);
+  }
+  async logLedgers(): Promise<void> {
+    console.log('TODO: implement logLedgers in RedisStores');
   }
 }

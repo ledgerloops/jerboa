@@ -34,27 +34,6 @@ if (cluster.isPrimary) {
       stores = new InMemStores();
   }
   stores.connect().then(() => {
-    async function processDisbursement(obj: { from: string, to: string, amount: number }): Promise<number> {
-      // don't wait for this to complete:
-      stores.storeTransaction({ thisParty: obj.to, otherParty: 0, amount: obj.amount });
-      return obj.amount;
-    }
-    async function processReclamation(obj: { from: string, to: string, amount: number }): Promise<number> {
-      // don't wait for this to complete:
-      stores.storeTransaction({ thisParty: obj.from, otherParty: 0, amount: -obj.amount });
-      return obj.amount;
-    }
-    async function processStandard(obj: { from: string, to: string, amount: number }): Promise<number> {
-      // don't wait for this to complete:
-      stores.storeTransaction({ thisParty: obj.from, otherParty: obj.to, amount: -obj.amount });
-      return obj.amount;
-    }
-    async function processCredit(obj: { from: string, to: string, amount: number }): Promise<number> {
-      // don't wait for this to complete:
-      stores.storeTransaction({ thisParty: obj.to, otherParty: obj.from, amount: obj.amount });
-      return obj.amount;
-    }
-    
     http.createServer((req, res) => {
       let body = '';
       req.on('data', chunk => {
@@ -65,20 +44,32 @@ if (cluster.isPrimary) {
         let result;
         switch (req.url) {
           case '/DISBURSEMENT':
-            result = await processDisbursement(obj);
+            // don't wait for this to complete:
+            stores.storeTransaction({ thisParty: obj.to, otherParty: 0, amount: obj.amount });
+            result = obj.amount;
             break;
           case '/RECLAMATION':
-            result = await processReclamation(obj);
+            // don't wait for this to complete:
+            stores.storeTransaction({ thisParty: obj.from, otherParty: 0, amount: -obj.amount });
+            result = obj.amount;
             break;
           case '/STANDARD':
-            result = await processStandard(obj);
-            await fetch('http://localhost:8000/credit', {
+            // don't wait for this to complete:
+            stores.storeTransaction({ thisParty: obj.from, otherParty: obj.to, amount: -obj.amount });
+            fetch('http://localhost:8000/credit', {
               method: 'POST',
               body: JSON.stringify(obj)
             });
+            result = obj.amount;
             break;
           case '/credit':
-            result = await processCredit(obj);
+            // don't wait for this to complete:
+            stores.storeTransaction({ thisParty: obj.to, otherParty: obj.from, amount: obj.amount });
+            result = obj.amount;
+            break;
+          case '/report':
+            await stores.logLedgers();
+            result = `Ledgers logged to stdout of the server process`;
             break;
           default:
             console.error('Unknown command', req.url);
