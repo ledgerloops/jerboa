@@ -3,6 +3,7 @@ import http from 'node:http';
 import { availableParallelism } from 'node:os';
 import process from 'node:process';
 import { RedisStores } from './redis.js';
+import { InMemStores } from './inmem.js';
 
 const numCPUs = availableParallelism();
 
