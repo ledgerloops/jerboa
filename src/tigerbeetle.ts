@@ -1,4 +1,4 @@
-import { CreateAccountError, createClient, id } from 'tigerbeetle-node';
+import { CreateAccountError, createClient, CreateTransferError, id } from 'tigerbeetle-node';
 
 export class TigerBeetleStores {
     client;
@@ -51,7 +51,7 @@ export class TigerBeetleStores {
       const accountErrors: { index: number, result: number}[] = await this.client.createAccounts([mainAccount, otherAccount]);
       accountErrors.forEach(({ index, result }: { index: number, result: number})  => {
         if (result !== CreateAccountError["exists"]) {
-          throw new Error(`error creating TigerBeetle account ${index} ${result}`);
+          throw new Error(`error creating TigerBeetle account ${index} ${CreateAccountError[result]}`);
         }
       });
       // console.log('account created', accountErrors, );
@@ -112,7 +112,12 @@ export class TigerBeetleStores {
       }];
       console.log('creating transfer', debit_account_id, credit_account_id, ledgerId);
       const transferErrors = await this.client.createTransfers(transfers);
-      console.log(thisParty, otherParty, amount, thisPartyId, debit_account_id, credit_account_id, scaledAmount, transferErrors);
+      console.log(thisParty, otherParty, amount, thisPartyId, debit_account_id, credit_account_id, scaledAmount, transferErrors.map(error => {
+        return {
+          index: error.index,
+          result: CreateTransferError[error.result]
+        }
+      }));
       return amount;
     }
   }
