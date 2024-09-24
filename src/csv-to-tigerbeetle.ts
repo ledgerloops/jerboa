@@ -65,10 +65,11 @@ async function run(): Promise<void> {
       to: parseInt(toStr),
       amount: parseFloat(amountStr)
     }
-    if (!isNaN(obj.from) && !isNaN(obj.to) && !isNaN(obj.amount)) {
+    if (!isNaN(obj.from) && !isNaN(obj.to) && !isNaN(obj.amount) && (obj.from !== obj.to)) {
       transactions.push(obj);
     }
   }
+  console.log('creating transactions', transactions.length);
   for (let transNo = 0; transNo < transactions.length; transNo++) {
     const obj = transactions[transNo];
     console.log(transNo, obj);
