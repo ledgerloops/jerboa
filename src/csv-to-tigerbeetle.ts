@@ -82,7 +82,9 @@ async function run(): Promise<void> {
       });
     }
   }
-  setInterval(() => {
+  setInterval(async () => {
+    console.log('flushing');
+    await (stores as TigerBeetleStores).flushTransfers();
     console.log('success', successThisWorker);
     console.log('running', runningThisWorker);
     console.log('fail', backgroundFailThisWorker);

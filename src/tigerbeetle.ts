@@ -2,7 +2,7 @@ import { CreateAccountError, createClient, CreateTransferError, id } from 'tiger
 import { Stores } from './stores.js';
 
 const PORTS = ["3000"];
-const TRANSFER_BATCH_SIZE = 8190;
+const TRANSFER_BATCH_SIZE = 100;
 
 export class TigerBeetleStores implements Stores {
   accountsCreated = {};
@@ -66,7 +66,7 @@ export class TigerBeetleStores implements Stores {
       accountsToCreate.push(otherAccount);
     }
     if (accountsToCreate.length > 0) {
-      console.log('creating accounts', accountsToCreate);
+      // console.log('creating accounts', accountsToCreate);
       // NB: there is no way to 'upsert' an account, so we just create them and catch the error if it already exists.
       const accountErrors: { index: number, result: number}[] = await this.client.createAccounts(accountsToCreate);
       accountErrors.forEach(({ index, result }: { index: number, result: number})  => {
@@ -74,7 +74,7 @@ export class TigerBeetleStores implements Stores {
           throw new Error(`error creating TigerBeetle account ${index} ${CreateAccountError[result]}`);
         }
       });
-      console.log('account created', accountErrors);
+      // console.log('account created', accountErrors);
     }
     return {
       ledgerId,
@@ -109,9 +109,9 @@ export class TigerBeetleStores implements Stores {
         BigInt(secondChunk) * BigInt(1000 * 1000) +
         BigInt(lastChunk);
 
-      console.log('ensuring accounts exist start');
+      // console.log('ensuring accounts exist start');
       const { ledgerId, thisPartyId, otherPartyId } = await this.ensureAccountsExist(thisParty, otherParty);
-      console.log('ensuring accounts exist end');
+      // console.log('ensuring accounts exist end');
       // this.balances[thisParty][otherParty] += amount;
       let debit_account_id, credit_account_id;
       if (amount >= 0) {
@@ -137,15 +137,18 @@ export class TigerBeetleStores implements Stores {
         timestamp: 0n,
       });
       if (this.transferBatch.length === TRANSFER_BATCH_SIZE) {
-        console.log('flush start');
+        // console.log('flush start');
         await this.flushTransfers();
-        console.log('flush end');
+        // console.log('flush end');
       }
     }
     async flushTransfers(): Promise<void> {
-      const thisBatch = this.transferBatch;
+      const thisBatch = [ ...this.transferBatch];
       this.transferBatch = [];
       console.log('creating transfers', thisBatch);
+      if (thisBatch.length === 0) {
+        return;
+      }
       await this.client.createTransfers(thisBatch).then((transferErrors) => {
         if (transferErrors.length > 0) {
           transferErrors.map(error => {
