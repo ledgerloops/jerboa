@@ -88,6 +88,16 @@ async function run(): Promise<void> {
     console.log('success', successThisWorker);
     console.log('running', runningThisWorker);
     console.log('fail', backgroundFailThisWorker);
+    let done = true;
+    Object.keys(runningThisWorker).forEach(key => {
+      if (runningThisWorker[key] > 0)  {
+        done = false;
+      }
+    });
+    if (done) {
+      console.log('done');
+      process.exit(0);
+    }
   }, 1000);
 }
 

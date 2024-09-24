@@ -2,7 +2,8 @@ import { CreateAccountError, createClient, CreateTransferError, id } from 'tiger
 import { Stores } from './stores.js';
 
 const PORTS = ["3000"];
-const TRANSFER_BATCH_SIZE = 100;
+// See https://github.com/tigerbeetle/tigerbeetle/issues/2348
+const TRANSFER_BATCH_SIZE = 254;
 
 export class TigerBeetleStores implements Stores {
   accountsCreated = {};
@@ -145,7 +146,7 @@ export class TigerBeetleStores implements Stores {
     async flushTransfers(): Promise<void> {
       const thisBatch = [ ...this.transferBatch];
       this.transferBatch = [];
-      console.log('creating transfers', thisBatch);
+      console.log('creating transfers', thisBatch.length);
       if (thisBatch.length === 0) {
         return;
       }
