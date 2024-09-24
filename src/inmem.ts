@@ -22,11 +22,12 @@ export class InMemStores implements Stores {
   } 
   async disconnect(): Promise<void> {
     // noop
-}
-  async storeTransaction({ thisParty, otherParty, amount }: { thisParty: number, otherParty: number, amount: number }): Promise<number> {
-    this.ensureBalance(thisParty, otherParty);
+  }
+  // async storeTransaction({ txid, thisParty, otherParty, amount }: { txid: number, thisParty: number, otherParty: number, amount: number }): Promise<void> {
+  async storeTransaction({ thisParty, otherParty, amount }: { thisParty: number, otherParty: number, amount: number }): Promise<void> {
+      this.ensureBalance(thisParty, otherParty);
     this.balances[thisParty][otherParty] += amount;
-    return this.balances[thisParty][otherParty];
+    // return this.balances[thisParty][otherParty];
   }
   async logLedgers(): Promise<string> {
     console.log(this.balances);
@@ -38,5 +39,9 @@ export class InMemStores implements Stores {
     }
   }> {
     return this.balances;
+  }
+
+  async getTransactionIds(): Promise<string> {
+    return '';
   }
 }

@@ -15,9 +15,10 @@ export class RedisStores implements Stores {
   async disconnect(): Promise<void> {
     await this.client.quit();
   }
-  async storeTransaction({ thisParty, otherParty, amount }: { thisParty: number, otherParty: number, amount: number }): Promise<number> {
-    // console.log('storing transaction', thisParty, otherParty, amount);
-    return this.client.incrByFloat(`${thisParty}:${otherParty}`, amount);
+  // async storeTransaction({ txid, thisParty, otherParty, amount }: { txid: number, thisParty: number, otherParty: number, amount: number }): Promise<void> {
+  async storeTransaction({ thisParty, otherParty, amount }: { thisParty: number, otherParty: number, amount: number }): Promise<void> {
+      // console.log('storing transaction', thisParty, otherParty, amount);
+    await this.client.incrByFloat(`${thisParty}:${otherParty}`, amount);
   }
   async logLedgers(): Promise<string> {
     return 'TODO: implement logLedgers in RedisStores';
@@ -28,5 +29,8 @@ export class RedisStores implements Stores {
     }
   }> {
     return {};
+  }
+  async getTransactionIds(): Promise<string> {
+    return '';
   }
 }

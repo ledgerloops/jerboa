@@ -77,7 +77,7 @@ export class TigerBeetleStores implements Stores {
     async disconnect(): Promise<void> {
       // noop
   }
-    async storeTransaction({ thisParty, otherParty, amount }: { thisParty: number, otherParty: number, amount: number }): Promise<number> {
+    async storeTransaction({ txid, thisParty, otherParty, amount }: { txid: number, thisParty: number, otherParty: number, amount: number }): Promise<void> {
       // console.log('storeTransaction', thisParty, otherParty, amount);
       const absAmount = Math.abs(amount);
       const firstChunk = Math.round(absAmount);
@@ -107,7 +107,7 @@ export class TigerBeetleStores implements Stores {
         credit_account_id,
         amount: scaledAmount,
         pending_id: 0n,
-        user_data_128: 0n,
+        user_data_128: BigInt(txid),
         user_data_64: 0n,
         user_data_32: 0,
         timeout: 0,
@@ -116,17 +116,29 @@ export class TigerBeetleStores implements Stores {
         flags: 0,
         timestamp: 0n,
       }];
+      let done = false;
+      do {
+        await new Promise((resolve) => {
+          setTimeout(resolve, 1000);
+          this.client.createTransfers(transfers).then((transferErrors) => {
+            if (transferErrors.length > 0) {
+              console.log(thisParty, otherParty, amount, thisPartyId, debit_account_id, credit_account_id, scaledAmount, transferErrors.map(error => {
+                return {
+                  index: error.index,
+                  result: CreateTransferError[error.result]
+                }
+              }));
+              // process.exit(1);
+            }
+            done = true;
+            resolve(null);
+          });
+        });
+        if (!done) {
+          console.log('retrying createTransfers call', transfers);
+        }
+      } while (!done);
       // console.log('creating transfer', debit_account_id, credit_account_id, ledgerId);
-      const transferErrors = await this.client.createTransfers(transfers);
-      if (transferErrors.length > 0) {
-        console.log(thisParty, otherParty, amount, thisPartyId, debit_account_id, credit_account_id, scaledAmount, transferErrors.map(error => {
-          return {
-            index: error.index,
-            result: CreateTransferError[error.result]
-          }
-        }));
-      }
-      return amount;
     }
     async logTransfers(): Promise<void> {
       const query_transfers = await this.client.queryTransfers({
@@ -277,6 +289,50 @@ export class TigerBeetleStores implements Stores {
         [neighbour: number]: number
       }
     }> {
+      const query_accounts = await this.client.queryAccounts({
+        user_data_128: 0n,
+        user_data_64: 0n,
+        user_data_32: 0,
+        code: 0,
+        ledger: 0,
+        timestamp_min: 0n,
+        timestamp_max: 0n,
+        limit: 100000,
+        flags: 0,
+      });
+      query_accounts.filter(({
+        id,
+        ledger,
+     }) => (BigInt(ledger) * BigInt(1000001) === id)).forEach(({
+        debits_posted,
+        credits_posted,
+        ledger,
+      }) => console.log(`${ledger}:${(BigInt(debits_posted) - BigInt(credits_posted))/(BigInt(1000000)*BigInt(1000000))}`));
       return {};
-    }  
+    }
+    async getTransactionIds(): Promise<string> {
+      const query_transfers = await this.client.queryTransfers({
+        user_data_128: 0n,
+        user_data_64: 0n,
+        user_data_32: 0,
+        code: 0,
+        ledger: 0,
+        timestamp_min: 0n,
+        timestamp_max: 0n,
+        limit: 100000,
+        flags: 0,
+      });
+      const found = {};
+      for (let i = 0; i < query_transfers.length; i++) {
+        const txid = Number(query_transfers[i].user_data_128);
+        if (typeof found[txid] === 'undefined') {
+          found[txid] = 0;
+        }
+        found[txid]++;
+      }
+      for (let i = 0; i < 1081; i++) {
+        console.log(i, found[i]);
+      }
+      return found[0].toString();
+    }
   }

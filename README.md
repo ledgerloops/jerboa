@@ -5,6 +5,10 @@
 
 ## Development
 Although you can also run Jerboa with Redis or in-memory, the best way is with TigerBeetle:
+* Preparation: [install TigerBeetle](https://docs.tigerbeetle.com/quick-start) including this step:
+```
+./tigerbeetle format --cluster=0 --replica=0 --replica-count=1 --development 0_0.tigerbeetle
+```
 
 * First window: [Start your TigerBeetle cluster](https://docs.tigerbeetle.com/quick-start#3-start-your-cluster)
 ```
