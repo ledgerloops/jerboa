@@ -2,8 +2,10 @@ import { CreateAccountError, createClient, CreateTransferError, id } from 'tiger
 import { Stores } from './stores.js';
 
 const PORTS = ["3000"];
-// See https://github.com/tigerbeetle/tigerbeetle/issues/2348
-const TRANSFER_BATCH_SIZE = 254;
+// Make sure you don't run tigerbeetle format/start with `--development`, see https://github.com/tigerbeetle/tigerbeetle/issues/2348
+const TRANSFER_BATCH_SIZE = 8190;
+const ACCOUNTS_BATCH_SIZE = 8190;
+const ASSUME_ACCOUNTS_ALREADY_CREATED = true;
 
 export class TigerBeetleStores implements Stores {
   accountsCreated = {};
@@ -13,6 +15,54 @@ export class TigerBeetleStores implements Stores {
     [ledgerId: number]: object[]
   };
   constructor() {
+  }
+  async createAccountsBatch(specs: string[]): Promise<void> {
+    const accountsToCreate = [];
+    specs.forEach(str => {
+      const parts = str.split(' ');
+      const thisParty = parseInt(parts[0]);
+      const otherParty = parseInt(parts[1]);
+      const ledgerId = thisParty;
+      const thisPartyId = BigInt(1000 * 1000 * ledgerId) + BigInt(thisParty);
+      const otherPartyId = BigInt(1000 * 1000 * ledgerId) + BigInt(otherParty);
+      // console.log('creating accounts', ledgerId, thisPartyId, otherPartyId);
+      accountsToCreate.push({
+        id: thisPartyId,
+        debits_pending: 0n,
+        debits_posted: 0n,
+        credits_pending: 0n,
+        credits_posted: 0n,
+        user_data_128: 0n,
+        user_data_64: 0n,
+        user_data_32: 0,
+        reserved: 0,
+        ledger: ledgerId,
+        code: 1,
+        flags: 0,
+        timestamp: 0n,
+      });
+      accountsToCreate.push({
+        id: otherPartyId,
+        debits_pending: 0n,
+        debits_posted: 0n,
+        credits_pending: 0n,
+        credits_posted: 0n,
+        user_data_128: 0n,
+        user_data_64: 0n,
+        user_data_32: 0,
+        reserved: 0,
+        ledger: ledgerId,
+        code: 1,
+        flags: 0,
+        timestamp: 0n,
+      });
+    });
+    console.log(`translated ${specs.length} to ${accountsToCreate.length} accounts to create`);
+    while (accountsToCreate.length > 0) {
+      const batch = accountsToCreate.splice(0, ACCOUNTS_BATCH_SIZE);
+      console.log(`creating ${batch.length} accounts, ${accountsToCreate.length} left after this`);
+      await this.client.createAccounts(batch);
+    }
   }
   async ensureAccountsExist(thisParty: number, otherParty: number): Promise<{ ledgerId: number, thisPartyId: bigint, otherPartyId: bigint}> {
     // `thisParty` is 1,2,3,...
@@ -26,56 +76,58 @@ export class TigerBeetleStores implements Stores {
     const ledgerId = thisParty;
     const thisPartyId = BigInt(1000 * 1000 * ledgerId) + BigInt(thisParty);
     const otherPartyId = BigInt(1000 * 1000 * ledgerId) + BigInt(otherParty);
-    // console.log('creating accounts', ledgerId, thisPartyId, otherPartyId);
-    const mainAccount = {
-      id: thisPartyId,
-      debits_pending: 0n,
-      debits_posted: 0n,
-      credits_pending: 0n,
-      credits_posted: 0n,
-      user_data_128: 0n,
-      user_data_64: 0n,
-      user_data_32: 0,
-      reserved: 0,
-      ledger: ledgerId,
-      code: 1,
-      flags: 0,
-      timestamp: 0n,
-    };
-    const otherAccount = {
-      id: otherPartyId,
-      debits_pending: 0n,
-      debits_posted: 0n,
-      credits_pending: 0n,
-      credits_posted: 0n,
-      user_data_128: 0n,
-      user_data_64: 0n,
-      user_data_32: 0,
-      reserved: 0,
-      ledger: ledgerId,
-      code: 1,
-      flags: 0,
-      timestamp: 0n,
-    };
-    const accountsToCreate = [];
-    if (typeof this.accountsCreated[Number(thisPartyId)] === 'undefined') {
-      this.accountsCreated[Number(thisPartyId)] = true;
-      accountsToCreate.push(mainAccount);
-    }
-    if (typeof this.accountsCreated[Number(otherPartyId)] === 'undefined') {
-      this.accountsCreated[Number(otherPartyId)] = true;
-      accountsToCreate.push(otherAccount);
-    }
-    if (accountsToCreate.length > 0) {
-      // console.log('creating accounts', accountsToCreate);
-      // NB: there is no way to 'upsert' an account, so we just create them and catch the error if it already exists.
-      const accountErrors: { index: number, result: number}[] = await this.client.createAccounts(accountsToCreate);
-      accountErrors.forEach(({ index, result }: { index: number, result: number})  => {
-        if (result !== CreateAccountError["exists"]) {
-          throw new Error(`error creating TigerBeetle account ${index} ${CreateAccountError[result]}`);
-        }
-      });
-      // console.log('account created', accountErrors);
+    if (!ASSUME_ACCOUNTS_ALREADY_CREATED) {
+      // console.log('creating accounts', ledgerId, thisPartyId, otherPartyId);
+      const mainAccount = {
+        id: thisPartyId,
+        debits_pending: 0n,
+        debits_posted: 0n,
+        credits_pending: 0n,
+        credits_posted: 0n,
+        user_data_128: 0n,
+        user_data_64: 0n,
+        user_data_32: 0,
+        reserved: 0,
+        ledger: ledgerId,
+        code: 1,
+        flags: 0,
+        timestamp: 0n,
+      };
+      const otherAccount = {
+        id: otherPartyId,
+        debits_pending: 0n,
+        debits_posted: 0n,
+        credits_pending: 0n,
+        credits_posted: 0n,
+        user_data_128: 0n,
+        user_data_64: 0n,
+        user_data_32: 0,
+        reserved: 0,
+        ledger: ledgerId,
+        code: 1,
+        flags: 0,
+        timestamp: 0n,
+      };
+      const accountsToCreate = [];
+      if (typeof this.accountsCreated[Number(thisPartyId)] === 'undefined') {
+        this.accountsCreated[Number(thisPartyId)] = true;
+        accountsToCreate.push(mainAccount);
+      }
+      if (typeof this.accountsCreated[Number(otherPartyId)] === 'undefined') {
+        this.accountsCreated[Number(otherPartyId)] = true;
+        accountsToCreate.push(otherAccount);
+      }
+      if (accountsToCreate.length > 0) {
+        // console.log('creating accounts', accountsToCreate);
+        // NB: there is no way to 'upsert' an account, so we just create them and catch the error if it already exists.
+        const accountErrors: { index: number, result: number}[] = await this.client.createAccounts(accountsToCreate);
+        accountErrors.forEach(({ index, result }: { index: number, result: number})  => {
+          if (result !== CreateAccountError["exists"]) {
+            throw new Error(`error creating TigerBeetle account ${index} ${CreateAccountError[result]}`);
+          }
+        });
+        // console.log('account created', accountErrors);
+      }
     }
     return {
       ledgerId,

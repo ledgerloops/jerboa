@@ -2,8 +2,39 @@ import { readFileSync } from 'fs';
 import { TigerBeetleStores } from './tigerbeetle.js';
 // const TESTNET_CSV = './testnet-sarafu-first-10k.csv';
 const TESTNET_CSV = '../strategy-pit/__tests__/fixtures/testnet-sarafu.csv';
+const stores = new TigerBeetleStores();
+await stores.connect();
+let lines = readFileSync(TESTNET_CSV, 'utf8').split('\n');
+const transactions = [];
+for (let i = 0; i < lines.length; i++) {
+  const [ fromStr, toStr, amountStr ] = lines[i].split(' ')
+  const obj = {
+    txid: i,
+    from: parseInt(fromStr),
+    to: parseInt(toStr),
+    amount: parseFloat(amountStr)
+  }
+  if (!isNaN(obj.from) && !isNaN(obj.to) && !isNaN(obj.amount)) {
+    transactions.push(obj);
+  }
+}
+lines = undefined;
+
+async function createAccounts(): Promise<void> {
+  const accountsToCreate = {};
+  for (let transNo = 0; transNo < transactions.length; transNo++) {
+    const obj = transactions[transNo];
+    // console.log(transNo, obj);
+    accountsToCreate[`${obj.from} ${obj.to}`] = true;
+    accountsToCreate[`${obj.to} ${obj.from}`] = true;
+  }
+  console.log('creating accounts', Object.keys(accountsToCreate).length);
+  // process.exit(0);
+  await (stores as TigerBeetleStores).createAccountsBatch(Object.keys(accountsToCreate));
+}
 
 async function run(): Promise<void> {
+  await createAccounts();
   const successThisWorker = {
     disbursement: 0,
     reclamation: 0,
