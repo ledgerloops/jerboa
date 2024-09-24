@@ -28,7 +28,8 @@ export class InMemStores implements Stores {
     this.balances[thisParty][otherParty] += amount;
     return this.balances[thisParty][otherParty];
   }
-  async logLedgers(): Promise<void> {
+  async logLedgers(): Promise<string> {
     console.log(this.balances);
+    return 'Balances logged to server stdout';
   }
 }

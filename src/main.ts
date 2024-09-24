@@ -13,11 +13,11 @@ if (cluster.isPrimary) {
 
   // Fork workers.
   for (let i = 0; i < numCPUs; i++) {
-    cluster.fork();
+    cluster.fork({ WORKER: i });
   }
 
   cluster.on('exit', (worker, code, signal) => {
-    console.log(`worker ${worker.process.pid} died ${code} ${signal}`);
+    console.log(`worker ${worker.process.pid} done ${code} ${signal}`);
   });
 } else {
   // Workers can share any TCP connection
@@ -68,8 +68,7 @@ if (cluster.isPrimary) {
             result = obj.amount;
             break;
           case '/report':
-            await stores.logLedgers();
-            result = `Ledgers logged to stdout of the server process`;
+            result = await stores.logLedgers();
             break;
           default:
             console.error('Unknown command', req.url);

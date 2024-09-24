@@ -19,7 +19,7 @@ export class RedisStores implements Stores {
     // console.log('storing transaction', thisParty, otherParty, amount);
     return this.client.incrByFloat(`${thisParty}:${otherParty}`, amount);
   }
-  async logLedgers(): Promise<void> {
-    console.log('TODO: implement logLedgers in RedisStores');
+  async logLedgers(): Promise<string> {
+    return 'TODO: implement logLedgers in RedisStores';
   }
 }
