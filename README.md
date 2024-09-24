@@ -14,9 +14,21 @@ Although you can also run Jerboa with Redis or in-memory, the best way is with T
 ```
 ./tigerbeetle start --addresses=3000 --development 0_0.tigerbeetle
 ```
+
+### CSV to TB
+* Second window: Seed TigerBeetle from the CSV file with Sarafu data:
+```
+npm install
+npm run build
+node build/src/csv-to-tigerbeetle.js
+```
+
+### Multi-threaded feeder
+This setup seems to be dropping some packets, don't use it!
 * Second window: Run the main server
 ```
 npm install
+npm run build
 STORE=tigerbeetle node build/src/main.js
 ```
 * Third window: Run the feeder

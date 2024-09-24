@@ -1,7 +1,12 @@
 import { CreateAccountError, createClient, CreateTransferError, id } from 'tigerbeetle-node';
 import { Stores } from './stores.js';
 
+const PORTS = ["3000"];
+const TRANSFER_BATCH_SIZE = 8190;
+
 export class TigerBeetleStores implements Stores {
+    accountsCreated = {};
+    transferBatch = [];
     client;
     accountCache: {
       [ledgerId: number]: object[]
@@ -51,8 +56,17 @@ export class TigerBeetleStores implements Stores {
         flags: 0,
         timestamp: 0n,
       };
+      const accountsToCreate = [];
+      if (typeof this.accountsCreated[Number(thisPartyId)] === 'undefined') {
+        this.accountsCreated[Number(thisPartyId)] = true;
+        accountsToCreate.push(mainAccount);
+      }
+      if (typeof this.accountsCreated[Number(otherPartyId)] === 'undefined') {
+        this.accountsCreated[Number(otherPartyId)] = true;
+        accountsToCreate.push(otherAccount);
+      }
       // NB: there is no way to 'upsert' an account, so we just create them and catch the error if it already exists.
-      const accountErrors: { index: number, result: number}[] = await this.client.createAccounts([mainAccount, otherAccount]);
+      const accountErrors: { index: number, result: number}[] = await this.client.createAccounts([accountsToCreate]);
       accountErrors.forEach(({ index, result }: { index: number, result: number})  => {
         if (result !== CreateAccountError["exists"]) {
           throw new Error(`error creating TigerBeetle account ${index} ${CreateAccountError[result]}`);
@@ -70,7 +84,7 @@ export class TigerBeetleStores implements Stores {
       // console.log(`client ${process.env.WORKER} connects to replica ${myPort}`);
       this.client = createClient({
         cluster_id: 0n,
-        replica_addresses: ["3000"],
+        replica_addresses: PORTS,
       });
       // noop
     } 
@@ -101,7 +115,7 @@ export class TigerBeetleStores implements Stores {
         debit_account_id = otherPartyId;
         credit_account_id = thisPartyId;
       }
-      const transfers = [{
+      this.transferBatch.push({
         id: id(),
         debit_account_id,
         credit_account_id,
@@ -115,30 +129,22 @@ export class TigerBeetleStores implements Stores {
         code: 720,
         flags: 0,
         timestamp: 0n,
-      }];
-      let done = false;
-      do {
-        await new Promise((resolve) => {
-          // setTimeout(resolve, 10000);
-          this.client.createTransfers(transfers).then((transferErrors) => {
-            if (transferErrors.length > 0) {
-              console.log(thisParty, otherParty, amount, thisPartyId, debit_account_id, credit_account_id, scaledAmount, transferErrors.map(error => {
-                return {
-                  index: error.index,
-                  result: CreateTransferError[error.result]
-                }
-              }));
-              // process.exit(1);
-            }
-            done = true;
-            resolve(null);
-          });
+      });
+      if (this.transferBatch.length === TRANSFER_BATCH_SIZE) {
+        const thisBatch = JSON.parse(JSON.stringify(this.transferBatch));
+        this.transferBatch = [];
+        await this.client.createTransfers(thisBatch).then((transferErrors) => {
+          if (transferErrors.length > 0) {
+            console.log(thisParty, otherParty, amount, thisPartyId, debit_account_id, credit_account_id, scaledAmount, transferErrors.map(error => {
+              return {
+                index: error.index,
+                result: CreateTransferError[error.result]
+              }
+            }));
+            process.exit(1);
+          }
         });
-        if (!done) {
-          console.log('retrying createTransfers call', transfers);
-        }
-      } while (!done);
-      // console.log('creating transfer', debit_account_id, credit_account_id, ledgerId);
+      }
     }
     async logTransfers(): Promise<void> {
       const query_transfers = await this.client.queryTransfers({
