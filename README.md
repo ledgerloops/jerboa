@@ -20,19 +20,6 @@ Although you can also run Jerboa with Redis or in-memory, the best way is with T
 ```
 npm install
 npm run build
-node build/src/csv-to-tigerbeetle.js
+time node build/src/csv-to-tigerbeetle.js
 ```
-
-### Multi-threaded feeder
-This setup seems to be dropping some packets, don't use it!
-* Second window: Run the main server
-```
-npm install
-npm run build
-STORE=tigerbeetle node build/src/main.js
-```
-* Third window: Run the feeder
-```
-time node build/src/feeder.js
-curl -d'{}' http://localhost:8000/report
-```
+This should import the whole Sarafu dataset from CSV to TB in 78 seconds
