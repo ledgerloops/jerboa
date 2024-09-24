@@ -14,8 +14,10 @@ let numFail = 0;
 function messageHandler(msg): void {
   if (msg.cmd && msg.cmd === 'notifyDone') {
     numDone += 1;
-    if (numDone === 1000) {
+    if (numDone % 100 === 0) {
       console.log(numDone, numFail);
+    }
+    if (numDone === 1000) {
       process.exit(0);
     }
   }
@@ -42,7 +44,7 @@ if (cluster.isPrimary) {
   }
 } else {
   for (let i=0; i<1000; i++) {
-    // console.log(`worker ${process.env.CHUNK} ${i} / ${1000} start`);
+    console.log(`worker ${process.env.CHUNK} ${i} / ${1000} start`);
     const result = await fetch(`http://localhost:8000/report`, {
       method: 'POST',
       body: JSON.stringify({})
@@ -51,10 +53,10 @@ if (cluster.isPrimary) {
     // console.log(JSON.stringify(responseBody));
     if (responseBody === 'OK\n') {
       process.send({ cmd: 'notifyDone' });
-      // console.log(`worker ${process.env.CHUNK} ${i} / ${1000} done`);
+      console.log(`worker ${process.env.CHUNK} ${i} / ${1000} done`);
     } else {
       process.send({ cmd: 'notifyFail' });
-      // console.log(`worker ${process.env.CHUNK} ${i} / ${1000} fail`);
+      console.log(`worker ${process.env.CHUNK} ${i} / ${1000} fail`);
     }
 
   }

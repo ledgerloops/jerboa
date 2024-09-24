@@ -22,4 +22,11 @@ export class RedisStores implements Stores {
   async logLedgers(): Promise<string> {
     return 'TODO: implement logLedgers in RedisStores';
   }
+  async getBalances(): Promise<{
+    [nodeNo: number]: {
+      [neighbour: number]: number
+    }
+  }> {
+    return {};
+  }
 }

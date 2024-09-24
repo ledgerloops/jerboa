@@ -2,8 +2,8 @@ import { Stores } from "./stores.js";
 
 export class InMemStores implements Stores {
   balances: {
-    [thisNode: string]: {
-      [otherNode: string]: number
+    [thisNode: number]: {
+      [otherNode: number]: number
     }
   };
   constructor() {
@@ -31,5 +31,12 @@ export class InMemStores implements Stores {
   async logLedgers(): Promise<string> {
     console.log(this.balances);
     return 'Balances logged to server stdout';
+  }
+  async getBalances(): Promise<{
+    [nodeNo: number]: {
+      [neighbour: number]: number
+    }
+  }> {
+    return this.balances;
   }
 }

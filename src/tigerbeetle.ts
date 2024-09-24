@@ -66,9 +66,11 @@ export class TigerBeetleStores implements Stores {
       }
     }
     async connect(): Promise<void> {
+      // const myPort = (3000 + parseInt(process.env.WORKER)%3).toString();
+      // console.log(`client ${process.env.WORKER} connects to replica ${myPort}`);
       this.client = createClient({
         cluster_id: 0n,
-        replica_addresses: [process.env.TB_ADDRESS || "3000"],
+        replica_addresses: ["3000"],
       });
       // noop
     } 
@@ -243,7 +245,7 @@ export class TigerBeetleStores implements Stores {
           // const now: any = new Date();
           // console.log(`query running`, (now - startTime), process.env.WORKER);
           resolve('FAIL');
-        }, 1000);
+        }, 10000);
         this.client.queryAccounts({
           user_data_128: 0n,
           user_data_64: 0n,
@@ -270,4 +272,11 @@ export class TigerBeetleStores implements Stores {
       // await this.logLedgerSizes();
       return this.logPaths();
     }
+    async getBalances(): Promise<{
+      [nodeNo: number]: {
+        [neighbour: number]: number
+      }
+    }> {
+      return {};
+    }  
   }
