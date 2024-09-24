@@ -43,7 +43,7 @@ async function run(): Promise<void> {
     console.log(transNo, obj);
     if (obj.from === 0) {
       runningThisWorker.disbursement++;
-      stores.storeTransaction({ txid: obj.txid, thisParty: obj.to, otherParty: 0, amount: obj.amount }).then(() => {
+      await stores.storeTransaction({ txid: obj.txid, thisParty: obj.to, otherParty: 0, amount: obj.amount }).then(() => {
         successThisWorker.disbursement++;
         runningThisWorker.disbursement--;
       }).catch((e) => {
@@ -53,7 +53,7 @@ async function run(): Promise<void> {
       });
     } else if (obj.to === 0) {
       runningThisWorker.reclamation++;
-      stores.storeTransaction({ txid: obj.txid, thisParty: obj.from, otherParty: 0, amount: -obj.amount }).then(() => {
+      await stores.storeTransaction({ txid: obj.txid, thisParty: obj.from, otherParty: 0, amount: -obj.amount }).then(() => {
         successThisWorker.reclamation++;
         runningThisWorker.reclamation--;
       }).catch((e) => {
@@ -63,7 +63,7 @@ async function run(): Promise<void> {
       });
     } else {
       runningThisWorker.standard++;
-      stores.storeTransaction({ txid: obj.txid, thisParty: obj.from, otherParty: obj.to, amount: -obj.amount }).then(() => {
+      await stores.storeTransaction({ txid: obj.txid, thisParty: obj.from, otherParty: obj.to, amount: -obj.amount }).then(() => {
         successThisWorker.standard++;
         runningThisWorker.standard--;
       }).catch((e) => {
@@ -72,7 +72,7 @@ async function run(): Promise<void> {
         runningThisWorker.standard--;
       });
       runningThisWorker.credit++;
-      stores.storeTransaction({ txid: 0, thisParty: obj.to, otherParty: obj.from, amount: obj.amount }).then(() => {
+      await stores.storeTransaction({ txid: 0, thisParty: obj.to, otherParty: obj.from, amount: obj.amount }).then(() => {
         successThisWorker.credit++;
         runningThisWorker.credit--;
       }).catch((e) => {
