@@ -1,7 +1,7 @@
 import { readFileSync } from 'fs';
 import { TigerBeetleStores } from './tigerbeetle.js';
-const TESTNET_CSV = './testnet-sarafu-first-10k.csv';
-// const TESTNET_CSV = '../strategy-pit/__tests__/fixtures/testnet-sarafu.csv';
+// const TESTNET_CSV = './testnet-sarafu-first-10k.csv';
+const TESTNET_CSV = '../strategy-pit/__tests__/fixtures/testnet-sarafu.csv';
 
 async function run(): Promise<void> {
   const successThisWorker = {
