@@ -1,28 +1,29 @@
 import { readFileSync } from 'fs';
 import { TigerBeetleStores } from './tigerbeetle.js';
-const TESTNET_CSV = './testnet-sarafu-first-10k.csv';
+// const TESTNET_CSV = './testnet-sarafu-first-10k.csv';
+const TESTNET_CSV = '../strategy-pit/__tests__/fixtures/testnet-sarafu.csv';
 
 async function run(): Promise<void> {
   const successThisWorker = {
     disbursement: 0,
     reclamation: 0,
     standard: 0,
-    remoteCredit: 0
+    credit: 0
   };
   const runningThisWorker = {
     disbursement: 0,
     reclamation: 0,
     standard: 0,
-    remoteCredit: 0,
     credit: 0
   };
   const backgroundFailThisWorker = {
     disbursement: 0,
     reclamation: 0,
     standard: 0,
-    remoteCredit: 0
+    credit: 0
   };
   const stores = new TigerBeetleStores();
+  await stores.connect();
   const lines = readFileSync(TESTNET_CSV, 'utf8').split('\n');
   const transactions = [];
   for (let i = 0; i < lines.length; i++) {
@@ -70,17 +71,14 @@ async function run(): Promise<void> {
         backgroundFailThisWorker.standard++;
         runningThisWorker.standard--;
       });
-      runningThisWorker.remoteCredit++;
-      fetch('http://localhost:8000/credit', {
-        method: 'POST',
-        body: JSON.stringify(obj)
-      }).then(() => {
-        successThisWorker.remoteCredit++;
-        runningThisWorker.remoteCredit--;
+      runningThisWorker.credit++;
+      stores.storeTransaction({ txid: 0, thisParty: obj.to, otherParty: obj.from, amount: obj.amount }).then(() => {
+        successThisWorker.credit++;
+        runningThisWorker.credit--;
       }).catch((e) => {
         console.error(e.message);
-        backgroundFailThisWorker.remoteCredit++;
-        runningThisWorker.remoteCredit--;
+        backgroundFailThisWorker.credit++;
+        runningThisWorker.credit--;
       });
     }
   }

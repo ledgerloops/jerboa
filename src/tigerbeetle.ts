@@ -119,7 +119,7 @@ export class TigerBeetleStores implements Stores {
       let done = false;
       do {
         await new Promise((resolve) => {
-          setTimeout(resolve, 1000);
+          // setTimeout(resolve, 10000);
           this.client.createTransfers(transfers).then((transferErrors) => {
             if (transferErrors.length > 0) {
               console.log(thisParty, otherParty, amount, thisPartyId, debit_account_id, credit_account_id, scaledAmount, transferErrors.map(error => {
