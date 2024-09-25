@@ -88,7 +88,7 @@ export class ConnectivityMatrix {
             // console.log('')
             if (loopsOnly && hops.length < 2) {
               throw new Error(`How can hops have length < 2? ${hops}`);
-            } else if (loopsOnly && hops.length === 2) {
+            // } else if (loopsOnly && hops.length === 2) {
               // skip
             } else {
               const hopsFromSmallest = hops.slice(smallestPos).concat(hops.slice(0, smallestPos));
