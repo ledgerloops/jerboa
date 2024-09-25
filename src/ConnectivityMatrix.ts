@@ -1,3 +1,4 @@
+import { writeFileSync } from 'fs';
 export class ConnectivityMatrix {
   matrix: {
     [from: string]: {
@@ -58,6 +59,32 @@ export class ConnectivityMatrix {
         }
       });
     });
+  }
+  savePaths(filename: string, loopsOnly: boolean): void {
+    const lines = [];
+    Object.keys(this.matrix).forEach(from => {
+      Object.keys(this.matrix[from]).forEach(to => {
+        if (loopsOnly && (from !== to)) {
+          // skip
+        } else {
+          Object.keys(this.matrix[from][to]).forEach((hopsStr: string) => {
+            const hops = JSON.parse(hopsStr).concat(to).map(x => parseInt(x));
+            console.log('joining', hopsStr, to, hops);
+            let smallest = Infinity;
+            let smallestPos;
+            for (let i = 0; i<hops.length; i++) {
+              if (hops[i] < smallest) {
+                smallest = hops[i];
+                smallestPos = i;
+              }
+            }
+            // console.log('')
+            lines.push(JSON.stringify(hops.slice(smallestPos).concat(hops.slice(0, smallestPos))));
+          });
+        }
+      });
+    });
+    writeFileSync(filename, lines.join('\n'));
   }
   print(): void {
     Object.keys(this.matrix).forEach(from => {

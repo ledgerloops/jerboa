@@ -439,7 +439,7 @@ export class TigerBeetleStores implements Stores {
           amount: Number(query_transfers[i].amount) / (1000.0 * 1000.0 * 1000.0 * 1000.0)
         });
         if (found.length % 1000 === 0) {
-          console.log(`retrieved ${found.length} transactions`);
+          console.log(`retrieved ${found.length} transactions, up to txid ${txid}`);
         }
       }
       return found;
