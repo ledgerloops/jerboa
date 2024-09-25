@@ -7,12 +7,13 @@
 Although you can also run Jerboa with Redis or in-memory, the best way is with TigerBeetle:
 * Preparation: [install TigerBeetle](https://docs.tigerbeetle.com/quick-start) including this step:
 ```
-./tigerbeetle format --cluster=0 --replica=0 --replica-count=1 0_0.tigerbeetle
+tigerbeetle format --cluster=0 --replica=0 --replica-count=1 data/empty
+cp data/empty data/sarafu
 ```
 
 * First window: [Start your TigerBeetle cluster](https://docs.tigerbeetle.com/quick-start#3-start-your-cluster)
 ```
-./tigerbeetle start --addresses=3000 0_0.tigerbeetle
+tigerbeetle start --addresses=3000 data/sarafu
 ```
 
 ### CSV to TB
@@ -21,5 +22,9 @@ Although you can also run Jerboa with Redis or in-memory, the best way is with T
 npm install
 npm run build
 time node build/src/csv-to-tigerbeetle.js
+cp data/sarafu data/sarafu.bak
 ```
 This should import the whole Sarafu dataset from CSV to TB in 78 seconds
+
+### Development
+Make a copy of the `data/sarafu` file so you can reset it when needed.
