@@ -15,25 +15,30 @@ export class ConnectivityMatrix {
       this.matrix[from][to] = {};
     }
   }
-  addPath(from: string, to: string, hops: string[]): void {
+  addPath(from: string, to: string, hops: string[]): boolean {
     // if (from === to) {
     //   return;
     // }
     for (let i = 0; i < hops.length; i++) {
       if (hops[i] === from) {
-        return;
+        return true;
       }
       if (hops[i] === to) {
-        return;
+        return true;
       }
     }
     this.ensureCell(from, to);
+    const exists = this.matrix[from][to][JSON.stringify(hops)];
     this.matrix[from][to][JSON.stringify(hops)] = true;
+    return !!exists;
   }
   addLink(linkFrom: string, linkTo: string): void {
     // add the link itself as a path
     // console.log('direct link', linkFrom, linkTo);
-    this.addPath(linkFrom, linkTo, []);
+    const exists = this.addPath(linkFrom, linkTo, []);
+    if (exists) {
+      return;
+    }
     // for each existing path, append it
     Object.keys(this.matrix).forEach(existingFrom => {
       Object.keys(this.matrix[existingFrom]).forEach(existingTo => {
