@@ -16,7 +16,7 @@ do {
       connectivityMatrix.addLink(tx.from.toString(), tx.to.toString());
     }
     counter++;
-    if (counter % 1000 === 0) {
+    if (counter % 100000 === 0) {
       console.log(`processed ${counter} transactions, up to txid ${tx.txid}`);
       connectivityMatrix.savePaths(`${counter}.txt`, true);
       // process.exit(0);
@@ -27,6 +27,7 @@ do {
     }
   });
 } while(newTimesFound);
+connectivityMatrix.savePaths(`${counter}.txt`, true);
 connectivityMatrix.print();
 // stores.disconnect();
 process.exit(0);

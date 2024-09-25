@@ -33,37 +33,39 @@ export class ConnectivityMatrix {
     return !!exists;
   }
   addLink(linkFrom: string, linkTo: string): void {
+    
     // add the link itself as a path
     // console.log('direct link', linkFrom, linkTo);
-    const exists = this.addPath(linkFrom, linkTo, []);
-    if (exists) {
-      return;
-    }
-    // for each existing path, append it
-    Object.keys(this.matrix).forEach(existingFrom => {
-      Object.keys(this.matrix[existingFrom]).forEach(existingTo => {
-        if (existingTo === linkFrom) {
-          Object.keys(this.matrix[existingFrom][existingTo]).forEach((hopsStr: string) => {
-            const existingHops = JSON.parse(hopsStr);
-            const newHops = existingHops.concat(existingTo);
-            this.addPath(existingFrom, linkTo, newHops);
-          });
-          // console.log('appending', existingFrom, existingTo, linkFrom, linkTo);
-        } else {
-          // console.log('not appending', existingFrom, existingTo, linkFrom, linkTo);
-        }
-        if (existingFrom === linkTo) {
-          Object.keys(this.matrix[existingFrom][existingTo]).forEach((hopsStr: string) => {
-            const existingHops = JSON.parse(hopsStr);
-            const newHops = [existingFrom].concat(existingHops);
-            this.addPath(linkFrom, existingTo, newHops);
-          });
-          // console.log('prepending', linkFrom, linkTo, existingFrom, existingTo);
-        } else {
-          // console.log('not prepending', linkFrom, linkTo, existingFrom, existingTo);
-        }
-      });
-    });
+    this.addPath(linkFrom, linkTo, []);
+    // const exists = this.addPath(linkFrom, linkTo, []);
+    // if (exists) {
+    //   return;
+    // }
+    // // for each existing path, append it
+    // Object.keys(this.matrix).forEach(existingFrom => {
+    //   Object.keys(this.matrix[existingFrom]).forEach(existingTo => {
+    //     if (existingTo === linkFrom) {
+    //       Object.keys(this.matrix[existingFrom][existingTo]).forEach((hopsStr: string) => {
+    //         const existingHops = JSON.parse(hopsStr);
+    //         const newHops = existingHops.concat(existingTo);
+    //         this.addPath(existingFrom, linkTo, newHops);
+    //       });
+    //       // console.log('appending', existingFrom, existingTo, linkFrom, linkTo);
+    //     } else {
+    //       // console.log('not appending', existingFrom, existingTo, linkFrom, linkTo);
+    //     }
+    //     if (existingFrom === linkTo) {
+    //       Object.keys(this.matrix[existingFrom][existingTo]).forEach((hopsStr: string) => {
+    //         const existingHops = JSON.parse(hopsStr);
+    //         const newHops = [existingFrom].concat(existingHops);
+    //         this.addPath(linkFrom, existingTo, newHops);
+    //       });
+    //       // console.log('prepending', linkFrom, linkTo, existingFrom, existingTo);
+    //     } else {
+    //       // console.log('not prepending', linkFrom, linkTo, existingFrom, existingTo);
+    //     }
+    //   });
+    // });
   }
   savePaths(filename: string, loopsOnly: boolean): void {
     const lines = [];
