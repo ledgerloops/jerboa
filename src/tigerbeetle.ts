@@ -224,7 +224,7 @@ export class TigerBeetleStores implements Stores {
         ledger: 0,
         timestamp_min: 0n,
         timestamp_max: 0n,
-        limit: 10000000,
+        limit: TRANSFER_BATCH_SIZE,
         flags: 0,
       });
       console.log(query_transfers);
@@ -260,7 +260,7 @@ export class TigerBeetleStores implements Stores {
         ledger: 0,
         timestamp_min: 0n,
         timestamp_max: 0n,
-        limit: 1000000,
+        limit: ACCOUNTS_BATCH_SIZE,
         flags: 0,
       });
       console.log('accounts found', allAccounts.length);
@@ -341,7 +341,7 @@ export class TigerBeetleStores implements Stores {
           ledger: 0,
           timestamp_min: 0n,
           timestamp_max: 0n,
-          limit: 1000000,
+          limit: ACCOUNTS_BATCH_SIZE,
           flags: 0,
         }).then(() => {
           clearTimeout(latencyTimer);
@@ -409,5 +409,39 @@ export class TigerBeetleStores implements Stores {
         console.log(i, found[i]);
       }
       return found[0].toString();
+    }
+    async replay(timestamp_min: bigint): Promise<{ timestamp: bigint, txid: number, from: number, to: number, amount: number }[]> {
+      const query_transfers = await this.client.queryTransfers({
+        user_data_128: 0n,
+        user_data_64: 0n,
+        user_data_32: 0,
+        code: 0,
+        ledger: 0,
+        timestamp_min,
+        timestamp_max: 0n,
+        limit: TRANSFER_BATCH_SIZE,
+        flags: 0,
+      });
+      const found = [];
+      for (let i = 0; i < query_transfers.length; i++) {
+        const txid = Number(query_transfers[i].user_data_128);
+        if (txid === 0) {
+          continue;
+        }
+        if (typeof found[txid] !== 'undefined') {
+          throw new Error(`clashing txid ${txid}`);
+        }
+        found.push({
+          timestamp: query_transfers[i].timestamp,
+          txid,
+          from: Number(query_transfers[i].debit_account_id) % 1000000,
+          to: Number(query_transfers[i].credit_account_id) % 1000000,
+          amount: Number(query_transfers[i].amount) / (1000.0 * 1000.0 * 1000.0 * 1000.0)
+        });
+        if (found.length % 1000 === 0) {
+          console.log(`retrieved ${found.length} transactions`);
+        }
+      }
+      return found;
     }
   }
