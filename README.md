@@ -29,5 +29,5 @@ This should import the whole Sarafu dataset from CSV to TB in 78 seconds
 ### Development
 Make a copy of the `data/sarafu` file so you can reset it when needed.
 ```
-time node build/src/connectivityAnalysis.js
+time node --max-old-space-size=100000 build/src/connectivityAnalysis.js
 ```

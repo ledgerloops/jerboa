@@ -69,7 +69,7 @@ export class ConnectivityMatrix {
         } else {
           Object.keys(this.matrix[from][to]).forEach((hopsStr: string) => {
             const hops = JSON.parse(hopsStr).concat(to).map(x => parseInt(x));
-            console.log('joining', hopsStr, to, hops);
+            // console.log('joining', hopsStr, to, hops);
             let smallest = Infinity;
             let smallestPos;
             for (let i = 0; i<hops.length; i++) {
@@ -79,7 +79,22 @@ export class ConnectivityMatrix {
               }
             }
             // console.log('')
-            lines.push(JSON.stringify(hops.slice(smallestPos).concat(hops.slice(0, smallestPos))));
+            if (loopsOnly && hops.length < 2) {
+              throw new Error(`How can hops have length < 2? ${hops}`);
+            } else if (loopsOnly && hops.length === 2) {
+              // skip
+            } else {
+              const hopsFromSmallest = hops.slice(smallestPos).concat(hops.slice(0, smallestPos));
+              let reverseDeduplicated = hopsFromSmallest;
+              if (hopsFromSmallest[1] > hopsFromSmallest[hopsFromSmallest.length -1]) {
+                reverseDeduplicated = [hopsFromSmallest[0]].concat(hopsFromSmallest.slice(1).reverse());
+                // console.log(hopsFromSmallest, hopsFromSmallest[0], hopsFromSmallest.slice(1).reverse(), reverseDeduplicated);
+              }
+              const newLine = JSON.stringify(reverseDeduplicated);
+              if (lines.indexOf(newLine) === -1) {
+                lines.push(newLine);
+              }
+            }
           });
         }
       });
