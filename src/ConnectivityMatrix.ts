@@ -198,6 +198,125 @@ export class ConnectivityMatrix {
     console.log(`Netted ${totalNetted / 1000000} million in ${loops.length} triangles`);
     return totalNetted;
   }
+  netSquares(): number {
+    let totalNetted = 0;
+    const hops: {
+      [from: string]: string[];
+    } = {};
+    const loops: string[][] = [];
+    Object.keys(this.matrix).forEach(lower => {
+      if (Object.keys(this.matrix[lower]).length === 0) {
+        throw new Error('how can this matrix row exist but be empty?');
+      }
+      Object.keys(this.matrix[lower]).forEach(higher => {
+        if (this.matrix[lower][higher].bilaterallyNetted > 0) {
+          if (typeof hops[lower] === 'undefined') {
+            hops[lower] = [];
+          }
+          hops[lower].push(higher);
+        } else if (this.matrix[lower][higher].bilaterallyNetted < 0) {
+          if (typeof hops[higher] === 'undefined') {
+            hops[higher] = [];
+          }
+          hops[higher].push(lower);
+        }
+      });
+    });
+    // permutations of three nodes and symmetries between them
+    // 1 2 3 4 -> canonical upward
+    // 1 3 2 4 -> 
+    // 2 1 3 4 -> 
+    // 2 3 1 4 -> 
+    // 3 1 2 4 -> 
+    // 3 2 1 4 -> downward
+    // 1 2 4 3 -> 
+    // 1 3 4 2 -> 
+    // 2 1 4 3 -> downward
+    // 2 3 4 1 -> upward
+    // 3 1 4 2 -> 
+    // 3 2 4 1 -> 
+    // 1 4 2 3 -> 
+    // 1 4 3 2 -> canonical downward
+    // 2 4 1 3 -> 
+    // 2 4 3 1 -> 
+    // 3 4 1 2 -> upward
+    // 3 4 2 1 -> 
+    // 4 1 2 3 -> upward
+    // 4 1 3 2 -> 
+    // 4 2 1 3 -> 
+    // 4 2 3 1 -> 
+    // 4 3 1 2 -> 
+    // 4 3 2 1 -> downward
+    // one two three four -> two >= one, three >= one, four >= one
+    Object.keys(hops).forEach(one => {
+      hops[one].forEach(two => {
+        if (two < one) {
+          //not canonical
+          return;
+        }
+        if (this.getBilaterallyNetted(one, two) <= 0) {
+          // not really a hop
+          return;
+        }
+        if (typeof hops[two] === 'undefined') {
+          throw new Error('Why does this first hop lead to a leaf?');
+        }
+        hops[two].forEach(three => {
+          if (three < one) {
+            //not canonical
+            return;
+          }
+          if (this.getBilaterallyNetted(one, three) <= 0) {
+            // not really a hop
+            return;
+          }
+          if (typeof hops[three] === 'undefined') {
+            throw new Error('Why does this first hop lead to a leaf?');
+          }
+          hops[three].forEach(four => {
+            if (four < one) {
+              //not canonical
+              return;
+            }
+            if (this.getBilaterallyNetted(three, four) <= 0) {
+              // not really a hop
+              return;
+            }  
+            if (typeof hops[four] === 'undefined') {
+              throw new Error('Why does this second hop lead to a leaf?');
+            }
+            if (hops[four].indexOf(one) !== -1) {
+              if (this.getBilaterallyNetted(four, one) <= 0) {
+                // not really a hop
+                return;
+              }    
+              const weight = [
+                this.getBilaterallyNetted(one, three),
+                this.getBilaterallyNetted(three, four),
+                this.getBilaterallyNetted(four, four),
+                this.getBilaterallyNetted(four, one),
+              ];
+              let smallestWeight = (weight[0] < weight[1] ? weight[0] : weight[1]);
+              if (weight[2] < smallestWeight) {
+                smallestWeight = weight[2];
+              }
+              // const newBalances = [
+              this.addLink(one, four, smallestWeight);
+              this.addLink(four, three, smallestWeight);
+              this.addLink(three, one, smallestWeight);
+              // ];
+              // console.log(weight, newBalances, newBalances.map(x => (x ===0)));
+              // canonical triangular loop found and removed
+              loops.push([one, three, four, smallestWeight.toString()]);
+              totalNetted += 3*smallestWeight;
+            }
+          })
+        });
+      });
+    });
+    console.log(`Netted ${totalNetted / 1000000} million in ${loops.length} squares`);
+    return totalNetted;
+  }
   print(): void {
     let total = 0;
     let bilateral = 0;

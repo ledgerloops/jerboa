@@ -37,4 +37,13 @@ lineReader.on('close', function () {
     } while(numRemoved > 0);
     nettedInTriangles = connectivityMatrix.netTriangles();
   } while (nettedInTriangles > 0);
+  let nettedInSquares
+  do {
+    nettedInSquares = connectivityMatrix.netSquares();
+    let numRemoved;
+    do {
+      numRemoved = connectivityMatrix.removeLeaves();
+    } while(numRemoved > 0);
+    nettedInTriangles = connectivityMatrix.netTriangles();
+  } while ((nettedInTriangles > 0) || (nettedInSquares > 0));
 });
