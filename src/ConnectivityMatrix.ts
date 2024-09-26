@@ -143,53 +143,53 @@ export class ConnectivityMatrix {
     // 3 1 2 -> upward
     // 3 2 1 -> upward
     // from to next -> to >= from, next >= from
-    Object.keys(hops).forEach(from => {
-      hops[from].forEach(to => {
-        if (to < from) {
+    Object.keys(hops).forEach(one => {
+      hops[one].forEach(two => {
+        if (two < one) {
           //not canonical
           return;
         }
-        if (this.getBilaterallyNetted(from, to) <= 0) {
+        if (this.getBilaterallyNetted(one, two) <= 0) {
           // not really a hop
           return;
         }
-        if (typeof hops[to] === 'undefined') {
+        if (typeof hops[two] === 'undefined') {
           throw new Error('Why does this first hop lead to a leaf?');
         }
-        hops[to].forEach(next => {
-          if (next < from) {
+        hops[two].forEach(three => {
+          if (three < one) {
             //not canonical
             return;
           }
-          if (this.getBilaterallyNetted(to, next) <= 0) {
+          if (this.getBilaterallyNetted(two, three) <= 0) {
             // not really a hop
             return;
           }  
-          if (typeof hops[next] === 'undefined') {
+          if (typeof hops[three] === 'undefined') {
             throw new Error('Why does this second hop lead to a leaf?');
           }
-          if (hops[next].indexOf(from) !== -1) {
-            if (this.getBilaterallyNetted(next, from) <= 0) {
+          if (hops[three].indexOf(one) !== -1) {
+            if (this.getBilaterallyNetted(three, one) <= 0) {
               // not really a hop
               return;
             }    
             const weight = [
-              this.getBilaterallyNetted(from, to),
-              this.getBilaterallyNetted(to, next),
-              this.getBilaterallyNetted(next, from)
+              this.getBilaterallyNetted(one, two),
+              this.getBilaterallyNetted(two, three),
+              this.getBilaterallyNetted(three, one)
             ];
             let smallestWeight = (weight[0] < weight[1] ? weight[0] : weight[1]);
             if (weight[2] < smallestWeight) {
               smallestWeight = weight[2];
             }
-            const newBalances = [
-              this.addLink(from, next, smallestWeight),
-              this.addLink(next, to, smallestWeight),
-              this.addLink(to, from, smallestWeight),
-            ];
-            console.log(weight, newBalances, newBalances.map(x => (x ===0)));
+            // const newBalances = [
+            this.addLink(one, three, smallestWeight);
+            this.addLink(three, two, smallestWeight);
+            this.addLink(two, one, smallestWeight);
+            // ];
+            // console.log(weight, newBalances, newBalances.map(x => (x ===0)));
             // canonical triangular loop found and removed
-            loops.push([from, to, next, smallestWeight.toString()]);
+            loops.push([one, two, three, smallestWeight.toString()]);
             totalNetted += 3*smallestWeight;
           }
         })
