@@ -20,6 +20,7 @@ lineReader.on('line', function (line) {
   if (typeof nodes[target] === 'undefined') {
     nodes[target] = counter++;
   }
+  // if ((transfer_subtype === 'STANDARD') && (counter <= 10)) {
   if (transfer_subtype === 'STANDARD') {
     connectivityMatrix.addLink(nodes[source], nodes[target], parseFloat(weight));
   }
@@ -28,4 +29,8 @@ lineReader.on('line', function (line) {
 
 lineReader.on('close', function () {
     connectivityMatrix.print();
+    let numRemoved = 0;
+    do {
+      numRemoved = connectivityMatrix.removeLeaves();
+    } while(numRemoved > 0);
 });
