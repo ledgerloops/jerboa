@@ -37,14 +37,18 @@ lineReader.on('close', function () {
     } while(numRemoved > 0);
     nettedInTriangles = connectivityMatrix.netTriangles();
   } while (nettedInTriangles > 0);
-  let nettedInSquares, nettedInPentagons
+  let nettedInSquares, nettedInPentagons, nettedInHexagons;
   do {
     nettedInSquares = connectivityMatrix.netSquares();
     nettedInPentagons = connectivityMatrix.netPentagons();
+    nettedInHexagons = connectivityMatrix.netHexagons();
     let numRemoved;
     do {
       numRemoved = connectivityMatrix.removeLeaves();
     } while(numRemoved > 0);
     nettedInTriangles = connectivityMatrix.netTriangles();
-  } while ((nettedInTriangles > 0) || (nettedInSquares > 0) || (nettedInPentagons > 0));
+    nettedInSquares += connectivityMatrix.netSquares();
+    nettedInPentagons += connectivityMatrix.netPentagons();
+    nettedInHexagons = connectivityMatrix.netHexagons();
+  } while ((nettedInTriangles > 0) || (nettedInSquares > 0) || (nettedInPentagons > 0) || (nettedInHexagons > 0));
 });

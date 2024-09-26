@@ -423,6 +423,125 @@ export class ConnectivityMatrix {
     console.log(`Netted ${totalNetted / 1000000} million in ${loops.length} pentagons`);
     return totalNetted;
   }
+  netHexagons(): number {
+    let totalNetted = 0;
+    const hops: {
+      [from: string]: string[];
+    } = {};
+    const loops: string[][] = [];
+    Object.keys(this.matrix).forEach(lower => {
+      if (Object.keys(this.matrix[lower]).length === 0) {
+        throw new Error('how can this matrix row exist but be empty?');
+      }
+      Object.keys(this.matrix[lower]).forEach(higher => {
+        if (this.matrix[lower][higher].bilaterallyNetted > 0) {
+          if (typeof hops[lower] === 'undefined') {
+            hops[lower] = [];
+          }
+          hops[lower].push(higher);
+        } else if (this.matrix[lower][higher].bilaterallyNetted < 0) {
+          if (typeof hops[higher] === 'undefined') {
+            hops[higher] = [];
+          }
+          hops[higher].push(lower);
+        }
+      });
+    });
+    Object.keys(hops).forEach(one => {
+      hops[one].forEach(two => {
+        if (two < one) {
+          //not canonical
+          return;
+        }
+        if (this.getBilaterallyNetted(one, two) <= 0) {
+          // not really a hop
+          return;
+        }
+        if (typeof hops[two] === 'undefined') {
+          throw new Error('Why does this first hop lead to a leaf?');
+        }
+        hops[two].forEach(three => {
+          if (three < one) {
+            //not canonical
+            return;
+          }
+          if (this.getBilaterallyNetted(one, three) <= 0) {
+            // not really a hop
+            return;
+          }
+          if (typeof hops[three] === 'undefined') {
+            throw new Error('Why does this first hop lead to a leaf?');
+          }
+          hops[three].forEach(four => {
+            if (four < one) {
+              //not canonical
+              return;
+            }
+            if (this.getBilaterallyNetted(three, four) <= 0) {
+              // not really a hop
+              return;
+            }  
+            if (typeof hops[four] === 'undefined') {
+              throw new Error('Why does this second hop lead to a leaf?');
+            }
+            hops[four].forEach(five => {
+              if (five < one) {
+                //not canonical
+                return;
+              }
+              if (this.getBilaterallyNetted(three, five) <= 0) {
+                // not really a hop
+                return;
+              }  
+              if (typeof hops[five] === 'undefined') {
+                throw new Error('Why does this second hop lead to a leaf?');
+              }
+              hops[four].forEach(five => {
+                if (five < one) {
+                  //not canonical
+                  return;
+                }
+                if (this.getBilaterallyNetted(three, five) <= 0) {
+                  // not really a hop
+                  return;
+                }  
+                if (typeof hops[five] === 'undefined') {
+                  throw new Error('Why does this second hop lead to a leaf?');
+                }
+                if (hops[five].indexOf(one) !== -1) {
+                  if (this.getBilaterallyNetted(five, one) <= 0) {
+                    // not really a hop
+                    return;
+                  }    
+                  const weight = [
+                    this.getBilaterallyNetted(one, three),
+                    this.getBilaterallyNetted(three, five),
+                    this.getBilaterallyNetted(five, five),
+                    this.getBilaterallyNetted(five, one),
+                  ];
+                  let smallestWeight = (weight[0] < weight[1] ? weight[0] : weight[1]);
+                  if (weight[2] < smallestWeight) {
+                    smallestWeight = weight[2];
+                  }
+                  // const newBalances = [
+                  this.addLink(one, five, smallestWeight);
+                  this.addLink(five, three, smallestWeight);
+                  this.addLink(three, one, smallestWeight);
+                  // ];
+                  // console.log(weight, newBalances, newBalances.map(x => (x ===0)));
+                  // canonical triangular loop found and removed
+                  loops.push([one, three, five, smallestWeight.toString()]);
+                  totalNetted += 3*smallestWeight;
+                }
+              });
+            });
+          });
+        });
+      });
+    });
+    console.log(`Netted ${totalNetted / 1000000} million in ${loops.length} hexagons`);
+    return totalNetted;
+  }
   print(): void {
     let total = 0;
     let bilateral = 0;
