@@ -13,7 +13,7 @@ do {
   transactions.forEach(tx => {
     if ((tx.from !== 0) && (tx.to !== 0) && (tx.from !== tx.to)) {
       // console.log(`Adding txid ${tx.txid}: ${tx.from}->${tx.to}`);
-      connectivityMatrix.addLink(tx.from.toString(), tx.to.toString());
+      connectivityMatrix.addLink(tx.from.toString(), tx.to.toString(), '');
     }
     counter++;
     if (counter % 100000 === 0) {

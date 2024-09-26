@@ -32,8 +32,8 @@ export class ConnectivityMatrix {
     this.matrix[from][to][JSON.stringify(hops)] = true;
     return !!exists;
   }
-  addLink(linkFrom: string, linkTo: string): void {
-    
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  addLink(linkFrom: string, linkTo: string, _weight: string): void {
     // add the link itself as a path
     // console.log('direct link', linkFrom, linkTo);
     this.addPath(linkFrom, linkTo, []);

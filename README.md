@@ -31,3 +31,9 @@ Make a copy of the `data/sarafu` file so you can reset it when needed.
 ```
 time node --max-old-space-size=100000 build/src/connectivityAnalysis.js
 ```
+
+idea for algorithm:
+take the directed graph
+remove all edges that come from or go to a leaf
+repeat that until no more found
+the rest is cyclic structure!
