@@ -28,9 +28,13 @@ lineReader.on('line', function (line) {
 });
 
 lineReader.on('close', function () {
-    connectivityMatrix.print();
-    let numRemoved = 0;
+  connectivityMatrix.print();
+  let nettedInTriangles;
+  do {
+    let numRemoved;
     do {
       numRemoved = connectivityMatrix.removeLeaves();
     } while(numRemoved > 0);
+    nettedInTriangles = connectivityMatrix.netTriangles();
+  } while (nettedInTriangles > 0);
 });
