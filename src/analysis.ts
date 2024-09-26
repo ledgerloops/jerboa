@@ -21,11 +21,11 @@ lineReader.on('line', function (line) {
     nodes[target] = counter++;
   }
   if (transfer_subtype === 'STANDARD') {
-    connectivityMatrix.addLink(nodes[source], nodes[target], weight);
+    connectivityMatrix.addLink(nodes[source], nodes[target], parseFloat(weight));
   }
   // console.log({ id, timeset, transfer_subtype, source, target, weight });
 });
 
 lineReader.on('close', function () {
-    console.log('all done, son');
+    connectivityMatrix.print();
 });
