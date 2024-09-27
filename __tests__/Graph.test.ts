@@ -4,7 +4,7 @@ describe('Graph', () => {
   it('adds a link', () => {
     const graph = new Graph();
     graph.addWeight('a', 'b', 3);
-    expect(graph.links).toEqual({
+    expect(graph.getLinks()).toEqual({
       'a': {
         'b': 3
       }
@@ -22,7 +22,7 @@ describe('Graph', () => {
     const graph = new Graph();
     graph.addWeight('a', 'b', 3);
     graph.addWeight('a', 'c', 5);
-    expect(graph.links).toEqual({
+    expect(graph.getLinks()).toEqual({
       'a': {
         'b': 3,
         'c': 5
@@ -33,7 +33,7 @@ describe('Graph', () => {
     const graph = new Graph();
     graph.addWeight('a', 'b', 3);
     graph.addWeight('c', 'a', 5);
-    expect(graph.links).toEqual({
+    expect(graph.getLinks()).toEqual({
       'a': {
         'b': 3
       },
@@ -46,7 +46,7 @@ describe('Graph', () => {
     const graph = new Graph();
     graph.addWeight('a', 'b', 3);
     graph.addWeight('b', 'a', 7);
-    expect(graph.links).toEqual({
+    expect(graph.getLinks()).toEqual({
       'b': {
         'a': 4
       }
@@ -56,7 +56,7 @@ describe('Graph', () => {
     const graph = new Graph();
     graph.addWeight('a', 'b', 3);
     graph.addWeight('b', 'a', 2);
-    expect(graph.links).toEqual({
+    expect(graph.getLinks()).toEqual({
       'a': {
         'b': 1
       }
@@ -66,7 +66,7 @@ describe('Graph', () => {
     const graph = new Graph();
     graph.addWeight('a', 'b', 3);
     graph.addWeight('b', 'a', 3);
-    expect(graph.links).toEqual({
+    expect(graph.getLinks()).toEqual({
     });
   });
 });
