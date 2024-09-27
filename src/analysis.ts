@@ -28,4 +28,5 @@ lineReader.on('line', function (line) {
 
 lineReader.on('close', function () {
   birdsEyeWorm.runWorm();
+  console.log(birdsEyeWorm.stats);
 });

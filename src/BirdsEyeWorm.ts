@@ -19,7 +19,8 @@ export class BirdsEyeWorm {
     this.stats[loopLength].totalAmount += amount;
   }
   addTransfer(from: string, to: string, amount: number): void {
-    this.graph.addWeight(from, to, amount);
+    const amountNetted = this.graph.addWeight(from, to, amount);
+    this.report(2, amountNetted);
   }
   // assumes all loop hops exist
   getSmallestWeight(loop: string[]): number {
@@ -46,42 +47,56 @@ export class BirdsEyeWorm {
       }
       this.addTransfer(loop[k+1], loop[k], smallestWeight);
     }
+    this.report(loop.length - 1, smallestWeight);
     return firstZeroPos;
   }
   // removes dead ends as it finds them.
   // nets loops as it finds them.
   runWorm(): void {
-    const path = [];
+    let path = [];
     let newStep = this.graph.getFirstNode();
     // eslint-disable-next-line no-constant-condition
     let counter = 0;
-    while (counter++ < 100) {
-      console.log('Step', path, newStep);
+    while (counter++ < 1000000) {
+      // console.log('Step', path, newStep);
       path.push(newStep);
-      console.log('picking first option from', newStep);
-      newStep = this.graph.getFirstNode(newStep);
-      console.log('considering', path, newStep);
-      while (!this.graph.hasOutgoingLinks(newStep)) {
+      // console.log('picking first option from', newStep);
+      while (!this.graph.hasOutgoingLinks(newStep) && path.length > 0) {
         // backtrack
-        if (path.length === 0) {
-          // no paths left
-          return;
-        }
         const previousStep = path.pop();
-        console.log('backtracking', path, previousStep, newStep);
-        console.log(`zeroOut`)
+        // console.log('backtracking', path, previousStep, newStep);
+        // console.log(`zeroOut`)
         this.graph.removeLink(previousStep, newStep);
         // after having removed the link previousStep -> newStep,
         // this will pick the next one in the outer loop:
         newStep = previousStep;
       }
+      // we now now that either newStep has outgoing links, or path is empty
+      if (path.length === 0) {
+        // no paths left, start with a new worm
+        path = [];
+        try {
+          newStep = this.graph.getFirstNode();
+        } catch (e) {
+          if (e.message === 'Graph is empty') {
+            // We're done!
+            return;
+          } else {
+            throw e;
+          }
+        }
+      } else {
+        newStep = this.graph.getFirstNode(newStep);
+        // console.log('considering', path, newStep);  
+      }
+      // check for loops in path
       const pos = path.indexOf(newStep);
       if (pos !== -1) {
         const loop = path.splice(pos).concat(newStep);
         this.netLoop(loop);
-        console.log(`Found loop`, loop, ` pos ${pos} in `, path);
+        // console.log(`Found loop`, loop, ` pos ${pos} in `, path);
         newStep = this.graph.getFirstNode(path[path.length - 1]);
-        console.log(`Continuing with`, path, newStep);
+        // console.log(`Continuing with`, path, newStep);
       }
     }
   }

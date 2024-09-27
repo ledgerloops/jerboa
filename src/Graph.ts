@@ -13,36 +13,40 @@ export class Graph {
     }
   }
   // assumes that graph[from][to] exists
-  private zeroOut(from: string, to: string): void {
+  // @returns number amount removed
+  private zeroOut(from: string, to: string): number {
+    const amount = this.links[from][to]; 
     delete this.links[from][to];
     if (Object.keys(this.links[from]).length === 0) {
       delete this.links[from];
     }
+    return amount;
   }
   // assumes that both graph[from][to] and graph[to][from] exist
-  private substractAndRemoveCounterBalance(from: string, to: string): void {
+  private substractAndRemoveCounterBalance(from: string, to: string): number {
     const amount = this.links[to][from];
     this.links[from][to] -= amount;
-    this.zeroOut(to, from);
+    return this.zeroOut(to, from);
   }
   // assumes that graph[from][to] exists
-  private netBilateralAndRemove(from: string, to: string): void {
+  // @returns number amount netted
+  private netBilateralAndRemove(from: string, to: string): number {
     if (typeof this.links[to] === 'undefined') {
-      return;
+      return 0;
     }
     if (typeof this.links[to][from] === 'undefined') {
-      return;
+      return 0;
     }
     if (this.links[from][to] > this.links[to][from]) {
-      this.substractAndRemoveCounterBalance(from, to);
+      return this.substractAndRemoveCounterBalance(from, to);
     } else if (this.links[from][to] < this.links[to][from]) {
-      this.substractAndRemoveCounterBalance(to, from);
+      return this.substractAndRemoveCounterBalance(to, from);
     } else { // mutual annihilation
       this.zeroOut(from, to);
-      this.zeroOut(to, from);
+      return this.zeroOut(to, from);
     }
   }
-  public addWeight(from: string, to: string, weight: number): void {
+  public addWeight(from: string, to: string, weight: number): number {
     if (typeof from !== 'string') {
       throw new Error(`from param ${JSON.stringify(from)} is not a string in call to addWeight`);
     }
@@ -58,7 +62,7 @@ export class Graph {
     }
     this.ensureLink(from, to);
     this.links[from][to] += weight;
-    this.netBilateralAndRemove(from, to);
+    return this.netBilateralAndRemove(from, to);
   }
   public removeLink(from: string, to: string): void {
     if (typeof from !== 'string') {
