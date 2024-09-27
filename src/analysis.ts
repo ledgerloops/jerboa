@@ -36,12 +36,12 @@ lineReader.on('close', function () {
       do {
         numRemoved = connectivityMatrix.removeLeaves();
       } while(numRemoved > 0);
-      nettedThisRound = connectivityMatrix.netPolygons(3);
+      nettedThisRound = connectivityMatrix.netPolygons(k);
       console.log(`Netted ${nettedThisRound} in ${k}-edged polygons`);
     } while (nettedThisRound > 0);
   }
   do {
-    nettedThisRound = connectivityMatrix.netWithWorm(9);
+    nettedThisRound = connectivityMatrix.netWithWorm(5);
     let numRemoved;
     do {
       numRemoved = connectivityMatrix.removeLeaves();

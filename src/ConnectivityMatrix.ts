@@ -134,7 +134,9 @@ export class ConnectivityMatrix {
         }
       });
     });
-    console.log({ hermits, sources, internals, drains, linksRemoved });
+    if (linksRemoved > 1000) {
+      console.log({ hermits, sources, internals, drains, linksRemoved });
+    }
     return linksRemoved;
   }
   getCurrentHops(): void {
@@ -206,6 +208,7 @@ export class ConnectivityMatrix {
     return smallestWeight;
   }
   netPolygons(sides: number): number {
+    // console.log('netPolygons', sides);
     if (typeof this.stats[sides] === 'undefined') {
       this.stats[sides] = {
         numFound: 0,
@@ -230,12 +233,31 @@ export class ConnectivityMatrix {
         // if (found) {
         //   return;
         // }
+        if (sides === 5) {
+          console.log([startNode]);
+        }
         found = this.nestLoop([startNode], sides);
       });
     } while(found);
     return this.stats[sides].totalAmount - before; 
   }
   nestLoop(path: string[], sides: number): boolean {
+    // if ((sides === 5) && (path.length === 1) && (path[0] === '1918')) {
+    //   console.log(path);
+    // }
+    // if ((sides === 5) && (path.length === 2) && (path[0] === '1918') && (path[1] === '2115')) {
+    //   console.log(path);
+    // }
+    // if ((sides === 5) && (path.length === 3) && (path[0] === '1918') && (path[1] === '2115') && (path[2] === '1766')) {
+    //   console.log(path);
+    // }
+    // if ((sides === 5) && (path.length === 4) && (path[0] === '1918') && (path[1] === '2115') && (path[2] === '1766') && (path[3] === '67')) {
+    //   console.log(path);
+    // }
+    // if ((sides === 5) && (path.length === 5) && (path[0] === '1918') && (path[1] === '2115') && (path[2] === '1766') && (path[3] === '67') && (path[4] === '1918')) {
+    //   console.log(path);
+    // }
+
     // console.log('nestLoop', path, sides);
     if (path.length === sides) {
       return this.finishLoop(path);
@@ -296,7 +318,7 @@ export class ConnectivityMatrix {
     const loop = path.slice(path.indexOf(newItem)).concat([newItem]);
     const smallestWeight = this.netLoop(loop);
     if (loop.length - 1 < minExpectedLoopLength) {
-      console.log(`Found loop of length ${loop.length}`, loop);
+      console.log(`Found loop of length ${loop.length}`, loop, smallestWeight);
       // throw new Error('How come we find such a short loop still?');
     }
     totalNetted += smallestWeight * (loop.length - 1);
