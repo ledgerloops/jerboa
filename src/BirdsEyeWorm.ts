@@ -23,9 +23,10 @@ export class BirdsEyeWorm {
     this.stats[loopLength].numFound++;
     this.stats[loopLength].totalAmount += amount;
   }
-  addTransfer(from: string, to: string, amount: number): void {
+  addTransfer(from: string, to: string, amount: number): number {
     const amountNetted = this.graph.addWeight(from, to, amount);
     this.report(2, amountNetted);
+    return amountNetted;
   }
   // assumes all loop hops exist
   getSmallestWeight(loop: string[]): number {
