@@ -69,7 +69,7 @@ export class Graph {
     }
 
     if (typeof this.links[from] !== 'undefined') {
-      if (typeof this.links[from][to] === 'undefined') {
+      if (typeof this.links[from][to] !== 'undefined') {
         this.zeroOut(from, to);
       }
     }
@@ -92,7 +92,6 @@ export class Graph {
         throw new Error('Graph is empty');
       }
     }
-    // console.log('picking first item', nodes);
     return nodes[0];
   }
   public hasOutgoingLinks(after: string): boolean {
