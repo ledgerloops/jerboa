@@ -78,8 +78,11 @@ Done after 500332 steps
   '68': { numFound: 1, totalAmount: 113.69999999998163 }
 }
 Graph has 0 nodes and 0 links left
+After 422721 transactions with a total amount of 296.9910196480003 million
+189.10439082399995 million (64%) was immediately netted bilaterally
+And a further 65.095298411 million (22%) was netted in 27162 loops
+Leaving 42.79133041300035 million (14%) to be settled out of band
 
-real	0m35.510s
-user	0m32.959s
-sys	0m6.499s
-```
+real	0m37.647s
+user	0m34.820s
+sys	0m6.603s```
