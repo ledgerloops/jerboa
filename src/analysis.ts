@@ -28,27 +28,23 @@ lineReader.on('line', function (line) {
 });
 
 lineReader.on('close', function () {
-  connectivityMatrix.print();
-  let nettedInTriangles;
+  connectivityMatrix.netPolygons(2);
+  let nettedThisRound;
+  for (let k = 3; k < 10; k++) {
+    do {
+      let numRemoved: number;
+      do {
+        numRemoved = connectivityMatrix.removeLeaves();
+      } while(numRemoved > 0);
+      nettedThisRound = connectivityMatrix.netPolygons(3);
+      console.log(`Netted ${nettedThisRound} in ${k}-edged polygons`);
+    } while (nettedThisRound > 0);
+  }
   do {
+    nettedThisRound = connectivityMatrix.netWithWorm(9);
     let numRemoved;
     do {
       numRemoved = connectivityMatrix.removeLeaves();
     } while(numRemoved > 0);
-    nettedInTriangles = connectivityMatrix.netTriangles();
-  } while (nettedInTriangles > 0);
-  let nettedInSquares, nettedInPentagons, nettedInHexagons;
-  do {
-    nettedInSquares = connectivityMatrix.netSquares();
-    nettedInPentagons = connectivityMatrix.netPentagons();
-    nettedInHexagons = connectivityMatrix.netHexagons();
-    let numRemoved;
-    do {
-      numRemoved = connectivityMatrix.removeLeaves();
-    } while(numRemoved > 0);
-    nettedInTriangles = connectivityMatrix.netTriangles();
-    nettedInSquares += connectivityMatrix.netSquares();
-    nettedInPentagons += connectivityMatrix.netPentagons();
-    nettedInHexagons = connectivityMatrix.netHexagons();
-  } while ((nettedInTriangles > 0) || (nettedInSquares > 0) || (nettedInPentagons > 0) || (nettedInHexagons > 0));
+  } while (nettedThisRound > 0);
 });
