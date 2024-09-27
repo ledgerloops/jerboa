@@ -1,5 +1,7 @@
 import { Graph } from './Graph.js';
 
+const MAX_NUM_STEPS = 1000000;
+
 export class BirdsEyeWorm {
   graph: Graph = new Graph();
   stats: {
@@ -9,6 +11,9 @@ export class BirdsEyeWorm {
     }
   } = {};
   report(loopLength: number, amount: number): void {
+    // if (loopLength > 2) {
+    //   console.log('report', loopLength, amount);
+    // }
     if (typeof this.stats[loopLength] === 'undefined') {
       this.stats[loopLength] = {
         numFound: 0,
@@ -36,6 +41,7 @@ export class BirdsEyeWorm {
   }
   // assumes all loop hops exist
   netLoop(loop: string[]): number {
+    // const before = this.graph.getTotalWeight();
     const smallestWeight = this.getSmallestWeight(loop);
     if (smallestWeight === 0) {
       return 0;
@@ -47,6 +53,8 @@ export class BirdsEyeWorm {
       }
       this.addTransfer(loop[k+1], loop[k], smallestWeight);
     }
+    // const after = this.graph.getTotalWeight();
+    // console.log('total graph weight reduced by', before - after);
     this.report(loop.length - 1, smallestWeight);
     return firstZeroPos;
   }
@@ -57,7 +65,7 @@ export class BirdsEyeWorm {
     let newStep = this.graph.getFirstNode();
     // eslint-disable-next-line no-constant-condition
     let counter = 0;
-    while (counter++ < 1000) {
+    while (counter++ < MAX_NUM_STEPS) {
       // console.log('Step', path, newStep);
       path.push(newStep);
       // console.log('picking first option from', newStep);

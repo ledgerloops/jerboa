@@ -126,4 +126,13 @@ export class Graph {
   } {
     return this.links;
   }
+  public getTotalWeight(): number {
+    let total = 0;
+    Object.keys(this.links).forEach(from => {
+      Object.keys(this.links[from]).forEach(to => {
+        total += this.links[from][to];
+      });
+    });
+    return total;
+  }
 }
