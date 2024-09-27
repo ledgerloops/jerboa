@@ -41,9 +41,9 @@ lineReader.on('close', function () {
   });
   // console.log(birdsEyeWorm.stats);
   console.log(`Graph has ${Object.keys(links).length} nodes and ${numLinks} links left`);
-  console.log(`After ${numTrans} transactions with a total amount of ${totalTransAmount / 1000000} million`);
+  console.log(`After ${numTrans} transactions with a total amount of ${Math.round(totalTransAmount / 1000000)} million`);
   const totalBilateralAmount = 2 * totalImmediatelyNetted;
-  console.log(`${totalBilateralAmount / 1000000} million (${Math.round((totalBilateralAmount / totalTransAmount) * 100)}%) was immediately netted bilaterally`);
+  console.log(`${Math.round(totalBilateralAmount / 1000000)} million (${Math.round((totalBilateralAmount / totalTransAmount) * 100)}%) was immediately netted bilaterally`);
   let totalNum = 0;
   let totalAmount = 0;
   Object.keys(birdsEyeWorm.stats).map(numStr => {
@@ -53,6 +53,6 @@ lineReader.on('close', function () {
     }
   });
   const amountLeft = totalTransAmount - totalBilateralAmount - totalAmount;
-  console.log(`And a further ${totalAmount / 1000000} million (${Math.round((totalAmount / totalTransAmount) * 100)}%) was netted in ${totalNum} loops`);
-  console.log(`Leaving ${amountLeft / 1000000} million (${Math.round((amountLeft / totalTransAmount) * 100)}%) to be settled out of band`);
+  console.log(`And a further ${Math.round(totalAmount / 1000000)} million (${Math.round((totalAmount / totalTransAmount) * 100)}%) was netted in ${totalNum} loops`);
+  console.log(`Leaving ${Math.round(amountLeft / 1000000)} million (${Math.round((amountLeft / totalTransAmount) * 100)}%) to be settled out of band`);
 });
