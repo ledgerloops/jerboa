@@ -233,9 +233,9 @@ export class ConnectivityMatrix {
         // if (found) {
         //   return;
         // }
-        if (sides === 5) {
-          console.log([startNode]);
-        }
+        // if (sides === 5) {
+        //   console.log([startNode]);
+        // }
         found = this.nestLoop([startNode], sides);
       });
     } while(found);
@@ -304,24 +304,42 @@ export class ConnectivityMatrix {
   netWithWorm(minExpectedLoopLength: number): number {
     let totalNetted = 0;
     this.getCurrentHops();
-    const path = [];
-    let newItem = randomFromArray(Object.keys(this.hops));
-    while(path.indexOf(newItem) === -1) {
-      path.push(newItem);
-      newItem = randomFromArray(this.hops[newItem]);
-      if (this.getBilaterallyNetted(path[path.length - 1], newItem) <= 0) {
-        throw new Error(`non-positive balance on path between ${path[path.length - 1]} and ${newItem}`);
-      // } else {
-      //   console.log(`Balance on path hop from ${path[path.length - 1]} to ${newItem} is OK: ${this.getBilaterallyNetted(path[path.length - 1], newItem)}`);
+    let nettedThisWorm = 0;
+    do {
+      const path = [];
+      let newItem = randomFromArray(Object.keys(this.hops));
+      while(path.indexOf(newItem) === -1) {
+        path.push(newItem);
+        newItem = randomFromArray(this.hops[newItem]);
+        if (this.getBilaterallyNetted(path[path.length - 1], newItem) <= 0) {
+          // time to recalculate hops
+          this.getCurrentHops();
+          newItem = randomFromArray(this.hops[newItem]);
+        }
+        if (this.getBilaterallyNetted(path[path.length - 1], newItem) <= 0) {
+          throw new Error(`non-positive balance on path between ${path[path.length - 1]} and ${newItem}, even after recalculating hops?`)
+        }
+        if (typeof this.hops[newItem] === 'undefined') {
+          break; // time to return and remove leaves
+        }
       }
-    }
-    const loop = path.slice(path.indexOf(newItem)).concat([newItem]);
-    const smallestWeight = this.netLoop(loop);
-    if (loop.length - 1 < minExpectedLoopLength) {
-      console.log(`Found loop of length ${loop.length}`, loop, smallestWeight);
-      // throw new Error('How come we find such a short loop still?');
-    }
-    totalNetted += smallestWeight * (loop.length - 1);
+      const loop = path.slice(path.indexOf(newItem)).concat([newItem]);
+      const smallestWeight = this.netLoop(loop);
+      if (loop.length - 1 < minExpectedLoopLength) {
+        console.log(`Found loop of length ${loop.length}`, loop, smallestWeight);
+        // throw new Error('How come we find such a short loop still?');
+      }
+      if (typeof this.stats[loop.length - 1] === 'undefined') {
+        this.stats[loop.length - 1] = {
+          numFound: 0,
+          totalAmount: 0,
+        }
+      }
+      nettedThisWorm += smallestWeight * (loop.length - 1);
+      this.stats[loop.length - 1].numFound++;
+      this.stats[loop.length - 1].totalAmount += nettedThisWorm;
+      totalNetted += nettedThisWorm;
+    } while(nettedThisWorm > 0);
     return totalNetted;
   }
   bilateralNetting(): void {
