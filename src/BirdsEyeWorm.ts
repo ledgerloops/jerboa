@@ -57,7 +57,7 @@ export class BirdsEyeWorm {
     let newStep = this.graph.getFirstNode();
     // eslint-disable-next-line no-constant-condition
     let counter = 0;
-    while (counter++ < 1000000) {
+    while (counter++ < 1000) {
       // console.log('Step', path, newStep);
       path.push(newStep);
       // console.log('picking first option from', newStep);
@@ -80,6 +80,7 @@ export class BirdsEyeWorm {
         } catch (e) {
           if (e.message === 'Graph is empty') {
             // We're done!
+            console.log(`Done after ${counter} steps`);
             return;
           } else {
             throw e;
