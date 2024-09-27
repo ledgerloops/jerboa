@@ -1,6 +1,6 @@
 import { Graph } from '../src/Graph.js';
 
-describe('Graph', () => {
+describe('addWeight', () => {
   it('adds a link', () => {
     const graph = new Graph();
     graph.addWeight('a', 'b', 3);
@@ -68,5 +68,55 @@ describe('Graph', () => {
     graph.addWeight('b', 'a', 3);
     expect(graph.getLinks()).toEqual({
     });
+  });
+});
+
+describe('removeLink', () => {
+  it('removes a link', () => {
+    const graph = new Graph();
+    graph.addWeight('a', 'b', 3);
+    graph.removeLink('a', 'b');
+    expect(graph.getLinks()).toEqual({});
+  });
+});
+
+describe('getFirstNode', () => {
+  it('works when passing no after argument', () => {
+    const graph = new Graph();
+    graph.addWeight('a', 'b', 3);
+    expect(graph.getFirstNode()).toEqual('a');
+  });
+  it('works when passing an after argument', () => {
+    const graph = new Graph();
+    graph.addWeight('a', 'b', 3);
+    expect(graph.getFirstNode('a')).toEqual('b');
+  });
+});
+
+describe('hasOutgoingLinks', () => {
+  it('works in the positive case', () => {
+    const graph = new Graph();
+    graph.addWeight('a', 'b', 3);
+    expect(graph.hasOutgoingLinks('a')).toEqual(true);
+  });
+  it('works in the negative case', () => {
+    const graph = new Graph();
+    graph.addWeight('a', 'b', 3);
+    expect(graph.hasOutgoingLinks('b')).toEqual(false);
+    expect(graph.hasOutgoingLinks('c')).toEqual(false);
+  });
+});
+
+describe('getWeight', () => {
+  it('works in the positive case', () => {
+    const graph = new Graph();
+    graph.addWeight('a', 'b', 3);
+    expect(graph.getWeight('a', 'b')).toEqual(3);
+  });
+  it('works in the negative case', () => {
+    const graph = new Graph();
+    graph.addWeight('a', 'b', 3);
+    expect(graph.getWeight('b', 'a')).toEqual(0);
+    expect(graph.getWeight('c', 'b')).toEqual(0);
   });
 });

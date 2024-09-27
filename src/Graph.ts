@@ -81,16 +81,18 @@ export class Graph {
 
     let nodes;
     if (typeof after === 'string') {
-      nodes = this.links[after];
-      if (typeof nodes === 'undefined') {
+      const nodesObj = this.links[after];
+      if (typeof nodesObj === 'undefined') {
         throw new Error(`No outgoing links from node ${after}`);
       }
+      nodes = Object.keys(nodesObj);
     } else {
       nodes = Object.keys(this.links);
       if (nodes.length === 0) {
         throw new Error('Graph is empty');
       }
-      }
+    }
+    // console.log('picking first item', nodes);
     return nodes[0];
   }
   public hasOutgoingLinks(after: string): boolean {
