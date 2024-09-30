@@ -1,7 +1,7 @@
 import { Graph } from "./Graph.js";
 import { Balances } from "./Balances.js";
 export class Jerboa {
-  private balances: Balances;
+  private balances: Balances = new Balances();
   private graph: Graph;
   private name: string;
   constructor(name: string, graph: Graph) {
