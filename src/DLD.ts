@@ -8,22 +8,7 @@ export class DLD {
     this.graph.report(2, amountNetted);
     return amountNetted;
   }
-  
 
-
-
-  executeTask(task: string): void {
-    const parts = task.split(' ');
-    // console.log('task string received', parts);
-    switch(parts[0]) {
-      case 'probe':
-        return this.graph.getNode(parts[1]).receiveProbe(JSON.parse(parts[2]) as string[]);
-      case 'nack':
-        return this.graph.getNode(parts[1]).receiveNack(parts[2], JSON.parse(parts[3]) as string[]);
-      default:
-        throw new Error('unknown task');
-    }
-  }
   // removes dead ends as it finds them.
   // nets loops as it finds them.
   runWorm(): void {
@@ -41,8 +26,8 @@ export class DLD {
           throw e;
         }
       }
-      this.graph.messaging.queueTask(['probe', newStep, `[]`]);
-      this.graph.messaging.runTasks(this.executeTask.bind(this));
+      this.graph.messaging.sendMessage('out of nowhere', newStep, ['probe', `[]`]);
+      this.graph.messaging.runTasks();
     } while (!done);
   }
 }

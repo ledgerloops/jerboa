@@ -5,7 +5,7 @@ export class Graph {
   private nodes: {
     [from: string]: Jerboa
   } = {};
-  public messaging: Messaging = new Messaging();
+  public messaging: Messaging = new Messaging(this);
   stats: {
     [loopLength: number]: {
       numFound: number;

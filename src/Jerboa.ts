@@ -88,9 +88,9 @@ export class Jerboa {
         const nackSender = path.pop();
         newStep = path.pop();
         
-        const task = ['nack', newStep, nackSender, JSON.stringify(path)];
+        const task = ['nack', JSON.stringify(path)];
         // console.log('sending task string', task);
-        this.graph.messaging.queueTask(task);
+        this.graph.messaging.sendMessage(nackSender, newStep, task);
         return;
       }
     }
@@ -113,10 +113,21 @@ export class Jerboa {
       newStep = this.graph.getFirstNode(false, path[path.length - 1]);
       // console.log(`Continuing with`, path, newStep);
     }
-    const task = ['probe', newStep, JSON.stringify(path)];
+    const task = ['probe', JSON.stringify(path)];
     // console.log('sending task string', task);
-    this.graph.messaging.queueTask(task);
+    this.graph.messaging.sendMessage(this.name, newStep, task);
   };
+  receiveMessage(from: string, parts: string[]): void {
+    switch(parts[0]) {
+      case 'probe':
+        return this.receiveProbe(JSON.parse(parts[1]) as string[]);
+    case 'nack':
+      return this.receiveNack(from, JSON.parse(parts[1]) as string[]);
+    default:
+      throw new Error('unknown task');
+    }
+  }
+
 
   ensureBalance(to: string): void {
     // console.log('ensuring balance', to, this.balance);
