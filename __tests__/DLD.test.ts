@@ -67,6 +67,5 @@ describe('DLD', () => {
        "totalAmount": 70,
      }
     });
-
   });
 });

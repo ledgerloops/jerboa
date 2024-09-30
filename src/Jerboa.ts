@@ -4,6 +4,9 @@ export class Jerboa {
   private balance: {
     [to: string]: number;
   } = {};
+  private counterBalance: {
+    [to: string]: number;
+  } = {};
   private graph: Graph;
   private name: string;
   constructor(name: string, graph: Graph) {
@@ -26,6 +29,7 @@ export class Jerboa {
 
   addTransfer(from: string, to: string, amount: number): void {
     this.graph.addWeight(from, to, amount);
+    this.graph.messaging.sendMessage(this.name, to, ['transfer', JSON.stringify(amount)]);
   }
   // assumes all loop hops exist
   netLoop(loop: string[]): number {
@@ -45,6 +49,10 @@ export class Jerboa {
     // console.log('total graph weight reduced by', before - after);
     this.graph.report(loop.length - 1, smallestWeight);
     return firstZeroPos;
+  }
+  receiveTransfer(sender: string, amount: number): void {
+    this.ensureCounterBalance(sender);
+    this.counterBalance[sender] += amount;
   }
   receiveNack(nackSender: string, path: string[]): void {
     let newStep = this.name;
@@ -122,16 +130,24 @@ export class Jerboa {
         return this.receiveProbe(JSON.parse(parts[1]) as string[]);
     case 'nack':
       return this.receiveNack(from, JSON.parse(parts[1]) as string[]);
+    case 'transfer':
+      return this.receiveTransfer(from, JSON.parse(parts[1]) as number);
     default:
       throw new Error('unknown task');
     }
   }
 
-
   ensureBalance(to: string): void {
     // console.log('ensuring balance', to, this.balance);
     if (typeof this.balance[to] === 'undefined') {
       this.balance[to] = 0;
+    }
+  }
+
+  ensureCounterBalance(to: string): void {
+    // console.log('ensuring balance', to, this.balance);
+    if (typeof this.counterBalance[to] === 'undefined') {
+      this.counterBalance[to] = 0;
     }
   }
   addWeight(to: string, weight: number): void {
