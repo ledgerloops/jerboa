@@ -55,12 +55,17 @@ describe('DLD', () => {
         totalNum += dld.stats[numStr].numFound;
       }
     });
-    expect(totalNum).toEqual(0);
-    expect(totalAmount).toEqual(0);
+    expect(totalNum).toEqual(3);
+    expect(totalAmount).toEqual(210);
     expect(dld.stats).toEqual({
-      '2': {
-        numFound: 4,
-        totalAmount: 0.5 }
+      "2": {
+       "numFound": 1380,
+       "totalAmount": 5579.5,
+     },
+     "3": {
+       "numFound": 3,
+       "totalAmount": 70,
+     }
     });
 
   });

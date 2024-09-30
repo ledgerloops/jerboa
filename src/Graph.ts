@@ -8,21 +8,16 @@ export class Graph {
       this.nodes[name] = new Jerboa();
     }
   }
-  // assumes that graph[from][to] exists
-  // @returns number amount removed
-  private zeroOut(from: string, to: string): number {
-    const amount = this.nodes[from].getBalance(to); 
-    this.nodes[from].deleteBalance(to);
-    if (Object.keys(this.nodes[from]).length === 0) {
-      delete this.nodes[from];
-    }
-    return amount;
-  }
+
   // assumes that both graph[from][to] and graph[to][from] exist
   private substractAndRemoveCounterBalance(from: string, to: string): number {
     const amount = this.nodes[to].getBalance(from);
     this.nodes[from].addWeight(to, -amount);
-    return this.zeroOut(to, from);
+    const ret = this.nodes[to].zeroOut(from);
+    if (this.nodes[to].getOutgoingLinks().length === 0) {
+      delete this.nodes[to];
+    }
+    return ret;
   }
   // assumes that graph[from][to] exists
   // @returns number amount netted
@@ -38,8 +33,15 @@ export class Graph {
     } else if (this.nodes[from].getBalance(to) < this.nodes[to].getBalance(from)) {
       return this.substractAndRemoveCounterBalance(to, from);
     } else { // mutual annihilation
-      this.zeroOut(from, to);
-      return this.zeroOut(to, from);
+      this.nodes[from].zeroOut(to);
+      if (this.nodes[from].getOutgoingLinks().length === 0) {
+        delete this.nodes[from];
+      }
+      const ret = this.nodes[to].zeroOut(from);
+      if (this.nodes[to].getOutgoingLinks().length === 0) {
+        delete this.nodes[to];
+      }
+      return ret;
     }
   }
   public addWeight(from: string, to: string, weight: number): number {
@@ -70,7 +72,10 @@ export class Graph {
 
     if (typeof this.nodes[from] !== 'undefined') {
       if (typeof this.nodes[from].getBalance(to) !== 'undefined') {
-        this.zeroOut(from, to);
+        this.nodes[from].zeroOut(to);
+        if (this.nodes[from].getOutgoingLinks().length === 0) {
+          delete this.nodes[from];
+        }
       }
     }
   }
