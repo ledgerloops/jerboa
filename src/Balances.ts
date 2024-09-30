@@ -6,13 +6,13 @@ export class Balances {
       [to: string]: number;
     } = {};
     private ensureBalance(to: string): void {
-      console.log('ensuring balance', to, this.balance);
+      // console.log('ensuring balance', to, this.balance);
       if (typeof this.balance[to] === 'undefined') {
         this.balance[to] = 0;
       }
     }
     private ensureCounterBalance(to: string): void {
-      console.log('ensuring balance', to, this.balance);
+      // console.log('ensuring balance', to, this.balance);
       if (typeof this.counterBalance[to] === 'undefined') {
         this.counterBalance[to] = 0;
       }

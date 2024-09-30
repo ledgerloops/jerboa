@@ -87,79 +87,47 @@ export class Jerboa {
     }
   }
   receiveNack(nackSender: string, path: string[]): void {
-    let newStep = this.name;
     // console.log('receiveNack removes link', newStep, nackSender);
-    this.graph.removeLink(newStep, nackSender);
+    this.graph.removeLink(this.name, nackSender);
     if (path.length === 0) {
-      // console.log('starting with a new worm');
-      // no paths left, start with a new worm
-      path = [];
-      try {
-        newStep = this.graph.getFirstNode(false);
-      } catch (e) {
-        if (e.message === 'Graph is empty') {
-          // We're done!
-          // console.log('done!');
-          // console.log(`Done after ${counter} steps`);
-          return;
-        } else {
-          throw e;
-        }
-      }
-    }
-    // console.log('receiveNack calls receiveProbe', newStep, path);
-    this.receiveProbe(path);
-  }
-
-  receiveProbe(path: string[]): void {
-    let newStep = this.name;
-    // console.log('receiveProbe', newStep, path);
-    path.push(newStep);
-    // console.log('pushed', newStep, path);
-    if (!this.graph.hasOutgoingLinks(newStep) && path.length > 0) {
-      // console.log('backtracking', newStep, path);
-      if (path.length < 2) {
-        // this probe dies here
-        // console.log('this probe dies here', this.name, path);
-        return;
-      } else {
-        // backtrack
-        const nackSender = path.pop();
-        newStep = path.pop();
-        
-        const task = ['nack', JSON.stringify(path)];
-        // console.log('sending task string', task);
-        this.graph.messaging.sendMessage(nackSender, newStep, task);
-        return;
-      }
-    }
-    // we now now that either newStep has outgoing links, or path is empty
-    if (path.length === 0) {
-      // console.log('starting with a new worm');
-      // no paths left, start with a new worm
-      // console.log('this probe done', this.name, path);
+      // this probe is done
       return;
-    } else {
-      newStep = this.graph.getFirstNode(false, newStep);
-      // console.log('considering', path, newStep);
     }
-    // check for loops in path
-    const pos = path.indexOf(newStep);
+    const popped = path.pop();
+    // console.log('receiveNack calls receiveProbe', newStep, path);
+    this.receiveProbe(popped, path);
+  }
+  spliceLoop(path: string[]): void {
+    // chop off loop if there is one:
+    const pos = path.indexOf(this.name);
     if (pos !== -1) {
-      const loop = path.splice(pos).concat(newStep);
+      const loop = path.splice(pos).concat(this.name);
       this.netLoop(loop);
-      // console.log(`Found loop`, loop, ` pos ${pos} in `, path);
-      newStep = this.graph.getFirstNode(false, path[path.length - 1]);
-      // console.log(`Continuing with`, path, newStep);
+      console.log(`Found loop`, loop, ` pos ${pos} in `, path);
+      console.log(`Continuing with`, path);
     }
+  }
+  receiveProbe(sender: string, path: string[]): void {
+    console.log('receiveProbe', this.name, path);
+    this.spliceLoop(path);
+    const nodes = this.balances.getOutgoingLinks();
+    if (nodes.length === 0) {
+      const task = ['nack', JSON.stringify(path)];
+      console.log('backtracking', task);
+      this.graph.messaging.sendMessage(this.name, sender, task);
+      return;
+    }
+    path.push(sender);
+    const newStep = nodes[0];
+    console.log('considering', path, newStep, this.balances.getBalance(newStep));
     const task = ['probe', JSON.stringify(path)];
-    // console.log('sending task string', task);
+    console.log('sending task string', task);
     this.graph.messaging.sendMessage(this.name, newStep, task);
   };
   receiveMessage(from: string, parts: string[]): void {
     switch(parts[0]) {
       case 'probe':
-        return this.receiveProbe(JSON.parse(parts[1]) as string[]);
+        return this.receiveProbe(from, JSON.parse(parts[1]) as string[]);
     case 'nack':
       return this.receiveNack(from, JSON.parse(parts[1]) as string[]);
     case 'transfer':
@@ -202,5 +170,13 @@ export class Jerboa {
   }
   clearZeroes(): void {
     this.balances.sanityCheck(this.name);
+  }
+  startProbe(): boolean {
+    const nodes = this.balances.getOutgoingLinks();
+    if (nodes.length === 0) {
+      return false;
+    }
+    this.sendMessage(nodes[0], ['probe', JSON.stringify([])]);
+    return true;
   }
 }
