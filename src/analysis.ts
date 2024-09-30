@@ -1,6 +1,6 @@
 import { createInterface } from 'readline';
 import { createReadStream } from 'fs';
-import { BirdsEyeWorm } from './BirdsEyeWorm.js';
+import { DLD } from './DLD.js';
 
 const SARAFU_CSV = '../Sarafu2021_UKdb_submission/sarafu_xDAI/sarafu_txns_20200125-20210615.csv';
 
@@ -14,7 +14,7 @@ let counter = 0;
 let totalTransAmount = 0;
 let totalImmediatelyNetted = 0;
 let numTrans = 0;
-const birdsEyeWorm = new BirdsEyeWorm();
+const dld = new DLD();
 lineReader.on('line', function (line) {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [ _id,_timeset, transfer_subtype,source,target,weight,_token_name,_token_address ] = line.split(',');
@@ -25,16 +25,16 @@ lineReader.on('line', function (line) {
     nodes[target] = (counter++).toString();
   }
   if (transfer_subtype === 'STANDARD') {
-    totalImmediatelyNetted += birdsEyeWorm.addTransfer(nodes[source], nodes[target], parseFloat(weight));
+    totalImmediatelyNetted += dld.addTransfer(nodes[source], nodes[target], parseFloat(weight));
     numTrans++;
     totalTransAmount += parseFloat(weight);
   }
 });
 
 lineReader.on('close', function () {
-  birdsEyeWorm.runWorm();
-  console.log(birdsEyeWorm.stats);
-  const links = birdsEyeWorm.graph.getLinks();
+  dld.runWorm();
+  console.log(dld.stats);
+  const links = dld.graph.getLinks();
   let numLinks = 0;
   Object.keys(links).forEach(from => {
     numLinks += Object.keys(links[from]).length;
@@ -46,10 +46,10 @@ lineReader.on('close', function () {
   console.log(`${Math.round(totalBilateralAmount / 1000000)} million (${Math.round((totalBilateralAmount / totalTransAmount) * 100)}%) was immediately netted bilaterally`);
   let totalNum = 0;
   let totalAmount = 0;
-  Object.keys(birdsEyeWorm.stats).map(numStr => {
+  Object.keys(dld.stats).map(numStr => {
     if (numStr !== '2') {
-      totalAmount += birdsEyeWorm.stats[numStr].totalAmount * parseInt(numStr);
-      totalNum += birdsEyeWorm.stats[numStr].numFound;
+      totalAmount += dld.stats[numStr].totalAmount * parseInt(numStr);
+      totalNum += dld.stats[numStr].numFound;
     }
   });
   const amountLeft = totalTransAmount - totalBilateralAmount - totalAmount;

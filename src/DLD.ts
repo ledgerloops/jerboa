@@ -2,7 +2,7 @@ import { Graph } from './Graph.js';
 
 const MAX_NUM_STEPS = 1000000;
 
-export class BirdsEyeWorm {
+export class DLD {
   graph: Graph = new Graph();
   stats: {
     [loopLength: number]: {
@@ -89,7 +89,7 @@ export class BirdsEyeWorm {
         } catch (e) {
           if (e.message === 'Graph is empty') {
             // We're done!
-            console.log(`Done after ${counter} steps`);
+            // console.log(`Done after ${counter} steps`);
             return;
           } else {
             throw e;
