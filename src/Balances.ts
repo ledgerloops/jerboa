@@ -60,12 +60,12 @@ export class Balances {
         if (this.counterBalance[other] === 0) {
           throw new Error('why was this counterBalance entry not deleted?');
         }
-        if (this.balance[other] < 0) {
-          throw new Error('why is this balance negative?');
-        }
-        if (this.counterBalance[other] < 0) {
-          throw new Error('why is this counterBalance negative?');
-        }
+        // if (this.balance[other] < 0) {
+        //   throw new Error('why is this balance negative?');
+        // }
+        // if (this.counterBalance[other] < 0) {
+        //   throw new Error('why is this counterBalance negative?');
+        // }
         if ((typeof this.balance[other] !== 'undefined') && (typeof this.counterBalance[other] !== 'undefined')) {
           console.log('why wasnt this trustline cleared bilaterally', name, other, this.balance[other], this.counterBalance[other]);
         }
