@@ -3,10 +3,8 @@ import { Graph } from './Graph.js';
 export class DLD {
   tasks: string[] = [];
   graph: Graph = new Graph();
-  addTransfer(from: string, to: string, amount: number): number {
-    const amountNetted = this.graph.addWeight(from, to, amount);
-    this.graph.report(2, amountNetted);
-    return amountNetted;
+  addTransfer(from: string, to: string, amount: number): void {
+    this.graph.addWeight(from, to, amount);
   }
 
   // removes dead ends as it finds them.

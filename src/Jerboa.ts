@@ -10,6 +10,7 @@ export class Jerboa {
     this.name = name;
     this.graph = graph;
   }
+
   // assumes all loop hops exist
   getSmallestWeight(loop: string[]): number {
     let smallestWeight = Infinity;
@@ -23,10 +24,8 @@ export class Jerboa {
     return smallestWeight;
   }
 
-  addTransfer(from: string, to: string, amount: number): number {
-    const amountNetted = this.graph.addWeight(from, to, amount);
-    this.graph.report(2, amountNetted);
-    return amountNetted;
+  addTransfer(from: string, to: string, amount: number): void {
+    this.graph.addWeight(from, to, amount);
   }
   // assumes all loop hops exist
   netLoop(loop: string[]): number {

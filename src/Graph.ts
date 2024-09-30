@@ -20,41 +20,45 @@ export class Graph {
   }
 
   // assumes that both graph[from][to] and graph[to][from] exist
-  private substractAndRemoveCounterBalance(from: string, to: string): number {
+  private substractAndRemoveCounterBalance(from: string, to: string): void {
     const amount = this.nodes[to].getBalance(from);
+    // this.messaging.sendMessage(from, to, ['propose', amount.toString()]);
     this.nodes[from].addWeight(to, -amount);
-    const ret = this.nodes[to].zeroOut(from);
+    this.nodes[to].zeroOut(from);
+    this.report(2, amount);
     if (this.nodes[to].getOutgoingLinks().length === 0) {
       delete this.nodes[to];
     }
-    return ret;
   }
   // assumes that graph[from][to] exists
   // @returns number amount netted
-  private netBilateralAndRemove(from: string, to: string): number {
+  private netBilateralAndRemove(from: string, to: string): void {
     if (typeof this.nodes[to] === 'undefined') {
-      return 0;
+      return;
     }
     if (typeof this.nodes[to].getBalance(from) === 'undefined') {
-      return 0;
+      return;
     }
     if (this.nodes[from].getBalance(to) > this.nodes[to].getBalance(from)) {
       return this.substractAndRemoveCounterBalance(from, to);
     } else if (this.nodes[from].getBalance(to) < this.nodes[to].getBalance(from)) {
       return this.substractAndRemoveCounterBalance(to, from);
     } else { // mutual annihilation
+      const amount = this.nodes[from].getBalance(to);
+      if (amount > 0) {
+        this.report(2, amount);
+      }
       this.nodes[from].zeroOut(to);
       if (this.nodes[from].getOutgoingLinks().length === 0) {
         delete this.nodes[from];
       }
-      const ret = this.nodes[to].zeroOut(from);
+      this.nodes[to].zeroOut(from);
       if (this.nodes[to].getOutgoingLinks().length === 0) {
         delete this.nodes[to];
       }
-      return ret;
     }
   }
-  public addWeight(from: string, to: string, weight: number): number {
+  public addWeight(from: string, to: string, weight: number): void {
     if (typeof from !== 'string') {
       throw new Error(`from param ${JSON.stringify(from)} is not a string in call to addWeight`);
     }

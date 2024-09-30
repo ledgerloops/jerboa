@@ -2,8 +2,8 @@ import { createInterface } from 'readline';
 import { createReadStream } from 'fs';
 import { DLD } from './DLD.js';
 
-// const SARAFU_CSV = '../Sarafu2021_UKdb_submission/sarafu_xDAI/sarafu_txns_20200125-20210615.csv';
-const SARAFU_CSV = './__tests__/fixture.csv';
+const SARAFU_CSV = '../Sarafu2021_UKdb_submission/sarafu_xDAI/sarafu_txns_20200125-20210615.csv';
+// const SARAFU_CSV = './__tests__/fixture.csv';
 
 const lineReader = createInterface({
   input: createReadStream(SARAFU_CSV),
@@ -13,7 +13,6 @@ const nodes: {
 } = {};
 let counter = 0;
 let totalTransAmount = 0;
-let totalImmediatelyNetted = 0;
 let numTrans = 0;
 const dld = new DLD();
 lineReader.on('line', function (line) {
@@ -26,13 +25,15 @@ lineReader.on('line', function (line) {
     nodes[target] = (counter++).toString();
   }
   if (transfer_subtype === 'STANDARD') {
-    totalImmediatelyNetted += dld.addTransfer(nodes[source], nodes[target], parseFloat(weight));
+    dld.addTransfer(nodes[source], nodes[target], parseFloat(weight));
     numTrans++;
     totalTransAmount += parseFloat(weight);
   }
 });
 
 lineReader.on('close', function () {
+  const totalImmediatelyNetted = dld.graph.stats[2].totalAmount;
+
   dld.runWorm();
   console.log(dld.graph.stats);
   const links = dld.graph.getLinks();
