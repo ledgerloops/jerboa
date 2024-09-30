@@ -1,5 +1,7 @@
 import { Graph } from "./Graph.js";
 import { Balances } from "./Balances.js";
+const MIN_LOOP_WEIGHT = 0.0001;
+
 export class Jerboa {
   private balances: Balances = new Balances();
   private graph: Graph;
@@ -39,7 +41,7 @@ export class Jerboa {
   netLoop(loop: string[]): number {
     // const before = this.graph.getTotalWeight();
     const smallestWeight = this.getSmallestWeight(loop);
-    if ((smallestWeight === 0) || (smallestWeight === Infinity)) {
+    if ((smallestWeight < MIN_LOOP_WEIGHT) || (smallestWeight === Infinity)) {
       return 0;
     }
     let firstZeroPos;
@@ -51,6 +53,7 @@ export class Jerboa {
     }
     // const after = this.graph.getTotalWeight();
     // console.log('total graph weight reduced by', before - after);
+    console.log('netted', smallestWeight, loop.length);
     this.graph.report(loop.length - 1, smallestWeight);
     return firstZeroPos;
   }
