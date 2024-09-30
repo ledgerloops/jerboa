@@ -1,8 +1,7 @@
 import { Graph } from './Graph.js';
 
-const MAX_NUM_STEPS = 1000000;
-
 export class DLD {
+  tasks: string[] = [];
   graph: Graph = new Graph();
   stats: {
     [loopLength: number]: {
@@ -59,55 +58,82 @@ export class DLD {
     this.report(loop.length - 1, smallestWeight);
     return firstZeroPos;
   }
+  receiveProbe(newStep: string, path: string[]): void {
+    // console.log('receiveProbe', newStep, path);
+    path.push(newStep);
+    // console.log('pushed', newStep, path);
+    while (!this.graph.hasOutgoingLinks(newStep) && path.length > 0) {
+      // console.log('backtracking', newStep, path);
+      // backtrack
+      const previousStep = path.pop();
+      // console.log('backtracking', path, previousStep, newStep);
+      // console.log(`zeroOut`)
+      this.graph.removeLink(previousStep, newStep);
+      // after having removed the link previousStep -> newStep,
+      // this will pick the next one in the outer loop:
+      newStep = previousStep;
+    }
+    // we now now that either newStep has outgoing links, or path is empty
+    if (path.length === 0) {
+      // console.log('starting with a new worm');
+      // no paths left, start with a new worm
+      path = [];
+      try {
+        newStep = this.graph.getFirstNode();
+      } catch (e) {
+        if (e.message === 'Graph is empty') {
+          // We're done!
+          // console.log('done!');
+          // console.log(`Done after ${counter} steps`);
+          return;
+        } else {
+          throw e;
+        }
+      }
+    } else {
+      newStep = this.graph.getFirstNode(newStep);
+      // console.log('considering', path, newStep);
+    }
+    // check for loops in path
+    const pos = path.indexOf(newStep);
+    if (pos !== -1) {
+      const loop = path.splice(pos).concat(newStep);
+      this.netLoop(loop);
+      // console.log(`Found loop`, loop, ` pos ${pos} in `, path);
+      newStep = this.graph.getFirstNode(path[path.length - 1]);
+      // console.log(`Continuing with`, path, newStep);
+    }
+    const task = ['receive-probe', newStep, JSON.stringify(path)];
+    // console.log('sending task string', task);
+    this.queueTask(task);
+  };
+
+  queueTask(task: string[]): void {
+    this.tasks.push(task.join(' '));
+  }
+  executeTask(task: string): void {
+    const parts = task.split(' ');
+    // console.log('task string received', parts);
+    switch(parts[0]) {
+      case 'receive-probe':
+        return this.receiveProbe(parts[1], JSON.parse(parts[2]) as string[]);
+      default:
+        throw new Error('unknown task');
+    }
+  }
+  runTasks(): void {
+    let newTask;
+    while (this.tasks.length > 0) {
+      newTask = this.tasks.pop();
+      this.executeTask(newTask);
+    }
+  }
   // removes dead ends as it finds them.
   // nets loops as it finds them.
   runWorm(): void {
-    let path = [];
-    let newStep = this.graph.getFirstNode();
-    // eslint-disable-next-line no-constant-condition
-    let counter = 0;
-    while (counter++ < MAX_NUM_STEPS) {
-      // console.log('Step', path, newStep);
-      path.push(newStep);
-      // console.log('picking first option from', newStep);
-      while (!this.graph.hasOutgoingLinks(newStep) && path.length > 0) {
-        // backtrack
-        const previousStep = path.pop();
-        // console.log('backtracking', path, previousStep, newStep);
-        // console.log(`zeroOut`)
-        this.graph.removeLink(previousStep, newStep);
-        // after having removed the link previousStep -> newStep,
-        // this will pick the next one in the outer loop:
-        newStep = previousStep;
-      }
-      // we now now that either newStep has outgoing links, or path is empty
-      if (path.length === 0) {
-        // no paths left, start with a new worm
-        path = [];
-        try {
-          newStep = this.graph.getFirstNode();
-        } catch (e) {
-          if (e.message === 'Graph is empty') {
-            // We're done!
-            // console.log(`Done after ${counter} steps`);
-            return;
-          } else {
-            throw e;
-          }
-        }
-      } else {
-        newStep = this.graph.getFirstNode(newStep);
-        // console.log('considering', path, newStep);  
-      }
-      // check for loops in path
-      const pos = path.indexOf(newStep);
-      if (pos !== -1) {
-        const loop = path.splice(pos).concat(newStep);
-        this.netLoop(loop);
-        // console.log(`Found loop`, loop, ` pos ${pos} in `, path);
-        newStep = this.graph.getFirstNode(path[path.length - 1]);
-        // console.log(`Continuing with`, path, newStep);
-      }
-    }
+    const newStep = this.graph.getFirstNode();
+    // console.log('queueing');
+    this.queueTask(['receive-probe', newStep, `[]`]);
+    this.runTasks();
   }
 }
