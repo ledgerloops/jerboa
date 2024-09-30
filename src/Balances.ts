@@ -30,6 +30,9 @@ export class Balances {
       if (this.balance[to] === 0) {
         delete this.balance[to];
       }
+      if (this.balance[to] === Infinity) {
+        throw new Error('Infinity balance detected');
+      }
     }
     adjustCounterBalance(to: string, amount: number): void {
       if (typeof to !== 'string') {
@@ -69,6 +72,12 @@ export class Balances {
       });
     }
     getBalance(to: string): number | undefined {
+      if (typeof to !== 'string') {
+        throw new Error('getBalance argument to is not a string');
+      }
+      if (this.balance[to] === Infinity) {
+        throw new Error('Infinity balance detected');
+      }
       return this.balance[to];
     }
     getCounterBalance(to: string): number | undefined {

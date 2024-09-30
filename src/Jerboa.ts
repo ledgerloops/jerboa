@@ -13,12 +13,24 @@ export class Jerboa {
   // assumes all loop hops exist
   getSmallestWeight(loop: string[]): number {
     let smallestWeight = Infinity;
+    let found = false;
+    if (loop.length === 0) {
+      throw new Error('loop has length 0');
+    }
+    // console.log('finding smallest weight on loop', loop);
     for (let k = 0; k < loop.length - 1; k++) {
       const thisWeight = this.graph.getWeight(loop[k], loop[k+1]);
+      if (typeof thisWeight !== 'number') {
+        throw new Error('weight is not a number');
+      }
       // console.log(`Weight on loop from ${loop[k]} to ${loop[k+1]} is ${thisWeight}`);
       if (thisWeight < smallestWeight) {
         smallestWeight = thisWeight;
+        found = true;
       }
+    }
+    if (!found) {
+      throw new Error('not found, weird');
     }
     return smallestWeight;
   }
@@ -27,7 +39,7 @@ export class Jerboa {
   netLoop(loop: string[]): number {
     // const before = this.graph.getTotalWeight();
     const smallestWeight = this.getSmallestWeight(loop);
-    if (smallestWeight === 0) {
+    if ((smallestWeight === 0) || (smallestWeight === Infinity)) {
       return 0;
     }
     let firstZeroPos;
@@ -35,7 +47,7 @@ export class Jerboa {
       if ((this.graph.getWeight(loop[k], loop[k+1]) === smallestWeight) && (typeof firstZeroPos === 'undefined')) {
         firstZeroPos = k;
       }
-      this.graph.addWeight(loop[k+1], loop[k], smallestWeight);
+      this.graph.addWeight(loop[k], loop[k+1], -smallestWeight);
     }
     // const after = this.graph.getTotalWeight();
     // console.log('total graph weight reduced by', before - after);
@@ -97,31 +109,42 @@ export class Jerboa {
     // console.log('receiveNack calls receiveProbe', newStep, path);
     this.receiveProbe(popped, path);
   }
-  spliceLoop(path: string[]): void {
+  spliceLoop(sender: string, path: string[]): boolean {
+    // console.log('spliceLoop', sender, path);
     // chop off loop if there is one:
     const pos = path.indexOf(this.name);
     if (pos !== -1) {
-      const loop = path.splice(pos).concat(this.name);
+      const loop = path.splice(pos).concat([sender, this.name]);
       this.netLoop(loop);
-      console.log(`Found loop`, loop, ` pos ${pos} in `, path);
-      console.log(`Continuing with`, path);
+      // console.log(`Found loop`, loop, ` pos ${pos}`);
+      return true;
     }
+    return false;
   }
   receiveProbe(sender: string, path: string[]): void {
-    console.log('receiveProbe', this.name, path);
-    this.spliceLoop(path);
+    // console.log(`receiveProbe ${sender} => ${this.name}`, path);
+    const loopFound = this.spliceLoop(sender, path);
+    if (loopFound) {
+      if (path.length >= 1) {
+        // console.log('continuing by popping old sender from', path);
+        const oldSender = path.pop();
+        this.receiveProbe(oldSender, path);
+      }
+      return;
+    }
+    // console.log('path after splicing', path);
     const nodes = this.balances.getOutgoingLinks();
     if (nodes.length === 0) {
       const task = ['nack', JSON.stringify(path)];
-      console.log('backtracking', task);
+      // console.log('backtracking', task);
       this.graph.messaging.sendMessage(this.name, sender, task);
       return;
     }
     path.push(sender);
     const newStep = nodes[0];
-    console.log('considering', path, newStep, this.balances.getBalance(newStep));
+    // console.log(`forwarding from ${this.name} to ${newStep} (balance ${this.balances.getBalance(newStep)})`);
     const task = ['probe', JSON.stringify(path)];
-    console.log('sending task string', task);
+    // console.log('sending task string', task);
     this.graph.messaging.sendMessage(this.name, newStep, task);
   };
   receiveMessage(from: string, parts: string[]): void {

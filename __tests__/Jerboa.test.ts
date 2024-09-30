@@ -41,8 +41,8 @@ describe('Jerboa', () => {
     const a = new Jerboa('a', graph);
     a.addWeight('b', 9);
     expect(graph.messaging.sendMessage).toHaveBeenCalledWith('a', 'b', ['transfer', '9']);
-    a.receiveMessage('x', ['probe', JSON.stringify(['b', 'c', 'a', 'd'])]);
-    expect(graph.messaging.sendMessage).toHaveBeenCalledWith('a', 'b', ['probe', JSON.stringify(['b', 'c', 'x'])]);
+    a.receiveMessage('x', ['probe', JSON.stringify(['b', 'c', 'a', 'd'])]); // so the loop is a-d-x-a and b-c-a is the old prefix
+    expect(graph.messaging.sendMessage).toHaveBeenCalledWith('a', 'b', ['probe', JSON.stringify(['b', 'c'])]);
   });
   it ('replies with nack if it is a leaf', () => {
     const graph = new Graph();

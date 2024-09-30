@@ -15,10 +15,6 @@ describe('addWeight', () => {
     const graph = new Graph();
     expect(() => { graph.addWeight('a', 'b', 0)}).toThrow();
   });
-  it('refuses negative weight', () => {
-    const graph = new Graph();
-    expect(() => { graph.addWeight('a', 'b', -3)}).toThrow();
-  });
   it('adds another link', () => {
     const graph = new Graph();
     graph.addWeight('a', 'b', 3);

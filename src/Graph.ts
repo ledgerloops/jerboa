@@ -30,7 +30,8 @@ export class Graph {
       throw new Error(`weight param ${JSON.stringify(weight)} is not a number in call to addWeight`);
     }
   
-    if (weight <= 0) {
+    // negative weights are currently used Jerboa#netLoop
+    if (weight === 0) {
       throw new Error('weight should be greater than zero');
     }
     this.ensureNode(from);

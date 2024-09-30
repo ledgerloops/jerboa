@@ -59,8 +59,8 @@ describe('DLD', () => {
     expect(totalAmount).toEqual(210);
     expect(dld.graph.stats).toEqual({
       "2": {
-       "numFound": 151,
-       "totalAmount": 5579.5,
+       "numFound": 154,
+       "totalAmount": 5369.5,
      },
      "3": {
        "numFound": 3,
