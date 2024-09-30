@@ -58,20 +58,48 @@ export class DLD {
     this.report(loop.length - 1, smallestWeight);
     return firstZeroPos;
   }
+  receiveNack(newStep: string, nackSender: string, path: string[]): void {
+    // console.log('receiveNack removes link', newStep, nackSender);
+    this.graph.removeLink(newStep, nackSender);
+    if (path.length === 0) {
+      // console.log('starting with a new worm');
+      // no paths left, start with a new worm
+      path = [];
+      try {
+        newStep = this.graph.getFirstNode();
+      } catch (e) {
+        if (e.message === 'Graph is empty') {
+          // We're done!
+          // console.log('done!');
+          // console.log(`Done after ${counter} steps`);
+          return;
+        } else {
+          throw e;
+        }
+      }
+    }
+    // console.log('receiveNack calls receiveProbe', newStep, path);
+    this.receiveProbe(newStep, path);
+  }
+
   receiveProbe(newStep: string, path: string[]): void {
     // console.log('receiveProbe', newStep, path);
     path.push(newStep);
     // console.log('pushed', newStep, path);
-    while (!this.graph.hasOutgoingLinks(newStep) && path.length > 0) {
+    if (!this.graph.hasOutgoingLinks(newStep) && path.length > 0) {
       // console.log('backtracking', newStep, path);
+      if (path.length < 2) {
+        // the path should at this point at least contain the probe sender and the probe receiver, right?
+        throw new Error('help');
+      }
       // backtrack
-      const previousStep = path.pop();
-      // console.log('backtracking', path, previousStep, newStep);
-      // console.log(`zeroOut`)
-      this.graph.removeLink(previousStep, newStep);
-      // after having removed the link previousStep -> newStep,
-      // this will pick the next one in the outer loop:
-      newStep = previousStep;
+      const nackSender = path.pop();
+      newStep = path.pop();
+
+      const task = ['nack', newStep, nackSender, JSON.stringify(path)];
+      // console.log('sending task string', task);
+      this.queueTask(task);
+      return;
     }
     // we now now that either newStep has outgoing links, or path is empty
     if (path.length === 0) {
@@ -103,7 +131,7 @@ export class DLD {
       newStep = this.graph.getFirstNode(path[path.length - 1]);
       // console.log(`Continuing with`, path, newStep);
     }
-    const task = ['receive-probe', newStep, JSON.stringify(path)];
+    const task = ['probe', newStep, JSON.stringify(path)];
     // console.log('sending task string', task);
     this.queueTask(task);
   };
@@ -115,8 +143,10 @@ export class DLD {
     const parts = task.split(' ');
     // console.log('task string received', parts);
     switch(parts[0]) {
-      case 'receive-probe':
+      case 'probe':
         return this.receiveProbe(parts[1], JSON.parse(parts[2]) as string[]);
+      case 'nack':
+        return this.receiveNack(parts[1], parts[2], JSON.parse(parts[3]) as string[]);
       default:
         throw new Error('unknown task');
     }
@@ -133,7 +163,7 @@ export class DLD {
   runWorm(): void {
     const newStep = this.graph.getFirstNode();
     // console.log('queueing');
-    this.queueTask(['receive-probe', newStep, `[]`]);
+    this.queueTask(['probe', newStep, `[]`]);
     this.runTasks();
   }
 }
