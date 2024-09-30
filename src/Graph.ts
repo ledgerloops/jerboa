@@ -1,45 +1,41 @@
+import { Jerboa } from './Jerboa.js'
 export class Graph {
-  private links: {
-    [from: string]: {
-      [to: string]: number;
-    }
+  private nodes: {
+    [from: string]: Jerboa
   } = {};
-  private ensureLink(from: string, to: string): void {
-    if (typeof this.links[from] === 'undefined') {
-      this.links[from] = {};
-    }
-    if (typeof this.links[from][to] === 'undefined') {
-      this.links[from][to] = 0;
+  private ensureNode(name: string): void {
+    if (typeof this.nodes[name] === 'undefined') {
+      this.nodes[name] = new Jerboa();
     }
   }
   // assumes that graph[from][to] exists
   // @returns number amount removed
   private zeroOut(from: string, to: string): number {
-    const amount = this.links[from][to]; 
-    delete this.links[from][to];
-    if (Object.keys(this.links[from]).length === 0) {
-      delete this.links[from];
+    const amount = this.nodes[from].getBalance(to); 
+    this.nodes[from].deleteBalance(to);
+    if (Object.keys(this.nodes[from]).length === 0) {
+      delete this.nodes[from];
     }
     return amount;
   }
   // assumes that both graph[from][to] and graph[to][from] exist
   private substractAndRemoveCounterBalance(from: string, to: string): number {
-    const amount = this.links[to][from];
-    this.links[from][to] -= amount;
+    const amount = this.nodes[to].getBalance(from);
+    this.nodes[from].addWeight(to, -amount);
     return this.zeroOut(to, from);
   }
   // assumes that graph[from][to] exists
   // @returns number amount netted
   private netBilateralAndRemove(from: string, to: string): number {
-    if (typeof this.links[to] === 'undefined') {
+    if (typeof this.nodes[to] === 'undefined') {
       return 0;
     }
-    if (typeof this.links[to][from] === 'undefined') {
+    if (typeof this.nodes[to].getBalance(from) === 'undefined') {
       return 0;
     }
-    if (this.links[from][to] > this.links[to][from]) {
+    if (this.nodes[from].getBalance(to) > this.nodes[to].getBalance(from)) {
       return this.substractAndRemoveCounterBalance(from, to);
-    } else if (this.links[from][to] < this.links[to][from]) {
+    } else if (this.nodes[from].getBalance(to) < this.nodes[to].getBalance(from)) {
       return this.substractAndRemoveCounterBalance(to, from);
     } else { // mutual annihilation
       this.zeroOut(from, to);
@@ -60,8 +56,8 @@ export class Graph {
     if (weight <= 0) {
       throw new Error('weight should be greater than zero');
     }
-    this.ensureLink(from, to);
-    this.links[from][to] += weight;
+    this.ensureNode(from);
+    this.nodes[from].addWeight(to, weight);
     return this.netBilateralAndRemove(from, to);
   }
   public removeLink(from: string, to: string): void {
@@ -72,8 +68,8 @@ export class Graph {
       throw new Error(`to param ${JSON.stringify(to)} is not a string in call to removeLink`);
     }
 
-    if (typeof this.links[from] !== 'undefined') {
-      if (typeof this.links[from][to] !== 'undefined') {
+    if (typeof this.nodes[from] !== 'undefined') {
+      if (typeof this.nodes[from].getBalance(to) !== 'undefined') {
         this.zeroOut(from, to);
       }
     }
@@ -85,13 +81,13 @@ export class Graph {
 
     let nodes;
     if (typeof after === 'string') {
-      const nodesObj = this.links[after];
+      const nodesObj = this.nodes[after];
       if (typeof nodesObj === 'undefined') {
         throw new Error(`No outgoing links from node ${after}`);
       }
-      nodes = Object.keys(nodesObj);
+      nodes = nodesObj.getOutgoingLinks();
     } else {
-      nodes = Object.keys(this.links);
+      nodes = Object.keys(this.nodes);
       if (nodes.length === 0) {
         throw new Error('Graph is empty');
       }
@@ -102,7 +98,7 @@ export class Graph {
     if (typeof after !== 'string') {
       throw new Error(`after param ${JSON.stringify(after)} is not a string in call to hasOutgoingLinks`);
     }
-    return (typeof this.links[after] !== 'undefined');
+    return ((typeof this.nodes[after] !== 'undefined') && (this.nodes[after].getOutgoingLinks().length >= 1));
   }
   public getWeight(from: string, to: string): number {
     if (typeof from !== 'string') {
@@ -111,26 +107,33 @@ export class Graph {
     if (typeof to !== 'string') {
       throw new Error(`to param ${JSON.stringify(to)} is not a string in call to getWeight`);
     }
-    if (typeof this.links[from] === 'undefined') {
+    if (typeof this.nodes[from] === 'undefined') {
       return 0;
     }
-    if (typeof this.links[from][to] === 'undefined') {
+    if (typeof this.nodes[from].getBalance(to) === 'undefined') {
       return 0;
     }
-    return this.links[from][to];
+    return this.nodes[from].getBalance(to);
   }
   public getLinks(): {
     [from: string]: {
       [to: string]: number;
     }
   } {
-    return this.links;
+    const links = {};
+    Object.keys(this.nodes).forEach(name => {
+      const balances = this.nodes[name].getBalances();
+      if (Object.keys(balances).length >= 1) {
+        links[name] = balances;
+      }
+    });
+    return links;
   }
   public getTotalWeight(): number {
     let total = 0;
-    Object.keys(this.links).forEach(from => {
-      Object.keys(this.links[from]).forEach(to => {
-        total += this.links[from][to];
+    Object.keys(this.nodes).forEach(from => {
+      Object.keys(this.nodes[from]).forEach(to => {
+        total += this.nodes[from].getBalance(to);
       });
     });
     return total;
