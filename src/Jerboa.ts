@@ -1,18 +1,14 @@
 import { Graph } from "./Graph.js";
-
+import { Balances } from "./Balances.js";
 export class Jerboa {
-  private balance: {
-    [to: string]: number;
-  } = {};
-  private counterBalance: {
-    [to: string]: number;
-  } = {};
+  private balances: Balances;
   private graph: Graph;
   private name: string;
   constructor(name: string, graph: Graph) {
     this.name = name;
     this.graph = graph;
   }
+  private sentBilateralClearing: { [otherParty: string]: boolean } = {};
 
   // assumes all loop hops exist
   getSmallestWeight(loop: string[]): number {
@@ -27,10 +23,6 @@ export class Jerboa {
     return smallestWeight;
   }
 
-  addTransfer(from: string, to: string, amount: number): void {
-    this.graph.addWeight(from, to, amount);
-    this.graph.messaging.sendMessage(this.name, to, ['transfer', JSON.stringify(amount)]);
-  }
   // assumes all loop hops exist
   netLoop(loop: string[]): number {
     // const before = this.graph.getTotalWeight();
@@ -43,16 +35,56 @@ export class Jerboa {
       if ((this.graph.getWeight(loop[k], loop[k+1]) === smallestWeight) && (typeof firstZeroPos === 'undefined')) {
         firstZeroPos = k;
       }
-      this.addTransfer(loop[k+1], loop[k], smallestWeight);
+      this.graph.addWeight(loop[k+1], loop[k], smallestWeight);
     }
     // const after = this.graph.getTotalWeight();
     // console.log('total graph weight reduced by', before - after);
     this.graph.report(loop.length - 1, smallestWeight);
     return firstZeroPos;
   }
+  sendMessage(to: string, task: string[]): void {
+    this.graph.messaging.sendMessage(this.name, to, task);
+  }
+  finishBilateralClear(sender: string, amount: number): void {
+    this.balances.adjustBalance(sender, -amount);
+    this.balances.adjustCounterBalance(sender, -amount);
+  }
+  receiveCommit(sender: string, probe: string, amount: number): void {
+    if (probe === 'bilateral') {
+      if (typeof this.sentBilateralClearing[sender] === 'undefined') { // role b
+        this.sendMessage(sender, ['commit', 'bilateral', JSON.stringify(amount)]);
+      } else {
+        this.graph.report(2, amount);
+        delete this.sentBilateralClearing[sender];
+      }
+      this.finishBilateralClear(sender, amount);
+    }
+  }
+  receivePropose(sender: string, probe: string, amount: number): void {
+    if (probe === 'bilateral') {
+      if (typeof this.sentBilateralClearing[sender] === 'undefined') { // role b
+        this.sendMessage(sender, ['propose', 'bilateral', JSON.stringify(amount)]);
+      } else {
+        this.sendMessage(sender, ['commit', 'bilateral', JSON.stringify(amount)]);
+      }
+    }
+  }
+  // a -> b propose
+  // b -> a propose
+  // a -> b commit
+  // b -> a commit
+  startBilateralClear(sender: string, amount: number): void {
+    this.sentBilateralClearing[sender] = true;
+    this.sendMessage(sender, ['propose', 'bilateral', JSON.stringify(amount)]);
+  }
   receiveTransfer(sender: string, amount: number): void {
-    this.ensureCounterBalance(sender);
-    this.counterBalance[sender] += amount;
+    // console.log('processing transfer message,', sender, this.name, amount);
+    this.balances.adjustCounterBalance(sender, amount);
+    const balance = this.balances.getBalance(sender);
+    const counterBalance = this.balances.getCounterBalance(sender);
+    if (counterBalance <= balance) {
+      this.startBilateralClear(sender, counterBalance);
+    }
   }
   receiveNack(nackSender: string, path: string[]): void {
     let newStep = this.name;
@@ -132,41 +164,43 @@ export class Jerboa {
       return this.receiveNack(from, JSON.parse(parts[1]) as string[]);
     case 'transfer':
       return this.receiveTransfer(from, JSON.parse(parts[1]) as number);
+      case 'propose':
+        return this.receivePropose(from, parts[1], JSON.parse(parts[2]) as number);
+    case 'commit':
+      return this.receiveCommit(from, parts[1], JSON.parse(parts[2]) as number);      
     default:
       throw new Error('unknown task');
     }
   }
-
-  ensureBalance(to: string): void {
-    // console.log('ensuring balance', to, this.balance);
-    if (typeof this.balance[to] === 'undefined') {
-      this.balance[to] = 0;
-    }
-  }
-
-  ensureCounterBalance(to: string): void {
-    // console.log('ensuring balance', to, this.balance);
-    if (typeof this.counterBalance[to] === 'undefined') {
-      this.counterBalance[to] = 0;
-    }
-  }
   addWeight(to: string, weight: number): void {
-    this.ensureBalance(to);
-    this.balance[to] += weight;
+    this.balances.adjustBalance(to, weight);
+    // console.log('sending transfer message', this.name, to, weight);
+    this.graph.messaging.sendMessage(this.name, to, ['transfer', JSON.stringify(weight)]);
+    const balance = this.balances.getBalance(to);
+    const counterBalance = this.balances.getCounterBalance(to);
+    if (counterBalance < balance) {
+      this.startBilateralClear(to, counterBalance);
+    }
   }
   getBalance(to: string): number | undefined {
-    return this.balance[to];
+    return this.balances.getBalance(to);
   }
+  getCounterBalance(to: string): number | undefined {
+    return this.balances.getCounterBalance(to);
+  }
+
   // @returns number amount removed
   zeroOut(to: string): number {
-    const amount = this.getBalance(to);
-    delete this.balance[to];
-    return amount;
+    return this.balances.zeroOut(to);
   }
   getOutgoingLinks(): string[] {
-    return Object.keys(this.balance);
+    return this.balances.getOutgoingLinks();
   }
+
   getBalances(): { [to: string]: number } {
-    return this.balance;
+    return this.balances.getBalances();
+  }
+  clearZeroes(): void {
+    this.balances.sanityCheck(this.name);
   }
 }

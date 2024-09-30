@@ -4,6 +4,7 @@ describe('addWeight', () => {
   it('adds a link', () => {
     const graph = new Graph();
     graph.addWeight('a', 'b', 3);
+    graph.messaging.runTasks();
     expect(graph.getLinks()).toEqual({
       'a': {
         'b': 3
@@ -21,7 +22,9 @@ describe('addWeight', () => {
   it('adds another link', () => {
     const graph = new Graph();
     graph.addWeight('a', 'b', 3);
+    graph.messaging.runTasks();
     graph.addWeight('a', 'c', 5);
+    graph.messaging.runTasks();
     expect(graph.getLinks()).toEqual({
       'a': {
         'b': 3,
@@ -32,7 +35,9 @@ describe('addWeight', () => {
   it('prepends a link to a path', () => {
     const graph = new Graph();
     graph.addWeight('a', 'b', 3);
+    graph.messaging.runTasks();
     graph.addWeight('c', 'a', 5);
+    graph.messaging.runTasks();
     expect(graph.getLinks()).toEqual({
       'a': {
         'b': 3
@@ -46,6 +51,7 @@ describe('addWeight', () => {
     const graph = new Graph();
     graph.addWeight('a', 'b', 3);
     graph.addWeight('b', 'a', 7);
+    graph.messaging.runTasks();
     expect(graph.getLinks()).toEqual({
       'b': {
         'a': 4
@@ -56,6 +62,8 @@ describe('addWeight', () => {
     const graph = new Graph();
     graph.addWeight('a', 'b', 3);
     graph.addWeight('b', 'a', 2);
+    // console.log('calling runTasks');
+    graph.messaging.runTasks();
     expect(graph.getLinks()).toEqual({
       'a': {
         'b': 1
@@ -66,6 +74,7 @@ describe('addWeight', () => {
     const graph = new Graph();
     graph.addWeight('a', 'b', 3);
     graph.addWeight('b', 'a', 3);
+    graph.messaging.runTasks();
     expect(graph.getLinks()).toEqual({
     });
   });
@@ -76,6 +85,7 @@ describe('removeLink', () => {
     const graph = new Graph();
     graph.addWeight('a', 'b', 3);
     graph.removeLink('a', 'b');
+    graph.messaging.runTasks();
     expect(graph.getLinks()).toEqual({});
   });
 });
@@ -84,11 +94,13 @@ describe('getFirstNode', () => {
   it('works when passing no after argument', () => {
     const graph = new Graph();
     graph.addWeight('a', 'b', 3);
+    graph.messaging.runTasks();
     expect(graph.getFirstNode(false)).toEqual('a');
   });
   it('works when passing an after argument', () => {
     const graph = new Graph();
     graph.addWeight('a', 'b', 3);
+    graph.messaging.runTasks();
     expect(graph.getFirstNode(false, 'a')).toEqual('b');
   });
 });
@@ -97,11 +109,13 @@ describe('hasOutgoingLinks', () => {
   it('works in the positive case', () => {
     const graph = new Graph();
     graph.addWeight('a', 'b', 3);
+    graph.messaging.runTasks();
     expect(graph.hasOutgoingLinks('a')).toEqual(true);
   });
   it('works in the negative case', () => {
     const graph = new Graph();
     graph.addWeight('a', 'b', 3);
+    graph.messaging.runTasks();
     expect(graph.hasOutgoingLinks('b')).toEqual(false);
     expect(graph.hasOutgoingLinks('c')).toEqual(false);
   });
@@ -111,11 +125,13 @@ describe('getWeight', () => {
   it('works in the positive case', () => {
     const graph = new Graph();
     graph.addWeight('a', 'b', 3);
+    graph.messaging.runTasks();
     expect(graph.getWeight('a', 'b')).toEqual(3);
   });
   it('works in the negative case', () => {
     const graph = new Graph();
     graph.addWeight('a', 'b', 3);
+    graph.messaging.runTasks();
     expect(graph.getWeight('b', 'a')).toEqual(0);
     expect(graph.getWeight('c', 'b')).toEqual(0);
   });

@@ -3,9 +3,6 @@ import { Graph } from './Graph.js';
 export class DLD {
   tasks: string[] = [];
   graph: Graph = new Graph();
-  addTransfer(from: string, to: string, amount: number): void {
-    this.graph.addWeight(from, to, amount);
-  }
 
   // removes dead ends as it finds them.
   // nets loops as it finds them.
@@ -26,6 +23,7 @@ export class DLD {
       }
       this.graph.messaging.sendMessage('out of nowhere', newStep, ['probe', `[]`]);
       this.graph.messaging.runTasks();
+      console.log('running probe from', newStep);
     } while (!done);
   }
 }

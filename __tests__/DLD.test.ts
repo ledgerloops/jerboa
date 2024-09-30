@@ -40,7 +40,7 @@ async function readCsv(callback: (from: string, to: string, amount: number) => v
 describe('DLD', () => {
   it('finds loops', async () => {
     const dld = new DLD();
-    await readCsv(dld.addTransfer.bind(dld));
+    await readCsv(dld.graph.addWeight.bind(dld.graph));
     dld.runWorm();
     // const links = dld.graph.getLinks();
     // let numLinks = 0;

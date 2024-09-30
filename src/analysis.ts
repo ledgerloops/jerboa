@@ -1,6 +1,7 @@
 import { createInterface } from 'readline';
 import { createReadStream } from 'fs';
 import { DLD } from './DLD.js';
+import { Jerboa } from './Jerboa.js';
 
 const SARAFU_CSV = '../Sarafu2021_UKdb_submission/sarafu_xDAI/sarafu_txns_20200125-20210615.csv';
 // const SARAFU_CSV = './__tests__/fixture.csv';
@@ -25,15 +26,20 @@ lineReader.on('line', function (line) {
     nodes[target] = (counter++).toString();
   }
   if (transfer_subtype === 'STANDARD') {
-    dld.addTransfer(nodes[source], nodes[target], parseFloat(weight));
+    dld.graph.addWeight(nodes[source], nodes[target], parseFloat(weight));
     numTrans++;
     totalTransAmount += parseFloat(weight);
   }
 });
 
 lineReader.on('close', function () {
+  console.log('primary transfers done, now inviting bilateral netting');
+  dld.graph.messaging.runTasks();
   const totalImmediatelyNetted = dld.graph.stats[2].totalAmount;
-
+  dld.graph.getNodes().forEach((jerboa: Jerboa) => {
+    jerboa.clearZeroes();
+  })
+  console.log('bilateral netting done, now inviting probes');
   dld.runWorm();
   console.log(dld.graph.stats);
   const links = dld.graph.getLinks();
