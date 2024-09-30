@@ -6,9 +6,16 @@ export class Graph {
     [from: string]: Jerboa
   } = {};
   public messaging: Messaging = new Messaging();
+  stats: {
+    [loopLength: number]: {
+      numFound: number;
+      totalAmount: number;
+    }
+  } = {};
+ 
   private ensureNode(name: string): void {
     if (typeof this.nodes[name] === 'undefined') {
-      this.nodes[name] = new Jerboa();
+      this.nodes[name] = new Jerboa(name, this);
     }
   }
 
@@ -82,12 +89,12 @@ export class Graph {
       }
     }
   }
-  public getFirstNode(after?: string): string {
+  public getFirstNode(withOutgoingLinks: boolean, after?: string): string {
     if ((typeof after !== 'string') && (typeof after !== 'undefined')) {
       throw new Error(`after param ${JSON.stringify(after)} is neither a string nor undefined in call to getFirstNode`);
     }
 
-    let nodes;
+    let nodes: string[];
     if (typeof after === 'string') {
       const nodesObj = this.nodes[after];
       if (typeof nodesObj === 'undefined') {
@@ -100,7 +107,16 @@ export class Graph {
         throw new Error('Graph is empty');
       }
     }
-    return nodes[0];
+    if (withOutgoingLinks) {
+      for (let i = 0; i < nodes.length; i++) {
+        if ((typeof this.nodes[nodes[i]] !== 'undefined') && (this.nodes[nodes[i]].getOutgoingLinks().length >= 1)) {
+          return nodes[i];
+        }
+      }
+    } else {
+      return nodes[0];
+    }
+    throw new Error('no nodes have outgoing links');
   }
   public hasOutgoingLinks(after: string): boolean {
     if (typeof after !== 'string') {
@@ -145,5 +161,22 @@ export class Graph {
       });
     });
     return total;
+  }
+  report(loopLength: number, amount: number): void {
+    // if (loopLength > 2) {
+    //   console.log('report', loopLength, amount);
+    // }
+    if (typeof this.stats[loopLength] === 'undefined') {
+      this.stats[loopLength] = {
+        numFound: 0,
+        totalAmount: 0
+      };
+    }
+    this.stats[loopLength].numFound++;
+    this.stats[loopLength].totalAmount += amount;
+  }
+  getNode(name: string): Jerboa {
+    this.ensureNode(name);
+    return this.nodes[name];
   }
 }

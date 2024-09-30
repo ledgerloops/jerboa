@@ -84,12 +84,12 @@ describe('getFirstNode', () => {
   it('works when passing no after argument', () => {
     const graph = new Graph();
     graph.addWeight('a', 'b', 3);
-    expect(graph.getFirstNode()).toEqual('a');
+    expect(graph.getFirstNode(false)).toEqual('a');
   });
   it('works when passing an after argument', () => {
     const graph = new Graph();
     graph.addWeight('a', 'b', 3);
-    expect(graph.getFirstNode('a')).toEqual('b');
+    expect(graph.getFirstNode(false, 'a')).toEqual('b');
   });
 });
 

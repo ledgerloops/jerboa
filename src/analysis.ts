@@ -34,7 +34,7 @@ lineReader.on('line', function (line) {
 
 lineReader.on('close', function () {
   dld.runWorm();
-  console.log(dld.stats);
+  console.log(dld.graph.stats);
   const links = dld.graph.getLinks();
   let numLinks = 0;
   Object.keys(links).forEach(from => {
@@ -47,10 +47,10 @@ lineReader.on('close', function () {
   console.log(`${Math.round(totalBilateralAmount / 1000000)} million (${Math.round((totalBilateralAmount / totalTransAmount) * 100)}%) was immediately netted bilaterally`);
   let totalNum = 0;
   let totalAmount = 0;
-  Object.keys(dld.stats).map(numStr => {
+  Object.keys(dld.graph.stats).map(numStr => {
     if (numStr !== '2') {
-      totalAmount += dld.stats[numStr].totalAmount * parseInt(numStr);
-      totalNum += dld.stats[numStr].numFound;
+      totalAmount += dld.graph.stats[numStr].totalAmount * parseInt(numStr);
+      totalNum += dld.graph.stats[numStr].numFound;
     }
   });
   const amountLeft = totalTransAmount - totalBilateralAmount - totalAmount;

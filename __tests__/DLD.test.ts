@@ -49,15 +49,15 @@ describe('DLD', () => {
     // });
     let totalNum = 0;
     let totalAmount = 0;
-    Object.keys(dld.stats).map(numStr => {
+    Object.keys(dld.graph.stats).map(numStr => {
       if (numStr !== '2') {
-        totalAmount += dld.stats[numStr].totalAmount * parseInt(numStr);
-        totalNum += dld.stats[numStr].numFound;
+        totalAmount += dld.graph.stats[numStr].totalAmount * parseInt(numStr);
+        totalNum += dld.graph.stats[numStr].numFound;
       }
     });
     expect(totalNum).toEqual(3);
     expect(totalAmount).toEqual(210);
-    expect(dld.stats).toEqual({
+    expect(dld.graph.stats).toEqual({
       "2": {
        "numFound": 1380,
        "totalAmount": 5579.5,
