@@ -53,7 +53,7 @@ export class Jerboa {
     }
     // const after = this.graph.getTotalWeight();
     // console.log('total graph weight reduced by', before - after);
-    console.log('netted', smallestWeight, loop.length);
+    console.log(`Netted a loop with weight ${smallestWeight} and length ${loop.length}`);
     this.graph.report(loop.length - 1, smallestWeight);
     return firstZeroPos;
   }

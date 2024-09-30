@@ -7,7 +7,7 @@ export class Messaging {
     this.graph = graph;
   }
   deliverMessage(from: string, to: string, task: string): void {
-    // console.log('deliverMessage', from, to, task);
+    console.log('deliverMessage', from, to, task);
     const parts = task.split(' ');
     return this.graph.getNode(to).receiveMessage(from, parts);
   }
