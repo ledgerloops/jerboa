@@ -98,7 +98,7 @@ export class DLD {
 
       const task = ['nack', newStep, nackSender, JSON.stringify(path)];
       // console.log('sending task string', task);
-      this.queueTask(task);
+      this.graph.messaging.queueTask(task);
       return;
     }
     // we now now that either newStep has outgoing links, or path is empty
@@ -133,12 +133,9 @@ export class DLD {
     }
     const task = ['probe', newStep, JSON.stringify(path)];
     // console.log('sending task string', task);
-    this.queueTask(task);
+    this.graph.messaging.queueTask(task);
   };
 
-  queueTask(task: string[]): void {
-    this.tasks.push(task.join(' '));
-  }
   executeTask(task: string): void {
     const parts = task.split(' ');
     // console.log('task string received', parts);
@@ -151,19 +148,12 @@ export class DLD {
         throw new Error('unknown task');
     }
   }
-  runTasks(): void {
-    let newTask;
-    while (this.tasks.length > 0) {
-      newTask = this.tasks.pop();
-      this.executeTask(newTask);
-    }
-  }
   // removes dead ends as it finds them.
   // nets loops as it finds them.
   runWorm(): void {
     const newStep = this.graph.getFirstNode();
     // console.log('queueing');
-    this.queueTask(['probe', newStep, `[]`]);
-    this.runTasks();
+    this.graph.messaging.queueTask(['probe', newStep, `[]`]);
+    this.graph.messaging.runTasks(this.executeTask.bind(this));
   }
 }
