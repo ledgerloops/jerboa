@@ -70,18 +70,22 @@ export class BirdsEyeWorm {
       // console.log('Step', path, newStep);
       path.push(newStep);
       // console.log('picking first option from', newStep);
-      while (!this.graph.hasOutgoingLinks(newStep) && path.length > 0) {
+      // console.log(path);
+      const backtracked = [];
+      while (path.length > 0 && !this.graph.hasOutgoingLinks(path[path.length - 1])) {
+        // console.log('no outgoing links', path);
         // backtrack
         const previousStep = path.pop();
-        console.log('backtracking', path, previousStep, newStep);
-        // console.log(`zeroOut`)
-        this.graph.removeLink(previousStep, newStep);
-        // after having removed the link previousStep -> newStep,
-        // this will pick the next one in the outer loop:
-        newStep = previousStep;
+        backtracked.push(previousStep);
+        if (path.length > 0) {
+          this.graph.removeLink(path[path.length - 1], previousStep);
+        }
       }
       // we now now that either newStep has outgoing links, or path is empty
       if (path.length === 0) {
+        if (backtracked.length > 0) {
+          console.log('finished   ', path, backtracked.reverse());
+        }
         // no paths left, start with a new worm
         path = [];
         try {
@@ -96,6 +100,12 @@ export class BirdsEyeWorm {
           }
         }
       } else {
+        if (backtracked.length > 0) {
+          console.log('backtracked', path, backtracked.reverse());
+          newStep = path[path.length - 1];
+          // console.log('continuing from', path, newStep);
+        }
+
         newStep = this.graph.getFirstNode(newStep);
         // console.log('considering', path, newStep);  
       }
@@ -104,9 +114,9 @@ export class BirdsEyeWorm {
       if (pos !== -1) {
         const loop = path.splice(pos).concat(newStep);
         this.netLoop(loop);
-        console.log(`Found loop`, loop, ` pos ${pos} in `, path);
+        console.log(`found loop `, path, loop);
         newStep = this.graph.getFirstNode(path[path.length - 1]);
-        console.log(`Continuing with`, path, newStep);
+        // console.log(`Continuing with`, path, newStep);
       }
     }
   }
