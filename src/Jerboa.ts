@@ -78,64 +78,31 @@ export class Jerboa {
   sendMessage(to: string, task: string[]): void {
     this.graph.messaging.sendMessage(this.name, to, task);
   }
-  // finishBilateralClear(sender: string, amount: number): void {
-  //   this.balances.adjustBalance(sender, -amount);
-  //   this.balances.adjustCounterBalance(sender, -amount);
-  // }
-  // receiveCommit(sender: string, probe: string, amount: number): void {
-  //   if (probe === 'bilateral') {
-  //     if (typeof this.sentBilateralClearing[sender] === 'undefined') { // role b
-  //       this.sendMessage(sender, ['commit', 'bilateral', JSON.stringify(amount)]);
-  //     } else {
-  //       this.graph.report(2, amount);
-  //       delete this.sentBilateralClearing[sender];
-  //     }
-  //     this.finishBilateralClear(sender, amount);
-  //   }
-  // }
-  // receivePropose(sender: string, probe: string, amount: number): void {
-  //   if (probe === 'bilateral') {
-  //     if (typeof this.sentBilateralClearing[sender] === 'undefined') { // role b
-  //       this.sendMessage(sender, ['propose', 'bilateral', JSON.stringify(amount)]);
-  //     } else {
-  //       this.sendMessage(sender, ['commit', 'bilateral', JSON.stringify(amount)]);
-  //     }
-  //   }
-  // }
-  // a -> b propose
-  // b -> a propose
-  // a -> b commit
-  // b -> a commit
-  // startBilateralClear(sender: string, amount: number): void {
-  //   this.sentBilateralClearing[sender] = true;
-  //   this.sendMessage(sender, ['propose', 'bilateral', JSON.stringify(amount)]);
-  // }
   receiveTransfer(sender: string, amount: number): void {
     // console.log(`${sender}->${this.name}: ${amount}`);
     this.balances.adjustReceived(sender, amount);
     this.checkFriendCache(sender);
   }
-  receiveNack(nackSender: string, path: string[], backtracked: string[]): void {
+  receiveNack(nackSender: string, debugInfo: { path: string[], backtracked: string[] }): void {
     delete this.outgoingLinks[nackSender];
-    if (path.length === 0) {
+    if (debugInfo.path.length === 0) {
       const nodes = this.getOutgoingLinks();
       if (nodes.length === 0) {
         if (process.env.PROBING_REPORT) {
-          console.log('finished   ', [], [this.name, nackSender].concat(backtracked));
+          console.log('finished   ', [], [this.name, nackSender].concat(debugInfo.backtracked));
         }
       } else {
         if (process.env.PROBING_REPORT) {
-          console.log('backtracked', [ this.name ], [nackSender].concat(backtracked));
+          console.log('backtracked', [ this.name ], [nackSender].concat(debugInfo.backtracked));
         }
         const newStep = randomStringFromArray(nodes);
-        const task = ['probe', JSON.stringify(path), JSON.stringify([])];
-        this.graph.messaging.sendMessage(this.name, newStep, task);
+        this.sendProbeMessage(newStep, '1', { path: debugInfo.path, backtracked: [] });
       }
     } else {
       // console.log('backtracked', path.concat(this.name), [ nackSender ].concat(backtracked));
-      const popped = path.pop();
+      const popped = debugInfo.path.pop();
       // console.log(`                     combining nack sender, internal receiveProbe`, popped, this.name, path, [nackSender].concat(backtracked));
-      this.receiveProbe(popped, path, [nackSender].concat(backtracked));
+      this.receiveProbe(popped, '1', { path: debugInfo.path, backtracked: [nackSender].concat(debugInfo.backtracked) });
     }
   }
   spliceLoop(sender: string, path: string[]): boolean {
@@ -152,14 +119,14 @@ export class Jerboa {
     }
     return false;
   }
-  receiveProbe(sender: string, path: string[], backtracked: string[]): void {
+  receiveProbe(sender: string, probeId: string, debugInfo: { path: string[], backtracked: string[] }): void {
     // console.log(`receiveProbe ${sender} => ${this.name}`, path);
-    const loopFound = this.spliceLoop(sender, path);
+    const loopFound = this.spliceLoop(sender, debugInfo.path);
     if (loopFound) {
-      if (path.length >= 1) {
+      if (debugInfo.path.length >= 1) {
         // console.log('                   continuing by popping old sender from', path);
-        const oldSender = path.pop();
-        this.receiveProbe(oldSender, path, []);
+        const oldSender = debugInfo.path.pop();
+        this.receiveProbe(oldSender, probeId, { path: debugInfo.path, backtracked: [] });
       }
       return;
     }
@@ -167,36 +134,44 @@ export class Jerboa {
     const nodes = this.getOutgoingLinks();
     if (nodes.length === 0) {
       // console.log(`                     combining self, sending nack ${this.name}->${sender}`, path, backtracked);
-      const task = ['nack', JSON.stringify(path), JSON.stringify(backtracked)];
-      // console.log('backtracking', this.name, sender, task);
-      this.graph.messaging.sendMessage(this.name, sender, task);
+      this.sendNackMessage(sender, debugInfo);
       return;
-    } else if (backtracked.length > 0) {
+    } else if (debugInfo.backtracked.length > 0) {
       if (process.env.PROBING_REPORT) {
-        console.log(`backtracked`, path.concat([sender, this.name]), backtracked);
+        console.log(`backtracked`, debugInfo.path.concat([sender, this.name]), debugInfo.backtracked);
       }
     }
     // console.log('         did we print?', sender, this.name, path, backtracked);
-    path.push(sender);
+    debugInfo.path.push(sender);
     const newStep = randomStringFromArray(nodes);
     // console.log(`forwarding from ${this.name} to ${newStep} (balance ${this.balances.getBalance(newStep)})`);
-    const task = ['probe', JSON.stringify(path), JSON.stringify([])];
-    // console.log('sending task string', task);
-    this.graph.messaging.sendMessage(this.name, newStep, task);
+    this.sendProbeMessage(newStep, '1', { path: debugInfo.path, backtracked: [] });
   };
   receiveMessage(from: string, parts: string[]): void {
     // console.log('receiveMessage', from, this.name, parts);
     switch(parts[0]) {
-      case 'probe':
-        return this.receiveProbe(from, JSON.parse(parts[1]) as string[], JSON.parse(parts[2]) as string[]);
-    case 'nack':
-      return this.receiveNack(from, JSON.parse(parts[1]) as string[], JSON.parse(parts[2]) as string[]);
-    case 'transfer':
+      case 'probe': {
+        const probeId = parts[1];
+        const debugInfo: {
+          path: string[],
+          backtracked: string[]
+        } = JSON.parse(parts[2]);
+        return this.receiveProbe(from, probeId, debugInfo);
+      }
+    case 'nack': {
+      const debugInfo: {
+        path: string[],
+        backtracked: string[]
+      } = JSON.parse(parts[1]);
+      return this.receiveNack(from, debugInfo);
+    }
+    case 'transfer': {
       return this.receiveTransfer(from, JSON.parse(parts[1]) as number);
     //   case 'propose':
     //     return this.receivePropose(from, parts[1], JSON.parse(parts[2]) as number);
     // case 'commit':
     //   return this.receiveCommit(from, parts[1], JSON.parse(parts[2]) as number);
+    }
     default:
       throw new Error('unknown task');
     }
@@ -215,7 +190,7 @@ export class Jerboa {
   addWeight(to: string, weight: number): void {
     this.balances.adjustSent(to, weight);
     this.checkFriendCache(to);
-    this.graph.messaging.sendMessage(this.name, to, ['transfer', JSON.stringify(weight)]);
+    this.sendTransferMessage(to, weight);
   }
   getOutgoingLinks(): string[] {
     return Object.keys(this.outgoingLinks);
@@ -229,12 +204,21 @@ export class Jerboa {
   getArchiveWeights(): { [to: string]: number } {
     return this.balances.getArchiveWeights(this.name);
   }
+  sendProbeMessage(to: string, probeId: string, debugInfo: object): void {
+    this.sendMessage(to, ['probe', probeId, JSON.stringify(debugInfo)]);
+  }
+  sendNackMessage(to: string, debugInfo: object): void {
+    this.sendMessage(to, ['nack', JSON.stringify(debugInfo)]);
+  }
+  sendTransferMessage(to: string, weight: number): void {
+    this.sendMessage(to, ['transfer', JSON.stringify(weight)]);
+  }
   startProbe(): boolean {
     const nodes = this.getOutgoingLinks();
     if (nodes.length === 0) {
       return false;
     }
-    this.sendMessage(nodes[0], ['probe', JSON.stringify([]), JSON.stringify([])]);
+    this.sendProbeMessage(nodes[0], '1', { path: [], backtracked: [] });
     return true;
   }
 }
