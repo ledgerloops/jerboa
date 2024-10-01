@@ -23,7 +23,7 @@ export class Jerboa {
   private balances: Balances = new Balances();
   private graph: Graph;
   private name: string;
-  private nack: {
+  private outgoingLinks: {
     [friend: string]: boolean
   } = {};
   constructor(name: string, graph: Graph) {
@@ -113,11 +113,15 @@ export class Jerboa {
   receiveTransfer(sender: string, amount: number): void {
     // console.log(`${sender}->${this.name}: ${amount}`);
     this.balances.adjustReceived(sender, amount);
+    const newBalance = this.balances.getBalance(sender);
+    if (newBalance < MIN_LOOP_WEIGHT) {
+      delete this.outgoingLinks[sender];
+    }
   }
   receiveNack(nackSender: string, path: string[], backtracked: string[]): void {
-    this.nack[nackSender] = true;
+    delete this.outgoingLinks[nackSender];
     if (path.length === 0) {
-      const nodes = this.getOutgoingLinks(true);
+      const nodes = this.getOutgoingLinks();
       if (nodes.length === 0) {
         console.log('finished   ', [], [this.name, nackSender].concat(backtracked));
       } else {
@@ -157,7 +161,7 @@ export class Jerboa {
       return;
     }
     // console.log('path after splicing', path);
-    const nodes = this.getOutgoingLinks(true);
+    const nodes = this.getOutgoingLinks();
     if (nodes.length === 0) {
       // console.log(`                     combining self, sending nack ${this.name}->${sender}`, path, backtracked);
       const task = ['nack', JSON.stringify(path), JSON.stringify(backtracked)];
@@ -194,16 +198,17 @@ export class Jerboa {
   }
   addWeight(to: string, weight: number): void {
     this.balances.adjustSent(to, weight);
+    const newBalance = this.balances.getBalance(to);
+    if (newBalance > MIN_LOOP_WEIGHT) {
+      this.outgoingLinks[to] = true;
+    } else {
+      delete this.outgoingLinks[to];
+    }
+
     this.graph.messaging.sendMessage(this.name, to, ['transfer', JSON.stringify(weight)]);
   }
-  getOutgoingLinks(avoidNack: boolean): string[] {
-    const balances = this.balances.getBalances();
-    return Object.keys(balances).filter((to: string) => {
-      if ((avoidNack) && (this.nack[to])) {
-        return false;
-      }
-      return (balances[to] > MIN_LOOP_WEIGHT);
-    });
+  getOutgoingLinks(): string[] {
+    return Object.keys(this.outgoingLinks);
   }
   getBalance(to: string): number {
     return this.balances.getBalance(to);
@@ -215,7 +220,7 @@ export class Jerboa {
     return this.balances.getArchiveWeights(this.name);
   }
   startProbe(): boolean {
-    const nodes = this.getOutgoingLinks(true);
+    const nodes = this.getOutgoingLinks();
     if (nodes.length === 0) {
       return false;
     }
