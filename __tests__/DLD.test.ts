@@ -56,16 +56,16 @@ describe('DLD', () => {
       }
     });
     expect([totalNum, totalAmount, dld.graph.stats]).toEqual([
-      5,
-      240,
+      3,
+      210,
       {
         "2": {
-        "numFound": 129,
-        "totalAmount": 5355.5,
+        "numFound": 1,
+        "totalAmount": 2,
       },
       "3": {
-        "numFound": 5,
-        "totalAmount": 80,
+        "numFound": 3,
+        "totalAmount": 70,
       }
       }
     ]);

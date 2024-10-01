@@ -96,6 +96,9 @@ export class Balances {
       return amount;
     }
     getOutgoingLinks(): string[] {
-      return Object.keys(this.balance);
+      return Object.keys(this.balance).filter((to: string) => {
+        const counterBalance = this.getCounterBalance(to) || 0;
+        return (this.balance[to] - counterBalance > 0);
+      });
     }
   }
