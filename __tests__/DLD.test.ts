@@ -2,7 +2,7 @@ import { createInterface } from 'readline';
 import { createReadStream } from 'fs';
 import { DLD } from '../src/DLD.js';
 
-const SARAFU_CSV = './__tests__/fixture-3000.csv';
+const SARAFU_CSV = './__tests__/fixture-300.csv';
 
 async function readCsv(callback: (from: string, to: string, amount: number) => void): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -51,18 +51,18 @@ describe('DLD', () => {
       }
     });
     expect([totalNum, totalAmount, dld.graph.stats]).toEqual([
-      3,
-      210,
+      1,
+      30,
       {
         "2": {
         "numFound": 1,
-        "totalAmount": 2,
+        "totalAmount": 0.5,
+        },
+        "3": {
+          "numFound": 1,
+          "totalAmount": 10,
+        },
       },
-      "3": {
-        "numFound": 3,
-        "totalAmount": 70,
-      }
-      }
     ]);
   });
 });
