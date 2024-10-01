@@ -1,7 +1,6 @@
 import { Graph } from "./Graph.js";
 import { Balances } from "./Balances.js";
 const MIN_LOOP_WEIGHT = 0.00000001;
-const MAX_LOOP_WEIGHT = 1000000000;
 const RANDOM_NEXT_STEP = false;
 
 function randomStringFromArray(arr: string[]): string {
@@ -26,54 +25,22 @@ export class Jerboa {
   private outgoingLinks: {
     [friend: string]: boolean
   } = {};
+  private probes: {
+    [probeId: string]: {
+      in?: string,
+      out?: string,
+      traces: {
+        [traceId: string]: {
+          in?: string,
+          out?: string,
+          mintedHere: boolean,
+        }
+      }
+    }
+  }
   constructor(name: string, graph: Graph) {
     this.name = name;
     this.graph = graph;
-  }
-
-  // assumes all loop hops exist
-  getSmallestWeight(loop: string[]): number {
-    let smallestWeight = Infinity;
-    let found = false;
-    if (loop.length === 0) {
-      throw new Error('loop has length 0');
-    }
-    // const weights = [];
-    // console.log('finding smallest weight on loop', loop);
-    for (let k = 0; k < loop.length - 1; k++) {
-      const thisWeight = this.graph.getWeight(loop[k], loop[k+1]);
-      // weights.push(thisWeight);
-      if (typeof thisWeight !== 'number') {
-        throw new Error('weight is not a number');
-      }
-      // console.log(`Weight on loop from ${loop[k]} to ${loop[k+1]} is ${thisWeight}`);
-      if (thisWeight < smallestWeight) {
-        smallestWeight = thisWeight;
-        found = true;
-      }
-    }
-    if (!found) {
-      throw new Error('not found, weird');
-    }
-    // console.log('smallestWeight found', loop, weights, smallestWeight);
-    return smallestWeight;
-  }
-
-  // assumes all loop hops exist
-  netLoop(loop: string[]): number {
-    const smallestWeight = this.getSmallestWeight(loop);
-    if ((smallestWeight < MIN_LOOP_WEIGHT) || (smallestWeight > MAX_LOOP_WEIGHT)) {
-      return 0;
-    }
-    let firstZeroPos;
-    for (let k = 0; k < loop.length - 1; k++) {
-      if ((this.graph.getWeight(loop[k], loop[k+1]) === smallestWeight) && (typeof firstZeroPos === 'undefined')) {
-        firstZeroPos = k;
-      }
-      this.graph.addWeight(loop[k], loop[k+1], -smallestWeight);
-    }
-    this.graph.report(loop.length - 1, smallestWeight);
-    return firstZeroPos;
   }
   sendMessage(to: string, task: string[]): void {
     this.graph.messaging.sendMessage(this.name, to, task);
@@ -83,26 +50,11 @@ export class Jerboa {
     this.balances.adjustReceived(sender, amount);
     this.checkFriendCache(sender);
   }
-  receiveNack(nackSender: string, debugInfo: { path: string[], backtracked: string[] }): void {
+  receiveNack(nackSender: string, probeId: string): void {
     delete this.outgoingLinks[nackSender];
-    if (debugInfo.path.length === 0) {
-      const nodes = this.getOutgoingLinks();
-      if (nodes.length === 0) {
-        if (process.env.PROBING_REPORT) {
-          console.log('finished   ', [], [this.name, nackSender].concat(debugInfo.backtracked));
-        }
-      } else {
-        if (process.env.PROBING_REPORT) {
-          console.log('backtracked', [ this.name ], [nackSender].concat(debugInfo.backtracked));
-        }
-        const newStep = randomStringFromArray(nodes);
-        this.sendProbeMessage(newStep, '1', { path: debugInfo.path, backtracked: [] });
-      }
-    } else {
-      // console.log('backtracked', path.concat(this.name), [ nackSender ].concat(backtracked));
-      const popped = debugInfo.path.pop();
-      // console.log(`                     combining nack sender, internal receiveProbe`, popped, this.name, path, [nackSender].concat(backtracked));
-      this.receiveProbe(popped, '1', { path: debugInfo.path, backtracked: [nackSender].concat(debugInfo.backtracked) });
+    const nodes = this.getOutgoingLinks();
+    if (nodes.length === 0) {
+      this.sendNackMessage(this.probes[probeId].in, probeId);
     }
   }
   spliceLoop(sender: string, path: string[]): boolean {
@@ -110,7 +62,7 @@ export class Jerboa {
     const pos = path.indexOf(this.name);
     if (pos !== -1) {
       const loop = path.splice(pos).concat([sender, this.name]);
-      this.netLoop(loop);
+      // this.netLoop(loop);
       // console.log(`Found loop`, loop, ` pos ${pos}`);
       if (process.env.PROBING_REPORT) {  
         console.log(`found loop `, path, loop);
@@ -119,51 +71,37 @@ export class Jerboa {
     }
     return false;
   }
-  receiveProbe(sender: string, probeId: string, debugInfo: { path: string[], backtracked: string[] }): void {
-    // console.log(`receiveProbe ${sender} => ${this.name}`, path);
-    const loopFound = this.spliceLoop(sender, debugInfo.path);
-    if (loopFound) {
-      if (debugInfo.path.length >= 1) {
-        // console.log('                   continuing by popping old sender from', path);
-        const oldSender = debugInfo.path.pop();
-        this.receiveProbe(oldSender, probeId, { path: debugInfo.path, backtracked: [] });
-      }
-      return;
+  ensureProbe(probeId: string): void {
+    if (typeof this.probes[probeId] === 'undefined') {
+      this.probes[probeId] = { traces: {} };
     }
-    // console.log('path after splicing', path);
+  }
+  receiveProbe(sender: string, probeId: string): void {
+    this.ensureProbe(probeId);
+    const loopFound: boolean = (typeof this.probes[probeId].in !== 'undefined');
+    this.probes[probeId].in = sender;
+    if (loopFound) {
+      const traceId = '2';
+      this.sendTraceMessage(sender, probeId, traceId);
+    }
     const nodes = this.getOutgoingLinks();
     if (nodes.length === 0) {
-      // console.log(`                     combining self, sending nack ${this.name}->${sender}`, path, backtracked);
-      this.sendNackMessage(sender, debugInfo);
+      this.sendNackMessage(sender, probeId);
       return;
-    } else if (debugInfo.backtracked.length > 0) {
-      if (process.env.PROBING_REPORT) {
-        console.log(`backtracked`, debugInfo.path.concat([sender, this.name]), debugInfo.backtracked);
-      }
     }
-    // console.log('         did we print?', sender, this.name, path, backtracked);
-    debugInfo.path.push(sender);
     const newStep = randomStringFromArray(nodes);
-    // console.log(`forwarding from ${this.name} to ${newStep} (balance ${this.balances.getBalance(newStep)})`);
-    this.sendProbeMessage(newStep, '1', { path: debugInfo.path, backtracked: [] });
+    this.sendProbeMessage(newStep, '1');
   };
   receiveMessage(from: string, parts: string[]): void {
     // console.log('receiveMessage', from, this.name, parts);
     switch(parts[0]) {
       case 'probe': {
         const probeId = parts[1];
-        const debugInfo: {
-          path: string[],
-          backtracked: string[]
-        } = JSON.parse(parts[2]);
-        return this.receiveProbe(from, probeId, debugInfo);
+        return this.receiveProbe(from, probeId);
       }
     case 'nack': {
-      const debugInfo: {
-        path: string[],
-        backtracked: string[]
-      } = JSON.parse(parts[1]);
-      return this.receiveNack(from, debugInfo);
+      const probeId = parts[1];
+      return this.receiveNack(from, probeId);
     }
     case 'transfer': {
       return this.receiveTransfer(from, JSON.parse(parts[1]) as number);
@@ -204,11 +142,19 @@ export class Jerboa {
   getArchiveWeights(): { [to: string]: number } {
     return this.balances.getArchiveWeights(this.name);
   }
-  sendProbeMessage(to: string, probeId: string, debugInfo: object): void {
-    this.sendMessage(to, ['probe', probeId, JSON.stringify(debugInfo)]);
+  sendTraceMessage(to: string, probeId: string, traceId: string): void {
+    this.sendMessage(to, ['trace', probeId, traceId]);
   }
-  sendNackMessage(to: string, debugInfo: object): void {
-    this.sendMessage(to, ['nack', JSON.stringify(debugInfo)]);
+  sendProbeMessage(to: string, probeId: string): void {
+    this.ensureProbe(probeId);
+    if (typeof this.probes[probeId].out !== 'undefined') {
+      throw new Error('unexpectedly forking probe');
+    }
+    this.probes[probeId].out = to;
+    this.sendMessage(to, ['probe', probeId]);
+  }
+  sendNackMessage(to: string, probeId: string): void {
+    this.sendMessage(to, ['nack', probeId]);
   }
   sendTransferMessage(to: string, weight: number): void {
     this.sendMessage(to, ['transfer', JSON.stringify(weight)]);
@@ -218,7 +164,7 @@ export class Jerboa {
     if (nodes.length === 0) {
       return false;
     }
-    this.sendProbeMessage(nodes[0], '1', { path: [], backtracked: [] });
+    this.sendProbeMessage(nodes[0], '1');
     return true;
   }
 }
