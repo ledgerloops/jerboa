@@ -50,8 +50,8 @@ PROBING_REPORT=1 time node build/src/analysis.js __tests__/fixture-300000.csv > 
 diff ./jerboa-30.log ./birdseye-30.log
 diff ./jerboa-300.log ./birdseye-300.log
 diff ./jerboa-3k.log ./birdseye-3k.log
-diff ./jerboa-3k.log ./birdseye-30k.log
-diff ./jerboa-3k.log ./birdseye-300k.log
+diff ./jerboa-30k.log ./birdseye-30k.log
+diff ./jerboa-300k.log ./birdseye-300k.log
 ```
 
 The diff output is expected to show that BirdsEyeAnalysis does more netting, because it nets after every transfer, and Jerboa only nets the balances after all transfers are finished.
