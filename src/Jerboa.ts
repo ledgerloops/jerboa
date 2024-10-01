@@ -1,6 +1,6 @@
 import { Graph } from "./Graph.js";
 import { Balances } from "./Balances.js";
-const MIN_LOOP_WEIGHT = 0.0001;
+const MIN_LOOP_WEIGHT = 0.00000001;
 const MAX_LOOP_WEIGHT = 1000000000;
 const RANDOM_NEXT_STEP = false;
 

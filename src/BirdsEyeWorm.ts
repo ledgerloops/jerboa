@@ -12,7 +12,7 @@ export class BirdsEyeWorm {
   } = {};
   report(loopLength: number, amount: number): void {
     // if (loopLength > 2) {
-    //   console.log('report', loopLength, amount);
+      // console.log('report', loopLength, amount);
     // }
     if (typeof this.stats[loopLength] === 'undefined') {
       this.stats[loopLength] = {
@@ -25,7 +25,10 @@ export class BirdsEyeWorm {
   }
   addTransfer(from: string, to: string, amount: number): number {
     const amountNetted = this.graph.addWeight(from, to, amount);
-    this.report(2, amountNetted);
+    if (amountNetted > 0) {
+      // console.log(from, to, amount, amountNetted);
+      this.report(2, amountNetted);
+    }
     return amountNetted;
   }
   // assumes all loop hops exist
