@@ -113,19 +113,20 @@ export class Jerboa {
   receiveTransfer(sender: string, amount: number): void {
     // console.log(`${sender}->${this.name}: ${amount}`);
     this.balances.adjustReceived(sender, amount);
-    const newBalance = this.balances.getBalance(sender);
-    if (newBalance < MIN_LOOP_WEIGHT) {
-      delete this.outgoingLinks[sender];
-    }
+    this.checkFriendCache(sender);
   }
   receiveNack(nackSender: string, path: string[], backtracked: string[]): void {
     delete this.outgoingLinks[nackSender];
     if (path.length === 0) {
       const nodes = this.getOutgoingLinks();
       if (nodes.length === 0) {
-        console.log('finished   ', [], [this.name, nackSender].concat(backtracked));
+        if (process.env.PROBING_REPORT) {
+          console.log('finished   ', [], [this.name, nackSender].concat(backtracked));
+        }
       } else {
-        console.log('backtracked', [ this.name ], [nackSender].concat(backtracked));
+        if (process.env.PROBING_REPORT) {
+          console.log('backtracked', [ this.name ], [nackSender].concat(backtracked));
+        }
         const newStep = randomStringFromArray(nodes);
         const task = ['probe', JSON.stringify(path), JSON.stringify([])];
         this.graph.messaging.sendMessage(this.name, newStep, task);
@@ -144,7 +145,9 @@ export class Jerboa {
       const loop = path.splice(pos).concat([sender, this.name]);
       this.netLoop(loop);
       // console.log(`Found loop`, loop, ` pos ${pos}`);
-      console.log(`found loop `, path, loop);
+      if (process.env.PROBING_REPORT) {  
+        console.log(`found loop `, path, loop);
+      }
       return true;
     }
     return false;
@@ -169,7 +172,9 @@ export class Jerboa {
       this.graph.messaging.sendMessage(this.name, sender, task);
       return;
     } else if (backtracked.length > 0) {
-      console.log(`backtracked`, path.concat([sender, this.name]), backtracked);
+      if (process.env.PROBING_REPORT) {
+        console.log(`backtracked`, path.concat([sender, this.name]), backtracked);
+      }
     }
     // console.log('         did we print?', sender, this.name, path, backtracked);
     path.push(sender);
@@ -196,15 +201,20 @@ export class Jerboa {
       throw new Error('unknown task');
     }
   }
+  checkFriendCache(friend: string): void {
+    const newBalance = this.balances.getBalance(friend);
+    if (newBalance > MIN_LOOP_WEIGHT) {
+      this.outgoingLinks[friend] = true;
+    } else {
+      delete this.outgoingLinks[friend];
+      if (Object.keys(this.outgoingLinks).length === 0) {
+        this.graph.deregister(this.name);
+      }
+    }
+  }
   addWeight(to: string, weight: number): void {
     this.balances.adjustSent(to, weight);
-    const newBalance = this.balances.getBalance(to);
-    if (newBalance > MIN_LOOP_WEIGHT) {
-      this.outgoingLinks[to] = true;
-    } else {
-      delete this.outgoingLinks[to];
-    }
-
+    this.checkFriendCache(to);
     this.graph.messaging.sendMessage(this.name, to, ['transfer', JSON.stringify(weight)]);
   }
   getOutgoingLinks(): string[] {

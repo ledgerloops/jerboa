@@ -5,6 +5,9 @@ export class Graph {
   private nodes: {
     [from: string]: Jerboa
   } = {};
+  private nodesToStartFrom: {
+    [from: string]: boolean
+  } = {};
   public messaging: Messaging = new Messaging(this);
   stats: {
     [loopLength: number]: {
@@ -16,9 +19,12 @@ export class Graph {
   private ensureNode(name: string): void {
     if (typeof this.nodes[name] === 'undefined') {
       this.nodes[name] = new Jerboa(name, this);
+      this.nodesToStartFrom[name] = true;
     }
   }
-
+  public deregister(name: string): void {
+    delete this.nodesToStartFrom[name];
+  }
   public addWeight(from: string, to: string, weight: number): void {
     if (typeof from !== 'string') {
       throw new Error(`from param ${JSON.stringify(from)} is not a string in call to addWeight`);
@@ -51,7 +57,7 @@ export class Graph {
       }
       nodes = nodesObj.getOutgoingLinks();
     } else {
-      nodes = Object.keys(this.nodes);
+      nodes = Object.keys(this.nodesToStartFrom);
       if (nodes.length === 0) {
         throw new Error('Graph is empty');
       }

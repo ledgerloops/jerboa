@@ -40,10 +40,10 @@ time node build/src/birdsEyeAnalysis.js __tests__/fixture-300.csv > birdseye-300
 time node build/src/birdsEyeAnalysis.js __tests__/fixture-3000.csv > birdseye-3k.log
 time node build/src/birdsEyeAnalysis.js __tests__/fixture-30000.csv > birdseye-3k.log
 
-time node build/src/analysis.js __tests__/fixture-30.csv > jerboa-30.log
-time node build/src/analysis.js __tests__/fixture-300.csv > jerboa-300.log
-time node build/src/analysis.js __tests__/fixture-3000.csv > jerboa-3k.log
-time node build/src/analysis.js __tests__/fixture-3000.csv > jerboa-30k.log
+PROBING_REPORT=1 time node build/src/analysis.js __tests__/fixture-30.csv > jerboa-30.log
+PROBING_REPORT=1 time node build/src/analysis.js __tests__/fixture-300.csv > jerboa-300.log
+PROBING_REPORT=1 time node build/src/analysis.js __tests__/fixture-3000.csv > jerboa-3k.log
+PROBING_REPORT=1 time node build/src/analysis.js __tests__/fixture-3000.csv > jerboa-30k.log
 
 diff ./jerboa-30.log ./birdseye-30.log
 diff ./jerboa-300.log ./birdseye-300.log
