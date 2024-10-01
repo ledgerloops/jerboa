@@ -1,6 +1,7 @@
 import { Graph } from "./Graph.js";
 import { Balances } from "./Balances.js";
 const MIN_LOOP_WEIGHT = 0.0001;
+const MAX_LOOP_WEIGHT = 1000000000;
 const RANDOM_NEXT_STEP = false;
 
 function randomStringFromArray(arr: string[]): string {
@@ -37,9 +38,11 @@ export class Jerboa {
     if (loop.length === 0) {
       throw new Error('loop has length 0');
     }
+    // const weights = [];
     // console.log('finding smallest weight on loop', loop);
     for (let k = 0; k < loop.length - 1; k++) {
       const thisWeight = this.graph.getWeight(loop[k], loop[k+1]);
+      // weights.push(thisWeight);
       if (typeof thisWeight !== 'number') {
         throw new Error('weight is not a number');
       }
@@ -52,13 +55,14 @@ export class Jerboa {
     if (!found) {
       throw new Error('not found, weird');
     }
+    // console.log('smallestWeight found', loop, weights, smallestWeight);
     return smallestWeight;
   }
 
   // assumes all loop hops exist
   netLoop(loop: string[]): number {
     const smallestWeight = this.getSmallestWeight(loop);
-    if ((smallestWeight < MIN_LOOP_WEIGHT) || (smallestWeight === Infinity)) {
+    if ((smallestWeight < MIN_LOOP_WEIGHT) || (smallestWeight > MAX_LOOP_WEIGHT)) {
       return 0;
     }
     let firstZeroPos;
@@ -125,7 +129,7 @@ export class Jerboa {
     if (pos !== -1) {
       const loop = path.splice(pos).concat([sender, this.name]);
       this.netLoop(loop);
-      // console.log(`Found loop`, loop, ` pos ${pos}`);
+      console.log(`Found loop`, loop, ` pos ${pos}`);
       return true;
     }
     return false;
@@ -182,7 +186,7 @@ export class Jerboa {
       if ((avoidNack) && (this.nack[to])) {
         return false;
       }
-      return (balances[to] > 0);
+      return (balances[to] > MIN_LOOP_WEIGHT);
     });
   }
   getBalance(to: string): number {

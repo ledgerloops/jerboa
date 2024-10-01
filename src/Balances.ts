@@ -44,7 +44,6 @@ export class Balances {
       if (this.received[to] === 0) {
         delete this.received[to];
       }
-
     }
 
     getBalance(friend: string): number {

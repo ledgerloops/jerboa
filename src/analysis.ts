@@ -2,8 +2,8 @@ import { createInterface } from 'readline';
 import { createReadStream } from 'fs';
 import { DLD } from './DLD.js';
 
-const SARAFU_CSV = '../Sarafu2021_UKdb_submission/sarafu_xDAI/sarafu_txns_20200125-20210615.csv';
-// const SARAFU_CSV = './__tests__/fixture-3000.csv';
+// const SARAFU_CSV = '../Sarafu2021_UKdb_submission/sarafu_xDAI/sarafu_txns_20200125-20210615.csv';
+const SARAFU_CSV = './__tests__/fixture-3000.csv';
 
 const lineReader = createInterface({
   input: createReadStream(SARAFU_CSV),
