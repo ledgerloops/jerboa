@@ -5,10 +5,13 @@ describe('addWeight', () => {
     const graph = new Graph();
     graph.addWeight('a', 'b', 3);
     graph.messaging.runTasks();
-    expect(graph.getLinks()).toEqual({
+    expect(graph.getBalances()).toEqual({
       'a': {
-        'b': 3
-      }
+        'b': 3,
+      },
+      'b': {
+        'a': -3,
+      },
     });
   });
   it('refuses zero weight', () => {
@@ -21,11 +24,17 @@ describe('addWeight', () => {
     graph.messaging.runTasks();
     graph.addWeight('a', 'c', 5);
     graph.messaging.runTasks();
-    expect(graph.getLinks()).toEqual({
+    expect(graph.getBalances()).toEqual({
       'a': {
         'b': 3,
-        'c': 5
-      }
+        'c': 5,
+      },
+      'b': {
+        'a': -3,
+      },
+      'c': {
+        'a': -5,
+      },
     });
   });
   it('prepends a link to a path', () => {
@@ -34,67 +43,58 @@ describe('addWeight', () => {
     graph.messaging.runTasks();
     graph.addWeight('c', 'a', 5);
     graph.messaging.runTasks();
-    expect(graph.getLinks()).toEqual({
+    expect(graph.getBalances()).toEqual({
       'a': {
-        'b': 3
+        'b': 3,
+        'c': -5,
+      },
+      'b': {
+        'a': -3,
       },
       'c': {
         'a': 5
       }
     });
   });
-  it('doesnt net a higher amount', () => {
+  it('nets a higher amount', () => {
     const graph = new Graph();
     graph.addWeight('a', 'b', 3);
     graph.addWeight('b', 'a', 7);
     graph.messaging.runTasks();
-    expect(graph.getLinks()).toEqual({
+    expect(graph.getBalances()).toEqual({
       'a': {
-        'b': 3
+        'b': -4
       },
       'b': {
-        'a': 7
+        'a': 4
       }
     });
   });
-  it('doesnt net a lower amount', () => {
+  it('nets a lower amount', () => {
     const graph = new Graph();
     graph.addWeight('a', 'b', 3);
     graph.addWeight('b', 'a', 2);
-    // console.log('calling runTasks');
     graph.messaging.runTasks();
-    expect(graph.getLinks()).toEqual({
+    expect(graph.getBalances()).toEqual({
       'a': {
-        'b': 3
+        'b': 1
       },
       'b': {
-        'a': 2
+        'a': -1
       }
     });
   });
-  it('doesnt net an equal amount', () => {
+  it('nets an equal amount', () => {
     const graph = new Graph();
     graph.addWeight('a', 'b', 3);
     graph.addWeight('b', 'a', 3);
     graph.messaging.runTasks();
-    expect(graph.getLinks()).toEqual({
+    expect(graph.getBalances()).toEqual({
       'a': {
-        'b': 3
       },
       'b': {
-        'a': 3
       }
     });
-  });
-});
-
-describe('removeLink', () => {
-  it('removes a link', () => {
-    const graph = new Graph();
-    graph.addWeight('a', 'b', 3);
-    graph.removeLink('a', 'b');
-    graph.messaging.runTasks();
-    expect(graph.getLinks()).toEqual({});
   });
 });
 
@@ -126,21 +126,5 @@ describe('hasOutgoingLinks', () => {
     graph.messaging.runTasks();
     expect(graph.hasOutgoingLinks('b')).toEqual(false);
     expect(graph.hasOutgoingLinks('c')).toEqual(false);
-  });
-});
-
-describe('getWeight', () => {
-  it('works in the positive case', () => {
-    const graph = new Graph();
-    graph.addWeight('a', 'b', 3);
-    graph.messaging.runTasks();
-    expect(graph.getWeight('a', 'b')).toEqual(3);
-  });
-  it('works in the negative case', () => {
-    const graph = new Graph();
-    graph.addWeight('a', 'b', 3);
-    graph.messaging.runTasks();
-    expect(graph.getWeight('b', 'a')).toEqual(0);
-    expect(graph.getWeight('c', 'b')).toEqual(0);
   });
 });

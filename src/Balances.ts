@@ -1,104 +1,88 @@
 export class Balances {
-    private balance: {
+    private sent: {
       [to: string]: number;
     } = {};
-    private counterBalance: {
+    private received: {
       [to: string]: number;
     } = {};
-    private ensureBalance(to: string): void {
-      // console.log('ensuring balance', to, this.balance);
-      if (typeof this.balance[to] === 'undefined') {
-        this.balance[to] = 0;
+    private ensureSent(to: string): void {
+      if (typeof this.sent[to] === 'undefined') {
+        this.sent[to] = 0;
       }
     }
-    private ensureCounterBalance(to: string): void {
-      // console.log('ensuring balance', to, this.balance);
-      if (typeof this.counterBalance[to] === 'undefined') {
-        this.counterBalance[to] = 0;
+    private ensureReceived(to: string): void {
+      if (typeof this.received[to] === 'undefined') {
+        this.received[to] = 0;
       }
     }
-    adjustBalance(to: string, amount: number): void {
+    adjustSent(to: string, amount: number): void {
       if (typeof to !== 'string') {
         throw new Error('adjustBalance argument to is not a string');
       }
       if (typeof amount !== 'number') {
         throw new Error('adjustBalance argument amount is not a number');
       }
-      this.ensureBalance(to);
-      // console.log('adding', this.balance[to], amount);
-      this.balance[to] += amount;
-      if (this.balance[to] === 0) {
-        delete this.balance[to];
+      this.ensureSent(to);
+      this.sent[to] += amount;
+      if (this.sent[to] === 0) {
+        delete this.sent[to];
       }
-      if (this.balance[to] === Infinity) {
+      if (this.sent[to] === Infinity) {
         throw new Error('Infinity balance detected');
       }
     }
-    adjustCounterBalance(to: string, amount: number): void {
+    adjustReceived(to: string, amount: number): void {
       if (typeof to !== 'string') {
         throw new Error('adjustCounterBalance argument to is not a string');
       }
       if (typeof amount !== 'number') {
         throw new Error('adjustCounterBalance argument amount is not a number');
       }
-      this.ensureCounterBalance(to);
+      this.ensureReceived(to);
       // console.log('adding', this.counterBalance[to], amount);
-      this.counterBalance[to] += amount;
-      if (this.counterBalance[to] === 0) {
-        delete this.counterBalance[to];
+      this.received[to] += amount;
+      if (this.received[to] === 0) {
+        delete this.received[to];
       }
 
     }
-    getBalances(): { [to: string]: number } {
-      return this.balance;
-    }
+  
     sanityCheck(name: string): void {
-      Object.keys(this.balance).forEach((other: string) => {
-        if (this.balance[other] === 0) {
+      Object.keys(this.sent).forEach((other: string) => {
+        if (this.sent[other] === 0) {
           throw new Error('why was this balance entry not deleted?');
         }
-        if (this.counterBalance[other] === 0) {
+        if (this.received[other] === 0) {
           throw new Error('why was this counterBalance entry not deleted?');
         }
-        if (this.balance[other] < 0) {
-          console.log('why is this balance negative?', this.balance[other]);
+        if (this.sent[other] < 0) {
+          console.log('why is this balance negative?', this.sent[other]);
         }
-        if (this.counterBalance[other] < 0) {
-          console.log('why is this counterBalance negative?', this.counterBalance[other]);
+        if (this.received[other] < 0) {
+          console.log('why is this counterBalance negative?', this.received[other]);
         }
-        if ((typeof this.balance[other] !== 'undefined') && (typeof this.counterBalance[other] !== 'undefined')) {
-          console.log('why wasnt this trustline cleared bilaterally', name, other, this.balance[other], this.counterBalance[other]);
+        if ((typeof this.sent[other] !== 'undefined') && (typeof this.received[other] !== 'undefined')) {
+          console.log('why wasnt this trustline cleared bilaterally', name, other, this.sent[other], this.received[other]);
         }
       });
     }
-    getBalance(to: string): number | undefined {
-      if (typeof to !== 'string') {
-        throw new Error('getBalance argument to is not a string');
-      }
-      if (this.balance[to] === Infinity) {
-        throw new Error('Infinity balance detected');
-      }
-      return this.balance[to];
+    getBalance(friend: string): number {
+      const sent = this.sent[friend] || 0;
+      const received = this.received[friend] || 0;
+      return sent - received;
     }
-    getCounterBalance(to: string): number | undefined {
-      return this.counterBalance[to];
-    }
-    // @returns number amount removed
-    zeroOut(to: string): number {
-      if (typeof to !== 'string') {
-        throw new Error('adjustCounterBalance argument to is not a string');
-      }
-      const amount = this.getBalance(to);
-      if (typeof amount === 'undefined') {
-        return 0;
-      }
-      delete this.balance[to];
-      return amount;
-    }
-    getOutgoingLinks(): string[] {
-      return Object.keys(this.balance).filter((to: string) => {
-        const counterBalance = this.getCounterBalance(to) || 0;
-        return (this.balance[to] - counterBalance > 0);
+    getBalances(): {
+      [to: string]: number;
+    } {
+      const ret = {};
+      const friends = [... new Set(Object.keys(this.sent).concat(Object.keys(this.received)))];
+      friends.forEach((friend: string) => {
+        const balance = this.getBalance(friend);
+        if (balance !== 0) {
+          ret[friend] = balance;
+        }
       });
+      return ret;
     }
+
   }

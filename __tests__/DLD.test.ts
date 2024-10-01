@@ -42,11 +42,6 @@ describe('DLD', () => {
     const dld = new DLD();
     await readCsv(dld.graph.addWeight.bind(dld.graph));
     dld.runWorm();
-    // const links = dld.graph.getLinks();
-    // let numLinks = 0;
-    // Object.keys(links).forEach(from => {
-    //   numLinks += Object.keys(links[from]).length;
-    // });
     let totalNum = 0;
     let totalAmount = 0;
     Object.keys(dld.graph.stats).map(numStr => {

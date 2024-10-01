@@ -42,13 +42,7 @@ lineReader.on('close', function () {
   console.log('bilateral netting done, now inviting probes');
   dld.runWorm();
   console.log(dld.graph.stats);
-  const links = dld.graph.getLinks();
-  let numLinks = 0;
-  Object.keys(links).forEach(from => {
-    numLinks += Object.keys(links[from]).length;
-  });
-  // console.log(birdsEyeWorm.stats);
-  console.log(`Graph has ${Object.keys(links).length} nodes and ${numLinks} links left`);
+  dld.graph.logNumNodesAndLinks();
   console.log(`After ${numTrans} transactions with a total amount of ${Math.round(totalTransAmount / 1000000)} million`);
   const totalBilateralAmount = 2 * totalImmediatelyNetted;
   console.log(`${Math.round(totalBilateralAmount / 1000000)} million (${Math.round((totalBilateralAmount / totalTransAmount) * 100)}%) was immediately netted bilaterally`);

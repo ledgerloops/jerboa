@@ -22,11 +22,13 @@ export class Jerboa {
   private balances: Balances = new Balances();
   private graph: Graph;
   private name: string;
+  private nack: {
+    [friend: string]: boolean
+  } = {};
   constructor(name: string, graph: Graph) {
     this.name = name;
     this.graph = graph;
   }
-  // private sentBilateralClearing: { [otherParty: string]: boolean } = {};
 
   // assumes all loop hops exist
   getSmallestWeight(loop: string[]): number {
@@ -55,7 +57,6 @@ export class Jerboa {
 
   // assumes all loop hops exist
   netLoop(loop: string[]): number {
-    // const before = this.graph.getTotalWeight();
     const smallestWeight = this.getSmallestWeight(loop);
     if ((smallestWeight < MIN_LOOP_WEIGHT) || (smallestWeight === Infinity)) {
       return 0;
@@ -67,9 +68,6 @@ export class Jerboa {
       }
       this.graph.addWeight(loop[k], loop[k+1], -smallestWeight);
     }
-    // const after = this.graph.getTotalWeight();
-    // console.log('total graph weight reduced by', before - after);
-    // console.log(`Netted a loop with weight ${smallestWeight} and length ${loop.length}`);
     this.graph.report(loop.length - 1, smallestWeight);
     return firstZeroPos;
   }
@@ -109,27 +107,18 @@ export class Jerboa {
   //   this.sendMessage(sender, ['propose', 'bilateral', JSON.stringify(amount)]);
   // }
   receiveTransfer(sender: string, amount: number): void {
-    // console.log('processing transfer message,', sender, this.name, amount);
-    this.balances.adjustCounterBalance(sender, amount);
-    // const balance = this.balances.getBalance(sender);
-    // const counterBalance = this.balances.getCounterBalance(sender);
-    // if (counterBalance <= balance) {
-    //   this.startBilateralClear(sender, counterBalance);
-    // }
+    this.balances.adjustReceived(sender, amount);
   }
   receiveNack(nackSender: string, path: string[]): void {
-    // console.log('receiveNack removes link', newStep, nackSender);
-    this.graph.removeLink(this.name, nackSender);
+    this.nack[nackSender] = true;
     if (path.length === 0) {
       // this probe is done
       return;
     }
     const popped = path.pop();
-    // console.log('receiveNack calls receiveProbe', newStep, path);
     this.receiveProbe(popped, path);
   }
   spliceLoop(sender: string, path: string[]): boolean {
-    // console.log('spliceLoop', sender, path);
     // chop off loop if there is one:
     const pos = path.indexOf(this.name);
     if (pos !== -1) {
@@ -152,7 +141,7 @@ export class Jerboa {
       return;
     }
     // console.log('path after splicing', path);
-    const nodes = this.balances.getOutgoingLinks();
+    const nodes = this.getOutgoingLinks(true);
     if (nodes.length === 0) {
       const task = ['nack', JSON.stringify(path)];
       // console.log('backtracking', task);
@@ -183,30 +172,21 @@ export class Jerboa {
     }
   }
   addWeight(to: string, weight: number): void {
-    this.balances.adjustBalance(to, weight);
-    // console.log('sending transfer message', this.name, to, weight);
+    this.balances.adjustSent(to, weight);
     this.graph.messaging.sendMessage(this.name, to, ['transfer', JSON.stringify(weight)]);
-    // const balance = this.balances.getBalance(to);
-    // const counterBalance = this.balances.getCounterBalance(to);
-    // if (counterBalance < balance) {
-    //   this.startBilateralClear(to, counterBalance);
-    // }
   }
-  getBalance(to: string): number | undefined {
+  getOutgoingLinks(avoidNack: boolean): string[] {
+    const balances = this.balances.getBalances();
+    return Object.keys(balances).filter((to: string) => {
+      if ((avoidNack) && (this.nack[to])) {
+        return false;
+      }
+      return (balances[to] > 0);
+    });
+  }
+  getBalance(to: string): number {
     return this.balances.getBalance(to);
   }
-  getCounterBalance(to: string): number | undefined {
-    return this.balances.getCounterBalance(to);
-  }
-
-  // @returns number amount removed
-  zeroOut(to: string): number {
-    return this.balances.zeroOut(to);
-  }
-  getOutgoingLinks(): string[] {
-    return this.balances.getOutgoingLinks();
-  }
-
   getBalances(): { [to: string]: number } {
     return this.balances.getBalances();
   }
@@ -214,7 +194,7 @@ export class Jerboa {
     this.balances.sanityCheck(this.name);
   }
   startProbe(): boolean {
-    const nodes = this.balances.getOutgoingLinks();
+    const nodes = this.getOutgoingLinks(true);
     if (nodes.length === 0) {
       return false;
     }

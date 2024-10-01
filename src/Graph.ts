@@ -37,23 +37,7 @@ export class Graph {
     this.ensureNode(from);
     this.nodes[from].addWeight(to, weight);
   }
-  public removeLink(from: string, to: string): void {
-    if (typeof from !== 'string') {
-      throw new Error(`from param ${JSON.stringify(from)} is not a string in call to removeLink`);
-    }
-    if (typeof to !== 'string') {
-      throw new Error(`to param ${JSON.stringify(to)} is not a string in call to removeLink`);
-    }
 
-    if (typeof this.nodes[from] !== 'undefined') {
-      if (typeof this.nodes[from].getBalance(to) !== 'undefined') {
-        this.nodes[from].zeroOut(to);
-        if (this.nodes[from].getOutgoingLinks().length === 0) {
-          delete this.nodes[from];
-        }
-      }
-    }
-  }
   public getFirstNode(withOutgoingLinks: boolean, after?: string): string {
     if ((typeof after !== 'string') && (typeof after !== 'undefined')) {
       throw new Error(`after param ${JSON.stringify(after)} is neither a string nor undefined in call to getFirstNode`);
@@ -65,7 +49,7 @@ export class Graph {
       if (typeof nodesObj === 'undefined') {
         throw new Error(`No outgoing links from node ${after}`);
       }
-      nodes = nodesObj.getOutgoingLinks();
+      nodes = nodesObj.getOutgoingLinks(true);
     } else {
       nodes = Object.keys(this.nodes);
       if (nodes.length === 0) {
@@ -74,7 +58,7 @@ export class Graph {
     }
     if (withOutgoingLinks) {
       for (let i = 0; i < nodes.length; i++) {
-        if ((typeof this.nodes[nodes[i]] !== 'undefined') && (this.nodes[nodes[i]].getOutgoingLinks().length >= 1)) {
+        if ((typeof this.nodes[nodes[i]] !== 'undefined') && (this.nodes[nodes[i]].getOutgoingLinks(true).length >= 1)) {
           return nodes[i];
         }
       }
@@ -87,7 +71,7 @@ export class Graph {
     if (typeof after !== 'string') {
       throw new Error(`after param ${JSON.stringify(after)} is not a string in call to hasOutgoingLinks`);
     }
-    return ((typeof this.nodes[after] !== 'undefined') && (this.nodes[after].getOutgoingLinks().length >= 1));
+    return ((typeof this.nodes[after] !== 'undefined') && (this.nodes[after].getOutgoingLinks(true).length >= 1));
   }
   public getWeight(from: string, to: string): number {
     if (typeof from !== 'string') {
@@ -99,24 +83,27 @@ export class Graph {
     if (typeof this.nodes[from] === 'undefined') {
       return 0;
     }
-    if (typeof this.nodes[from].getBalance(to) === 'undefined') {
-      return 0;
-    }
     return this.nodes[from].getBalance(to);
   }
-  public getLinks(): {
+  public getBalances(): {
     [from: string]: {
       [to: string]: number;
     }
   } {
     const links = {};
     Object.keys(this.nodes).forEach(name => {
-      const balances = this.nodes[name].getBalances();
-      if (Object.keys(balances).length >= 1) {
-        links[name] = balances;
-      }
+      links[name] = this.nodes[name].getBalances();
     });
     return links;
+  }
+  public logNumNodesAndLinks(): void {
+    const numNodes = Object.keys(this.nodes).length;
+    let numLinks = 0;
+    Object.keys(this.nodes).forEach(name => {
+      const outgoingLinks = Object.keys(this.nodes[name].getBalances());
+      numLinks += outgoingLinks.length;
+    });
+    console.log(`Graph has ${numNodes} nodes and ${numLinks} links left`);
   }
   public getTotalWeight(): number {
     let total = 0;
@@ -128,9 +115,6 @@ export class Graph {
     return total;
   }
   report(loopLength: number, amount: number): void {
-    // if (loopLength > 2) {
-    //   console.log('report', loopLength, amount);
-    // }
     if (typeof this.stats[loopLength] === 'undefined') {
       this.stats[loopLength] = {
         numFound: 0,
