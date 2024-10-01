@@ -117,7 +117,7 @@ export class Jerboa {
   receiveNack(nackSender: string, path: string[], backtracked: string[]): void {
     this.nack[nackSender] = true;
     if (path.length === 0) {
-      const nodes = this.getOutgoingLinks(true);
+      const nodes = this.getOutgoingLinks();
       if (nodes.length === 0) {
         console.log('finished   ', [], [this.name, nackSender].concat(backtracked));
       } else {
@@ -157,7 +157,7 @@ export class Jerboa {
       return;
     }
     // console.log('path after splicing', path);
-    const nodes = this.getOutgoingLinks(true);
+    const nodes = this.getOutgoingLinks();
     if (nodes.length === 0) {
       // console.log(`                     combining self, sending nack ${this.name}->${sender}`, path, backtracked);
       const task = ['nack', JSON.stringify(path), JSON.stringify(backtracked)];
@@ -194,12 +194,13 @@ export class Jerboa {
   }
   addWeight(to: string, weight: number): void {
     this.balances.adjustSent(to, weight);
+
     this.graph.messaging.sendMessage(this.name, to, ['transfer', JSON.stringify(weight)]);
   }
-  getOutgoingLinks(avoidNack: boolean): string[] {
+  getOutgoingLinks(): string[] {
     const balances = this.balances.getBalances();
     return Object.keys(balances).filter((to: string) => {
-      if ((avoidNack) && (this.nack[to])) {
+      if (this.nack[to]) {
         return false;
       }
       return (balances[to] > MIN_LOOP_WEIGHT);
@@ -215,7 +216,7 @@ export class Jerboa {
     return this.balances.getArchiveWeights(this.name);
   }
   startProbe(): boolean {
-    const nodes = this.getOutgoingLinks(true);
+    const nodes = this.getOutgoingLinks();
     if (nodes.length === 0) {
       return false;
     }

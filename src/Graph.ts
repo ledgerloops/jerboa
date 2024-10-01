@@ -49,7 +49,7 @@ export class Graph {
       if (typeof nodesObj === 'undefined') {
         throw new Error(`No outgoing links from node ${after}`);
       }
-      nodes = nodesObj.getOutgoingLinks(true);
+      nodes = nodesObj.getOutgoingLinks();
     } else {
       nodes = Object.keys(this.nodes);
       if (nodes.length === 0) {
@@ -58,7 +58,7 @@ export class Graph {
     }
     if (withOutgoingLinks) {
       for (let i = 0; i < nodes.length; i++) {
-        if ((typeof this.nodes[nodes[i]] !== 'undefined') && (this.nodes[nodes[i]].getOutgoingLinks(true).length >= 1)) {
+        if ((typeof this.nodes[nodes[i]] !== 'undefined') && (this.nodes[nodes[i]].getOutgoingLinks().length >= 1)) {
           return nodes[i];
         }
       }
@@ -71,7 +71,7 @@ export class Graph {
     if (typeof after !== 'string') {
       throw new Error(`after param ${JSON.stringify(after)} is not a string in call to hasOutgoingLinks`);
     }
-    return ((typeof this.nodes[after] !== 'undefined') && (this.nodes[after].getOutgoingLinks(true).length >= 1));
+    return ((typeof this.nodes[after] !== 'undefined') && (this.nodes[after].getOutgoingLinks().length >= 1));
   }
   public getWeight(from: string, to: string): number {
     if (typeof from !== 'string') {
