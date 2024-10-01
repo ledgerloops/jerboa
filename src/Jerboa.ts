@@ -2,6 +2,11 @@ import { Graph } from "./Graph.js";
 import { Balances } from "./Balances.js";
 const MIN_LOOP_WEIGHT = 0.0001;
 
+function randomStringFromArray(arr: string[]): string {
+  const pick = Math.floor(Math.random() * arr.length);
+  return arr[pick];
+}
+
 export class Jerboa {
   private balances: Balances = new Balances();
   private graph: Graph;
@@ -144,7 +149,7 @@ export class Jerboa {
       return;
     }
     path.push(sender);
-    const newStep = nodes[0];
+    const newStep = randomStringFromArray(nodes);
     // console.log(`forwarding from ${this.name} to ${newStep} (balance ${this.balances.getBalance(newStep)})`);
     const task = ['probe', JSON.stringify(path)];
     // console.log('sending task string', task);
