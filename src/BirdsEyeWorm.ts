@@ -77,7 +77,6 @@ export class BirdsEyeWorm {
         // backtrack
         const previousStep = path.pop();
         backtracked.push(previousStep);
-        console.log('backtracked', path, previousStep);
         if (path.length > 0) {
           this.graph.removeLink(path[path.length - 1], previousStep);
         }
@@ -102,6 +101,7 @@ export class BirdsEyeWorm {
         }
       } else {
         if (backtracked.length > 0) {
+          console.log('backtracked', path, backtracked.reverse());
           newStep = path[path.length - 1];
           // console.log('continuing from', path, newStep);
         }
