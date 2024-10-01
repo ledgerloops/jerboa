@@ -43,18 +43,21 @@ describe('addWeight', () => {
       }
     });
   });
-  it('nets a higher amount', () => {
+  it('doesnt net a higher amount', () => {
     const graph = new Graph();
     graph.addWeight('a', 'b', 3);
     graph.addWeight('b', 'a', 7);
     graph.messaging.runTasks();
     expect(graph.getLinks()).toEqual({
+      'a': {
+        'b': 3
+      },
       'b': {
-        'a': 4
+        'a': 7
       }
     });
   });
-  it('nets a lower amount', () => {
+  it('doesnt net a lower amount', () => {
     const graph = new Graph();
     graph.addWeight('a', 'b', 3);
     graph.addWeight('b', 'a', 2);
@@ -62,16 +65,25 @@ describe('addWeight', () => {
     graph.messaging.runTasks();
     expect(graph.getLinks()).toEqual({
       'a': {
-        'b': 1
+        'b': 3
+      },
+      'b': {
+        'a': 2
       }
     });
   });
-  it('nets an equal amount', () => {
+  it('doesnt net an equal amount', () => {
     const graph = new Graph();
     graph.addWeight('a', 'b', 3);
     graph.addWeight('b', 'a', 3);
     graph.messaging.runTasks();
     expect(graph.getLinks()).toEqual({
+      'a': {
+        'b': 3
+      },
+      'b': {
+        'a': 3
+      }
     });
   });
 });
