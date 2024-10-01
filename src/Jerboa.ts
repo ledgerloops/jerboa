@@ -114,14 +114,23 @@ export class Jerboa {
     // console.log(`${sender}->${this.name}: ${amount}`);
     this.balances.adjustReceived(sender, amount);
   }
-  receiveNack(nackSender: string, path: string[]): void {
+  receiveNack(nackSender: string, path: string[], backtracked: string[]): void {
     this.nack[nackSender] = true;
     if (path.length === 0) {
-      // this probe is done
-      return;
+      const nodes = this.getOutgoingLinks(true);
+      if (nodes.length === 0) {
+        console.log('finished  ', [], [ this.name, nackSender ], backtracked);
+      } else {
+        console.log('backtracked', [ this.name ], [ nackSender ], backtracked);
+        const newStep = randomStringFromArray(nodes);
+        const task = ['probe', JSON.stringify(path)];
+        this.graph.messaging.sendMessage(this.name, newStep, task);
+      }
+    } else {
+      console.log('backtracked', path.concat(this.name), [ nackSender ], backtracked);
+      const popped = path.pop();
+      this.receiveProbe(popped, path, []);
     }
-    const popped = path.pop();
-    this.receiveProbe(popped, path);
   }
   spliceLoop(sender: string, path: string[]): boolean {
     // chop off loop if there is one:
@@ -129,43 +138,44 @@ export class Jerboa {
     if (pos !== -1) {
       const loop = path.splice(pos).concat([sender, this.name]);
       this.netLoop(loop);
-      console.log(`Found loop`, loop, ` pos ${pos}`);
+      // console.log(`Found loop`, loop, ` pos ${pos}`);
+      console.log(`found loop `, path, loop);
       return true;
     }
     return false;
   }
-  receiveProbe(sender: string, path: string[]): void {
+  receiveProbe(sender: string, path: string[], backtracked: string[]): void {
     // console.log(`receiveProbe ${sender} => ${this.name}`, path);
     const loopFound = this.spliceLoop(sender, path);
     if (loopFound) {
       if (path.length >= 1) {
         // console.log('continuing by popping old sender from', path);
         const oldSender = path.pop();
-        this.receiveProbe(oldSender, path);
+        this.receiveProbe(oldSender, path, []);
       }
       return;
     }
     // console.log('path after splicing', path);
     const nodes = this.getOutgoingLinks(true);
     if (nodes.length === 0) {
-      const task = ['nack', JSON.stringify(path)];
-      // console.log('backtracking', task);
+      const task = ['nack', JSON.stringify(path), JSON.stringify(backtracked)];
+      // console.log('backtracking', this.name, sender, task);
       this.graph.messaging.sendMessage(this.name, sender, task);
       return;
     }
     path.push(sender);
     const newStep = randomStringFromArray(nodes);
     // console.log(`forwarding from ${this.name} to ${newStep} (balance ${this.balances.getBalance(newStep)})`);
-    const task = ['probe', JSON.stringify(path)];
+    const task = ['probe', JSON.stringify(path), JSON.stringify(backtracked)];
     // console.log('sending task string', task);
     this.graph.messaging.sendMessage(this.name, newStep, task);
   };
   receiveMessage(from: string, parts: string[]): void {
     switch(parts[0]) {
       case 'probe':
-        return this.receiveProbe(from, JSON.parse(parts[1]) as string[]);
+        return this.receiveProbe(from, JSON.parse(parts[1]) as string[], JSON.parse(parts[2]) as string[]);
     case 'nack':
-      return this.receiveNack(from, JSON.parse(parts[1]) as string[]);
+      return this.receiveNack(from, JSON.parse(parts[1]) as string[], JSON.parse(parts[2]) as string[]);
     case 'transfer':
       return this.receiveTransfer(from, JSON.parse(parts[1]) as number);
     //   case 'propose':
@@ -203,7 +213,7 @@ export class Jerboa {
     if (nodes.length === 0) {
       return false;
     }
-    this.sendMessage(nodes[0], ['probe', JSON.stringify([])]);
+    this.sendMessage(nodes[0], ['probe', JSON.stringify([]), JSON.stringify([])]);
     return true;
   }
 }
