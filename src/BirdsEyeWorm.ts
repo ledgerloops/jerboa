@@ -73,7 +73,7 @@ export class BirdsEyeWorm {
       while (!this.graph.hasOutgoingLinks(newStep) && path.length > 0) {
         // backtrack
         const previousStep = path.pop();
-        // console.log('backtracking', path, previousStep, newStep);
+        console.log('backtracking', path, previousStep, newStep);
         // console.log(`zeroOut`)
         this.graph.removeLink(previousStep, newStep);
         // after having removed the link previousStep -> newStep,
@@ -104,9 +104,9 @@ export class BirdsEyeWorm {
       if (pos !== -1) {
         const loop = path.splice(pos).concat(newStep);
         this.netLoop(loop);
-        // console.log(`Found loop`, loop, ` pos ${pos} in `, path);
+        console.log(`Found loop`, loop, ` pos ${pos} in `, path);
         newStep = this.graph.getFirstNode(path[path.length - 1]);
-        // console.log(`Continuing with`, path, newStep);
+        console.log(`Continuing with`, path, newStep);
       }
     }
   }
