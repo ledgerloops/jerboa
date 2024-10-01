@@ -119,17 +119,18 @@ export class Jerboa {
     if (path.length === 0) {
       const nodes = this.getOutgoingLinks(true);
       if (nodes.length === 0) {
-        console.log('finished  ', [], [ this.name, nackSender ], backtracked);
+        console.log('finished   ', [], [this.name, nackSender].concat(backtracked));
       } else {
-        console.log('backtracked', [ this.name ], [ nackSender ], backtracked);
+        console.log('backtracked', [ this.name ], [nackSender].concat(backtracked));
         const newStep = randomStringFromArray(nodes);
-        const task = ['probe', JSON.stringify(path)];
+        const task = ['probe', JSON.stringify(path), JSON.stringify([])];
         this.graph.messaging.sendMessage(this.name, newStep, task);
       }
     } else {
-      console.log('backtracked', path.concat(this.name), [ nackSender ], backtracked);
+      // console.log('backtracked', path.concat(this.name), [ nackSender ].concat(backtracked));
       const popped = path.pop();
-      this.receiveProbe(popped, path, []);
+      // console.log(`                     combining nack sender, internal receiveProbe`, popped, this.name, path, [nackSender].concat(backtracked));
+      this.receiveProbe(popped, path, [nackSender].concat(backtracked));
     }
   }
   spliceLoop(sender: string, path: string[]): boolean {
@@ -149,7 +150,7 @@ export class Jerboa {
     const loopFound = this.spliceLoop(sender, path);
     if (loopFound) {
       if (path.length >= 1) {
-        // console.log('continuing by popping old sender from', path);
+        // console.log('                   continuing by popping old sender from', path);
         const oldSender = path.pop();
         this.receiveProbe(oldSender, path, []);
       }
@@ -158,19 +159,24 @@ export class Jerboa {
     // console.log('path after splicing', path);
     const nodes = this.getOutgoingLinks(true);
     if (nodes.length === 0) {
+      // console.log(`                     combining self, sending nack ${this.name}->${sender}`, path, backtracked);
       const task = ['nack', JSON.stringify(path), JSON.stringify(backtracked)];
       // console.log('backtracking', this.name, sender, task);
       this.graph.messaging.sendMessage(this.name, sender, task);
       return;
+    } else if (backtracked.length > 0) {
+      console.log(`backtracked`, path.concat([sender, this.name]), backtracked);
     }
+    // console.log('         did we print?', sender, this.name, path, backtracked);
     path.push(sender);
     const newStep = randomStringFromArray(nodes);
     // console.log(`forwarding from ${this.name} to ${newStep} (balance ${this.balances.getBalance(newStep)})`);
-    const task = ['probe', JSON.stringify(path), JSON.stringify(backtracked)];
+    const task = ['probe', JSON.stringify(path), JSON.stringify([])];
     // console.log('sending task string', task);
     this.graph.messaging.sendMessage(this.name, newStep, task);
   };
   receiveMessage(from: string, parts: string[]): void {
+    // console.log('receiveMessage', from, this.name, parts);
     switch(parts[0]) {
       case 'probe':
         return this.receiveProbe(from, JSON.parse(parts[1]) as string[], JSON.parse(parts[2]) as string[]);

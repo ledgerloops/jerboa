@@ -35,11 +35,11 @@ lineReader.on('line', function (line) {
 });
 
 lineReader.on('close', function () {
-  console.log('primary transfers done, now inviting bilateral netting');
+  // console.log('primary transfers done, now inviting bilateral netting');
   dld.graph.messaging.runTasks();
   dld.graph.runBilateralStats();
   const totalImmediatelyNetted = dld.graph.stats[2].totalAmount;
-  console.log('bilateral netting done, now inviting probes');
+  // console.log('bilateral netting done, now inviting probes');
   dld.runWorm();
   console.log(dld.graph.stats);
   dld.graph.logNumNodesAndLinks();
