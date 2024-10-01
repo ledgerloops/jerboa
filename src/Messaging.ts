@@ -1,12 +1,14 @@
 import { Graph } from "./Graph.js";
 
 export class Messaging {
+  messagesSent: number = 0;
   messages: string[][] = [];
   graph: Graph;
   constructor(graph: Graph) {
     this.graph = graph;
   }
   deliverMessage(from: string, to: string, task: string): void {
+    this.messagesSent++;
     // console.log('deliverMessage', from, to, task);
     const parts = task.split(' ');
     return this.graph.getNode(to).receiveMessage(from, parts);

@@ -57,4 +57,5 @@ lineReader.on('close', function () {
   const amountLeft = totalTransAmount - totalBilateralAmount - totalAmount;
   console.log(`And a further ${Math.round(totalAmount / 1000000)} million (${Math.round((totalAmount / totalTransAmount) * 100)}%) was netted in ${totalNum} loops`);
   console.log(`Leaving ${Math.round(amountLeft / 1000000)} million (${Math.round((amountLeft / totalTransAmount) * 100)}%) to be settled out of band`);
+  console.log(`Sent ${dld.graph.messaging.messagesSent} messages, that's ${Math.round(dld.graph.messaging.messagesSent / numTrans)} messages per transfer`);
 });
