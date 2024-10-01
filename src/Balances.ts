@@ -85,4 +85,17 @@ export class Balances {
       return ret;
     }
 
+    getArchiveWeights(): { [to: string]: number } {const ret = {};
+    const friends = [... new Set(Object.keys(this.sent).concat(Object.keys(this.received)))];
+    friends.forEach((friend: string) => {
+      const sent = this.sent[friend] || 0;
+      const received = this.received[friend] || 0;
+      if ((sent > 0) && (received > 0)) {
+        ret[friend] = Math.min(sent, received);
+      } else if ((sent < 0) && (received < 0)) {
+        ret[friend] = Math.max(sent, received);
+      }
+    });
+    return ret;
+    }
   }

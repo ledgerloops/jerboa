@@ -190,6 +190,9 @@ export class Jerboa {
   getBalances(): { [to: string]: number } {
     return this.balances.getBalances();
   }
+  getArchiveWeights(): { [to: string]: number } {
+    return this.balances.getArchiveWeights();
+  }
   clearZeroes(): void {
     this.balances.sanityCheck(this.name);
   }

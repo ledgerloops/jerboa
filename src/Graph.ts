@@ -124,6 +124,36 @@ export class Graph {
     this.stats[loopLength].numFound++;
     this.stats[loopLength].totalAmount += amount;
   }
+  runBilateralStats(): void {
+    let numFoundPos = 0;
+    let numFoundNeg = 0;
+    let amountFoundPos = 0;
+    let amountFoundNeg = 0;
+    
+    Object.keys(this.nodes).forEach((name: string) => {
+      const archiveWeights = this.nodes[name].getArchiveWeights();
+      Object.keys(archiveWeights).forEach((other: string) => {
+        if (archiveWeights[other] > 0) {
+          numFoundPos++;
+          amountFoundPos += archiveWeights[other];
+        }
+        if (archiveWeights[other] < 0) {
+          numFoundNeg++;
+          amountFoundNeg += archiveWeights[other];
+        }
+      });
+    });
+    if (numFoundPos !== numFoundNeg) {
+      throw new Error('discrepancy in numFound');
+    }
+    if (amountFoundPos !== amountFoundNeg) {
+      throw new Error('discrepancy in amountFound');
+    }
+    this.stats[2] = {
+      numFound: numFoundPos,
+      totalAmount: amountFoundPos,
+    };
+  }
   getNode(name: string): Jerboa {
     this.ensureNode(name);
     return this.nodes[name];
