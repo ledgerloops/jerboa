@@ -12,6 +12,28 @@ now it can only process 30k transactions in 150 seconds:
 $ npm install
 $ npm test
 $ npm run build
+$ time node build/src/birdsEyeAnalysis.js 
+Done after 500332 steps
+{
+  '2': { numFound: 739613, totalAmount: 159647493.82300043 },
+  '3': { numFound: 3459, totalAmount: 4429854.625000001 },
+  '4': { numFound: 2635, totalAmount: 1733074.771 },
+  '5': { numFound: 2040, totalAmount: 1080468.2000000032 },
+  '6': { numFound: 1754, totalAmount: 767042.2849999989 },
+  '7': { numFound: 1588, totalAmount: 545537.297999998 },
+[...]
+  '66': { numFound: 2, totalAmount: 24.999999999862666 },
+  '67': { numFound: 1, totalAmount: 156.930000000002 },
+  '68': { numFound: 1, totalAmount: 113.69999999998163 }
+}
+Graph has 0 nodes and 0 links left
+After 422721 transactions with a total amount of 297 million
+189 million (64%) was immediately netted bilaterally
+And a further 65 million (22%) was netted in 27162 loops
+Leaving 43 million (14%) to be settled out of band
+```
+And the Jerboa version is a lot slower, even on a smaller data set:
+```
 $ time node build/src/analysis.js ./__tests__/fixture-30000.csv 
 [...]
 {
