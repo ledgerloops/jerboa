@@ -1,10 +1,9 @@
 import { createInterface } from 'readline';
 import { createReadStream } from 'fs';
 import { DLD } from './DLD.js';
-import { Jerboa } from './Jerboa.js';
 
 const SARAFU_CSV = '../Sarafu2021_UKdb_submission/sarafu_xDAI/sarafu_txns_20200125-20210615.csv';
-// const SARAFU_CSV = './__tests__/fixture.csv';
+// const SARAFU_CSV = './__tests__/fixture-3000.csv';
 
 const lineReader = createInterface({
   input: createReadStream(SARAFU_CSV),
@@ -29,6 +28,8 @@ lineReader.on('line', function (line) {
     dld.graph.addWeight(nodes[source], nodes[target], parseFloat(weight));
     numTrans++;
     totalTransAmount += parseFloat(weight);
+    // dld.graph.messaging.runTasks();
+    // dld.graph.runBilateralStats();  
   }
 });
 
@@ -37,9 +38,6 @@ lineReader.on('close', function () {
   dld.graph.messaging.runTasks();
   dld.graph.runBilateralStats();
   const totalImmediatelyNetted = dld.graph.stats[2].totalAmount;
-  dld.graph.getNodes().forEach((jerboa: Jerboa) => {
-    jerboa.clearZeroes();
-  })
   console.log('bilateral netting done, now inviting probes');
   dld.runWorm();
   console.log(dld.graph.stats);

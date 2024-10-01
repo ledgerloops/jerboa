@@ -133,21 +133,22 @@ export class Graph {
     Object.keys(this.nodes).forEach((name: string) => {
       const archiveWeights = this.nodes[name].getArchiveWeights();
       Object.keys(archiveWeights).forEach((other: string) => {
+        // console.log('archiveWeights', name, other, archiveWeights[other]);
         if (archiveWeights[other] > 0) {
           numFoundPos++;
           amountFoundPos += archiveWeights[other];
         }
         if (archiveWeights[other] < 0) {
           numFoundNeg++;
-          amountFoundNeg += archiveWeights[other];
+          amountFoundNeg -= archiveWeights[other];
         }
       });
     });
     if (numFoundPos !== numFoundNeg) {
-      throw new Error('discrepancy in numFound');
+      throw new Error(`discrepancy in numFound ${numFoundPos} vs ${numFoundNeg}`);
     }
-    if (amountFoundPos !== amountFoundNeg) {
-      throw new Error('discrepancy in amountFound');
+    if (Math.abs(amountFoundPos - amountFoundNeg) > 0.000001) {
+      throw new Error(`discrepancy in amountFound ${amountFoundPos} vs ${amountFoundNeg}`);
     }
     this.stats[2] = {
       numFound: numFoundPos,

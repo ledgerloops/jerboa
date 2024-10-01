@@ -2,7 +2,7 @@ import { createInterface } from 'readline';
 import { createReadStream } from 'fs';
 import { DLD } from '../src/DLD.js';
 
-const SARAFU_CSV = './__tests__/fixture.csv';
+const SARAFU_CSV = './__tests__/fixture-3000.csv';
 
 async function readCsv(callback: (from: string, to: string, amount: number) => void): Promise<void> {
   return new Promise((resolve, reject) => {

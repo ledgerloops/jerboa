@@ -46,26 +46,7 @@ export class Balances {
       }
 
     }
-  
-    sanityCheck(name: string): void {
-      Object.keys(this.sent).forEach((other: string) => {
-        if (this.sent[other] === 0) {
-          throw new Error('why was this balance entry not deleted?');
-        }
-        if (this.received[other] === 0) {
-          throw new Error('why was this counterBalance entry not deleted?');
-        }
-        if (this.sent[other] < 0) {
-          console.log('why is this balance negative?', this.sent[other]);
-        }
-        if (this.received[other] < 0) {
-          console.log('why is this counterBalance negative?', this.received[other]);
-        }
-        if ((typeof this.sent[other] !== 'undefined') && (typeof this.received[other] !== 'undefined')) {
-          console.log('why wasnt this trustline cleared bilaterally', name, other, this.sent[other], this.received[other]);
-        }
-      });
-    }
+
     getBalance(friend: string): number {
       const sent = this.sent[friend] || 0;
       const received = this.received[friend] || 0;
@@ -85,17 +66,21 @@ export class Balances {
       return ret;
     }
 
-    getArchiveWeights(): { [to: string]: number } {const ret = {};
-    const friends = [... new Set(Object.keys(this.sent).concat(Object.keys(this.received)))];
-    friends.forEach((friend: string) => {
-      const sent = this.sent[friend] || 0;
-      const received = this.received[friend] || 0;
-      if ((sent > 0) && (received > 0)) {
-        ret[friend] = Math.min(sent, received);
-      } else if ((sent < 0) && (received < 0)) {
-        ret[friend] = Math.max(sent, received);
-      }
-    });
-    return ret;
+    getArchiveWeights(name: string): { [to: string]: number } {
+      const ret = {};
+      const friends = [... new Set(Object.keys(this.sent).concat(Object.keys(this.received)))];
+      friends.forEach((friend: string) => {
+        const sent = this.sent[friend] || 0;
+        const received = this.received[friend] || 0;
+        const sign = (sent === received ? (parseInt(name) > parseInt(friend) ? 1 : -1) : (sent > received ? 1 : -1));
+        if ((sent > 0) && (received > 0)) {
+          ret[friend] = sign * Math.min(sent, received);
+          // console.log(name, friend, sent, received, 'setting pos', sign, Math.min(sent, received));
+        } else if ((sent < 0) && (received < 0)) {
+          ret[friend] = sign * Math.max(sent, received);
+          // console.log(name, friend, sent, received, 'setting neg', sign, Math.max(sent, received));
+        }
+      });
+      return ret;
     }
   }

@@ -107,6 +107,7 @@ export class Jerboa {
   //   this.sendMessage(sender, ['propose', 'bilateral', JSON.stringify(amount)]);
   // }
   receiveTransfer(sender: string, amount: number): void {
+    // console.log(`${sender}->${this.name}: ${amount}`);
     this.balances.adjustReceived(sender, amount);
   }
   receiveNack(nackSender: string, path: string[]): void {
@@ -191,10 +192,7 @@ export class Jerboa {
     return this.balances.getBalances();
   }
   getArchiveWeights(): { [to: string]: number } {
-    return this.balances.getArchiveWeights();
-  }
-  clearZeroes(): void {
-    this.balances.sanityCheck(this.name);
+    return this.balances.getArchiveWeights(this.name);
   }
   startProbe(): boolean {
     const nodes = this.getOutgoingLinks(true);
