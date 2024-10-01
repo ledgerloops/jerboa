@@ -55,4 +55,3 @@ diff ./jerboa-300k.log ./birdseye-300k.log
 ```
 
 The diff output is expected to show that BirdsEyeAnalysis does more netting, because it nets after every transfer, and Jerboa only nets the balances after all transfers are finished.
-Other than that, Jerboa takes about 15 seconds on 30k transactions which is really quite slow. We're working on improving that to get it closer to the BirdsEye performance.
