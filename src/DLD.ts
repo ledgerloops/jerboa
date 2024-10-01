@@ -3,11 +3,6 @@ import { Graph } from './Graph.js';
 export class DLD {
   tasks: string[] = [];
   graph: Graph = new Graph();
-  addTransfer(from: string, to: string, amount: number): number {
-    const amountNetted = this.graph.addWeight(from, to, amount);
-    this.graph.report(2, amountNetted);
-    return amountNetted;
-  }
 
   // removes dead ends as it finds them.
   // nets loops as it finds them.
@@ -22,12 +17,13 @@ export class DLD {
         if ((e.message === 'Graph is empty') || (e.message == 'no nodes have outgoing links')) {
           done = true;
           return;
-        } else {
+        } else {;
           throw e;
         }
       }
-      this.graph.messaging.sendMessage('out of nowhere', newStep, ['probe', `[]`]);
+      this.graph.getNode(newStep).startProbe();
       this.graph.messaging.runTasks();
+      // console.log('running probe from', newStep);
     } while (!done);
   }
 }

@@ -1,38 +1,68 @@
 import { Graph } from "./Graph.js";
+import { Balances } from "./Balances.js";
+const MIN_LOOP_WEIGHT = 0.0001;
+const MAX_LOOP_WEIGHT = 1000000000;
+const RANDOM_NEXT_STEP = false;
+
+function randomStringFromArray(arr: string[]): string {
+  if (!Array.isArray(arr)) {
+    throw new Error('not an array!');
+  }
+  if (arr.length === 0) {
+    throw new Error('array is empty!');
+  }
+  if (RANDOM_NEXT_STEP) {
+    const pick = Math.floor(Math.random() * arr.length);
+    return arr[pick];
+  } else {
+    return arr[0];
+  }
+}
 
 export class Jerboa {
-  private balance: {
-    [to: string]: number;
-  } = {};
+  private balances: Balances = new Balances();
   private graph: Graph;
   private name: string;
+  private nack: {
+    [friend: string]: boolean
+  } = {};
   constructor(name: string, graph: Graph) {
     this.name = name;
     this.graph = graph;
   }
+
   // assumes all loop hops exist
   getSmallestWeight(loop: string[]): number {
     let smallestWeight = Infinity;
+    let found = false;
+    if (loop.length === 0) {
+      throw new Error('loop has length 0');
+    }
+    // const weights = [];
+    // console.log('finding smallest weight on loop', loop);
     for (let k = 0; k < loop.length - 1; k++) {
       const thisWeight = this.graph.getWeight(loop[k], loop[k+1]);
+      // weights.push(thisWeight);
+      if (typeof thisWeight !== 'number') {
+        throw new Error('weight is not a number');
+      }
       // console.log(`Weight on loop from ${loop[k]} to ${loop[k+1]} is ${thisWeight}`);
       if (thisWeight < smallestWeight) {
         smallestWeight = thisWeight;
+        found = true;
       }
     }
+    if (!found) {
+      throw new Error('not found, weird');
+    }
+    // console.log('smallestWeight found', loop, weights, smallestWeight);
     return smallestWeight;
   }
 
-  addTransfer(from: string, to: string, amount: number): number {
-    const amountNetted = this.graph.addWeight(from, to, amount);
-    this.graph.report(2, amountNetted);
-    return amountNetted;
-  }
   // assumes all loop hops exist
   netLoop(loop: string[]): number {
-    // const before = this.graph.getTotalWeight();
     const smallestWeight = this.getSmallestWeight(loop);
-    if (smallestWeight === 0) {
+    if ((smallestWeight < MIN_LOOP_WEIGHT) || (smallestWeight > MAX_LOOP_WEIGHT)) {
       return 0;
     }
     let firstZeroPos;
@@ -40,79 +70,92 @@ export class Jerboa {
       if ((this.graph.getWeight(loop[k], loop[k+1]) === smallestWeight) && (typeof firstZeroPos === 'undefined')) {
         firstZeroPos = k;
       }
-      this.addTransfer(loop[k+1], loop[k], smallestWeight);
+      this.graph.addWeight(loop[k], loop[k+1], -smallestWeight);
     }
-    // const after = this.graph.getTotalWeight();
-    // console.log('total graph weight reduced by', before - after);
     this.graph.report(loop.length - 1, smallestWeight);
     return firstZeroPos;
   }
-  receiveNack(nackSender: string, path: string[]): void {
-    let newStep = this.name;
-    // console.log('receiveNack removes link', newStep, nackSender);
-    this.graph.removeLink(newStep, nackSender);
-    if (path.length === 0) {
-      // console.log('starting with a new worm');
-      // no paths left, start with a new worm
-      path = [];
-      try {
-        newStep = this.graph.getFirstNode(false);
-      } catch (e) {
-        if (e.message === 'Graph is empty') {
-          // We're done!
-          // console.log('done!');
-          // console.log(`Done after ${counter} steps`);
-          return;
-        } else {
-          throw e;
-        }
-      }
-    }
-    // console.log('receiveNack calls receiveProbe', newStep, path);
-    this.receiveProbe(path);
+  sendMessage(to: string, task: string[]): void {
+    this.graph.messaging.sendMessage(this.name, to, task);
   }
-
-  receiveProbe(path: string[]): void {
-    let newStep = this.name;
-    // console.log('receiveProbe', newStep, path);
-    path.push(newStep);
-    // console.log('pushed', newStep, path);
-    if (!this.graph.hasOutgoingLinks(newStep) && path.length > 0) {
-      // console.log('backtracking', newStep, path);
-      if (path.length < 2) {
-        // this probe dies here
-        // console.log('this probe dies here', this.name, path);
-        return;
-      } else {
-        // backtrack
-        const nackSender = path.pop();
-        newStep = path.pop();
-        
-        const task = ['nack', JSON.stringify(path)];
-        // console.log('sending task string', task);
-        this.graph.messaging.sendMessage(nackSender, newStep, task);
-        return;
-      }
-    }
-    // we now now that either newStep has outgoing links, or path is empty
+  // finishBilateralClear(sender: string, amount: number): void {
+  //   this.balances.adjustBalance(sender, -amount);
+  //   this.balances.adjustCounterBalance(sender, -amount);
+  // }
+  // receiveCommit(sender: string, probe: string, amount: number): void {
+  //   if (probe === 'bilateral') {
+  //     if (typeof this.sentBilateralClearing[sender] === 'undefined') { // role b
+  //       this.sendMessage(sender, ['commit', 'bilateral', JSON.stringify(amount)]);
+  //     } else {
+  //       this.graph.report(2, amount);
+  //       delete this.sentBilateralClearing[sender];
+  //     }
+  //     this.finishBilateralClear(sender, amount);
+  //   }
+  // }
+  // receivePropose(sender: string, probe: string, amount: number): void {
+  //   if (probe === 'bilateral') {
+  //     if (typeof this.sentBilateralClearing[sender] === 'undefined') { // role b
+  //       this.sendMessage(sender, ['propose', 'bilateral', JSON.stringify(amount)]);
+  //     } else {
+  //       this.sendMessage(sender, ['commit', 'bilateral', JSON.stringify(amount)]);
+  //     }
+  //   }
+  // }
+  // a -> b propose
+  // b -> a propose
+  // a -> b commit
+  // b -> a commit
+  // startBilateralClear(sender: string, amount: number): void {
+  //   this.sentBilateralClearing[sender] = true;
+  //   this.sendMessage(sender, ['propose', 'bilateral', JSON.stringify(amount)]);
+  // }
+  receiveTransfer(sender: string, amount: number): void {
+    // console.log(`${sender}->${this.name}: ${amount}`);
+    this.balances.adjustReceived(sender, amount);
+  }
+  receiveNack(nackSender: string, path: string[]): void {
+    this.nack[nackSender] = true;
     if (path.length === 0) {
-      // console.log('starting with a new worm');
-      // no paths left, start with a new worm
-      // console.log('this probe done', this.name, path);
+      // this probe is done
       return;
-    } else {
-      newStep = this.graph.getFirstNode(false, newStep);
-      // console.log('considering', path, newStep);
     }
-    // check for loops in path
-    const pos = path.indexOf(newStep);
+    const popped = path.pop();
+    this.receiveProbe(popped, path);
+  }
+  spliceLoop(sender: string, path: string[]): boolean {
+    // chop off loop if there is one:
+    const pos = path.indexOf(this.name);
     if (pos !== -1) {
-      const loop = path.splice(pos).concat(newStep);
+      const loop = path.splice(pos).concat([sender, this.name]);
       this.netLoop(loop);
-      // console.log(`Found loop`, loop, ` pos ${pos} in `, path);
-      newStep = this.graph.getFirstNode(false, path[path.length - 1]);
-      // console.log(`Continuing with`, path, newStep);
+      console.log(`Found loop`, loop, ` pos ${pos}`);
+      return true;
     }
+    return false;
+  }
+  receiveProbe(sender: string, path: string[]): void {
+    // console.log(`receiveProbe ${sender} => ${this.name}`, path);
+    const loopFound = this.spliceLoop(sender, path);
+    if (loopFound) {
+      if (path.length >= 1) {
+        // console.log('continuing by popping old sender from', path);
+        const oldSender = path.pop();
+        this.receiveProbe(oldSender, path);
+      }
+      return;
+    }
+    // console.log('path after splicing', path);
+    const nodes = this.getOutgoingLinks(true);
+    if (nodes.length === 0) {
+      const task = ['nack', JSON.stringify(path)];
+      // console.log('backtracking', task);
+      this.graph.messaging.sendMessage(this.name, sender, task);
+      return;
+    }
+    path.push(sender);
+    const newStep = randomStringFromArray(nodes);
+    // console.log(`forwarding from ${this.name} to ${newStep} (balance ${this.balances.getBalance(newStep)})`);
     const task = ['probe', JSON.stringify(path)];
     // console.log('sending task string', task);
     this.graph.messaging.sendMessage(this.name, newStep, task);
@@ -120,38 +163,47 @@ export class Jerboa {
   receiveMessage(from: string, parts: string[]): void {
     switch(parts[0]) {
       case 'probe':
-        return this.receiveProbe(JSON.parse(parts[1]) as string[]);
+        return this.receiveProbe(from, JSON.parse(parts[1]) as string[]);
     case 'nack':
       return this.receiveNack(from, JSON.parse(parts[1]) as string[]);
+    case 'transfer':
+      return this.receiveTransfer(from, JSON.parse(parts[1]) as number);
+    //   case 'propose':
+    //     return this.receivePropose(from, parts[1], JSON.parse(parts[2]) as number);
+    // case 'commit':
+    //   return this.receiveCommit(from, parts[1], JSON.parse(parts[2]) as number);
     default:
       throw new Error('unknown task');
     }
   }
-
-
-  ensureBalance(to: string): void {
-    // console.log('ensuring balance', to, this.balance);
-    if (typeof this.balance[to] === 'undefined') {
-      this.balance[to] = 0;
-    }
-  }
   addWeight(to: string, weight: number): void {
-    this.ensureBalance(to);
-    this.balance[to] += weight;
+    this.balances.adjustSent(to, weight);
+    this.graph.messaging.sendMessage(this.name, to, ['transfer', JSON.stringify(weight)]);
   }
-  getBalance(to: string): number | undefined {
-    return this.balance[to];
+  getOutgoingLinks(avoidNack: boolean): string[] {
+    const balances = this.balances.getBalances();
+    return Object.keys(balances).filter((to: string) => {
+      if ((avoidNack) && (this.nack[to])) {
+        return false;
+      }
+      return (balances[to] > MIN_LOOP_WEIGHT);
+    });
   }
-  // @returns number amount removed
-  zeroOut(to: string): number {
-    const amount = this.getBalance(to);
-    delete this.balance[to];
-    return amount;
-  }
-  getOutgoingLinks(): string[] {
-    return Object.keys(this.balance);
+  getBalance(to: string): number {
+    return this.balances.getBalance(to);
   }
   getBalances(): { [to: string]: number } {
-    return this.balance;
+    return this.balances.getBalances();
+  }
+  getArchiveWeights(): { [to: string]: number } {
+    return this.balances.getArchiveWeights(this.name);
+  }
+  startProbe(): boolean {
+    const nodes = this.getOutgoingLinks(true);
+    if (nodes.length === 0) {
+      return false;
+    }
+    this.sendMessage(nodes[0], ['probe', JSON.stringify([])]);
+    return true;
   }
 }

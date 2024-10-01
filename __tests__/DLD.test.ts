@@ -2,7 +2,7 @@ import { createInterface } from 'readline';
 import { createReadStream } from 'fs';
 import { DLD } from '../src/DLD.js';
 
-const SARAFU_CSV = './__tests__/fixture.csv';
+const SARAFU_CSV = './__tests__/fixture-3000.csv';
 
 async function readCsv(callback: (from: string, to: string, amount: number) => void): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -40,13 +40,8 @@ async function readCsv(callback: (from: string, to: string, amount: number) => v
 describe('DLD', () => {
   it('finds loops', async () => {
     const dld = new DLD();
-    await readCsv(dld.addTransfer.bind(dld));
+    await readCsv(dld.graph.addWeight.bind(dld.graph));
     dld.runWorm();
-    // const links = dld.graph.getLinks();
-    // let numLinks = 0;
-    // Object.keys(links).forEach(from => {
-    //   numLinks += Object.keys(links[from]).length;
-    // });
     let totalNum = 0;
     let totalAmount = 0;
     Object.keys(dld.graph.stats).map(numStr => {
@@ -55,18 +50,19 @@ describe('DLD', () => {
         totalNum += dld.graph.stats[numStr].numFound;
       }
     });
-    expect(totalNum).toEqual(3);
-    expect(totalAmount).toEqual(210);
-    expect(dld.graph.stats).toEqual({
-      "2": {
-       "numFound": 1380,
-       "totalAmount": 5579.5,
-     },
-     "3": {
-       "numFound": 3,
-       "totalAmount": 70,
-     }
-    });
-
+    expect([totalNum, totalAmount, dld.graph.stats]).toEqual([
+      3,
+      210,
+      {
+        "2": {
+        "numFound": 1,
+        "totalAmount": 2,
+      },
+      "3": {
+        "numFound": 3,
+        "totalAmount": 70,
+      }
+      }
+    ]);
   });
 });

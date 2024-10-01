@@ -3,7 +3,8 @@ import { createReadStream } from 'fs';
 import { DLD } from './DLD.js';
 
 // const SARAFU_CSV = '../Sarafu2021_UKdb_submission/sarafu_xDAI/sarafu_txns_20200125-20210615.csv';
-const SARAFU_CSV = './__tests__/fixture.csv';
+const SARAFU_CSV = process.argv[2] || './__tests__/fixture-3000.csv';
+console.log('Opening', SARAFU_CSV);
 
 const lineReader = createInterface({
   input: createReadStream(SARAFU_CSV),
@@ -13,7 +14,6 @@ const nodes: {
 } = {};
 let counter = 0;
 let totalTransAmount = 0;
-let totalImmediatelyNetted = 0;
 let numTrans = 0;
 const dld = new DLD();
 lineReader.on('line', function (line) {
@@ -26,22 +26,23 @@ lineReader.on('line', function (line) {
     nodes[target] = (counter++).toString();
   }
   if (transfer_subtype === 'STANDARD') {
-    totalImmediatelyNetted += dld.addTransfer(nodes[source], nodes[target], parseFloat(weight));
+    dld.graph.addWeight(nodes[source], nodes[target], parseFloat(weight));
     numTrans++;
     totalTransAmount += parseFloat(weight);
+    // dld.graph.messaging.runTasks();
+    // dld.graph.runBilateralStats();  
   }
 });
 
 lineReader.on('close', function () {
+  console.log('primary transfers done, now inviting bilateral netting');
+  dld.graph.messaging.runTasks();
+  dld.graph.runBilateralStats();
+  const totalImmediatelyNetted = dld.graph.stats[2].totalAmount;
+  console.log('bilateral netting done, now inviting probes');
   dld.runWorm();
   console.log(dld.graph.stats);
-  const links = dld.graph.getLinks();
-  let numLinks = 0;
-  Object.keys(links).forEach(from => {
-    numLinks += Object.keys(links[from]).length;
-  });
-  // console.log(birdsEyeWorm.stats);
-  console.log(`Graph has ${Object.keys(links).length} nodes and ${numLinks} links left`);
+  dld.graph.logNumNodesAndLinks();
   console.log(`After ${numTrans} transactions with a total amount of ${Math.round(totalTransAmount / 1000000)} million`);
   const totalBilateralAmount = 2 * totalImmediatelyNetted;
   console.log(`${Math.round(totalBilateralAmount / 1000000)} million (${Math.round((totalBilateralAmount / totalTransAmount) * 100)}%) was immediately netted bilaterally`);

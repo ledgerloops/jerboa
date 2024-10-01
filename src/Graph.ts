@@ -19,42 +19,7 @@ export class Graph {
     }
   }
 
-  // assumes that both graph[from][to] and graph[to][from] exist
-  private substractAndRemoveCounterBalance(from: string, to: string): number {
-    const amount = this.nodes[to].getBalance(from);
-    this.nodes[from].addWeight(to, -amount);
-    const ret = this.nodes[to].zeroOut(from);
-    if (this.nodes[to].getOutgoingLinks().length === 0) {
-      delete this.nodes[to];
-    }
-    return ret;
-  }
-  // assumes that graph[from][to] exists
-  // @returns number amount netted
-  private netBilateralAndRemove(from: string, to: string): number {
-    if (typeof this.nodes[to] === 'undefined') {
-      return 0;
-    }
-    if (typeof this.nodes[to].getBalance(from) === 'undefined') {
-      return 0;
-    }
-    if (this.nodes[from].getBalance(to) > this.nodes[to].getBalance(from)) {
-      return this.substractAndRemoveCounterBalance(from, to);
-    } else if (this.nodes[from].getBalance(to) < this.nodes[to].getBalance(from)) {
-      return this.substractAndRemoveCounterBalance(to, from);
-    } else { // mutual annihilation
-      this.nodes[from].zeroOut(to);
-      if (this.nodes[from].getOutgoingLinks().length === 0) {
-        delete this.nodes[from];
-      }
-      const ret = this.nodes[to].zeroOut(from);
-      if (this.nodes[to].getOutgoingLinks().length === 0) {
-        delete this.nodes[to];
-      }
-      return ret;
-    }
-  }
-  public addWeight(from: string, to: string, weight: number): number {
+  public addWeight(from: string, to: string, weight: number): void {
     if (typeof from !== 'string') {
       throw new Error(`from param ${JSON.stringify(from)} is not a string in call to addWeight`);
     }
@@ -65,30 +30,14 @@ export class Graph {
       throw new Error(`weight param ${JSON.stringify(weight)} is not a number in call to addWeight`);
     }
   
-    if (weight <= 0) {
+    // negative weights are currently used Jerboa#netLoop
+    if (weight === 0) {
       throw new Error('weight should be greater than zero');
     }
     this.ensureNode(from);
     this.nodes[from].addWeight(to, weight);
-    return this.netBilateralAndRemove(from, to);
   }
-  public removeLink(from: string, to: string): void {
-    if (typeof from !== 'string') {
-      throw new Error(`from param ${JSON.stringify(from)} is not a string in call to removeLink`);
-    }
-    if (typeof to !== 'string') {
-      throw new Error(`to param ${JSON.stringify(to)} is not a string in call to removeLink`);
-    }
 
-    if (typeof this.nodes[from] !== 'undefined') {
-      if (typeof this.nodes[from].getBalance(to) !== 'undefined') {
-        this.nodes[from].zeroOut(to);
-        if (this.nodes[from].getOutgoingLinks().length === 0) {
-          delete this.nodes[from];
-        }
-      }
-    }
-  }
   public getFirstNode(withOutgoingLinks: boolean, after?: string): string {
     if ((typeof after !== 'string') && (typeof after !== 'undefined')) {
       throw new Error(`after param ${JSON.stringify(after)} is neither a string nor undefined in call to getFirstNode`);
@@ -100,7 +49,7 @@ export class Graph {
       if (typeof nodesObj === 'undefined') {
         throw new Error(`No outgoing links from node ${after}`);
       }
-      nodes = nodesObj.getOutgoingLinks();
+      nodes = nodesObj.getOutgoingLinks(true);
     } else {
       nodes = Object.keys(this.nodes);
       if (nodes.length === 0) {
@@ -109,7 +58,7 @@ export class Graph {
     }
     if (withOutgoingLinks) {
       for (let i = 0; i < nodes.length; i++) {
-        if ((typeof this.nodes[nodes[i]] !== 'undefined') && (this.nodes[nodes[i]].getOutgoingLinks().length >= 1)) {
+        if ((typeof this.nodes[nodes[i]] !== 'undefined') && (this.nodes[nodes[i]].getOutgoingLinks(true).length >= 1)) {
           return nodes[i];
         }
       }
@@ -122,7 +71,7 @@ export class Graph {
     if (typeof after !== 'string') {
       throw new Error(`after param ${JSON.stringify(after)} is not a string in call to hasOutgoingLinks`);
     }
-    return ((typeof this.nodes[after] !== 'undefined') && (this.nodes[after].getOutgoingLinks().length >= 1));
+    return ((typeof this.nodes[after] !== 'undefined') && (this.nodes[after].getOutgoingLinks(true).length >= 1));
   }
   public getWeight(from: string, to: string): number {
     if (typeof from !== 'string') {
@@ -134,24 +83,27 @@ export class Graph {
     if (typeof this.nodes[from] === 'undefined') {
       return 0;
     }
-    if (typeof this.nodes[from].getBalance(to) === 'undefined') {
-      return 0;
-    }
     return this.nodes[from].getBalance(to);
   }
-  public getLinks(): {
+  public getBalances(): {
     [from: string]: {
       [to: string]: number;
     }
   } {
     const links = {};
     Object.keys(this.nodes).forEach(name => {
-      const balances = this.nodes[name].getBalances();
-      if (Object.keys(balances).length >= 1) {
-        links[name] = balances;
-      }
+      links[name] = this.nodes[name].getBalances();
     });
     return links;
+  }
+  public logNumNodesAndLinks(): void {
+    const numNodes = Object.keys(this.nodes).length;
+    let numLinks = 0;
+    Object.keys(this.nodes).forEach(name => {
+      const outgoingLinks = Object.keys(this.nodes[name].getBalances());
+      numLinks += outgoingLinks.length;
+    });
+    console.log(`Graph has ${numNodes} nodes and ${numLinks} links left`);
   }
   public getTotalWeight(): number {
     let total = 0;
@@ -163,9 +115,6 @@ export class Graph {
     return total;
   }
   report(loopLength: number, amount: number): void {
-    // if (loopLength > 2) {
-    //   console.log('report', loopLength, amount);
-    // }
     if (typeof this.stats[loopLength] === 'undefined') {
       this.stats[loopLength] = {
         numFound: 0,
@@ -175,8 +124,42 @@ export class Graph {
     this.stats[loopLength].numFound++;
     this.stats[loopLength].totalAmount += amount;
   }
+  runBilateralStats(): void {
+    let numFoundPos = 0;
+    let numFoundNeg = 0;
+    let amountFoundPos = 0;
+    let amountFoundNeg = 0;
+    
+    Object.keys(this.nodes).forEach((name: string) => {
+      const archiveWeights = this.nodes[name].getArchiveWeights();
+      Object.keys(archiveWeights).forEach((other: string) => {
+        // console.log('archiveWeights', name, other, archiveWeights[other]);
+        if (archiveWeights[other] > 0) {
+          numFoundPos++;
+          amountFoundPos += archiveWeights[other];
+        }
+        if (archiveWeights[other] < 0) {
+          numFoundNeg++;
+          amountFoundNeg -= archiveWeights[other];
+        }
+      });
+    });
+    if (numFoundPos !== numFoundNeg) {
+      throw new Error(`discrepancy in numFound ${numFoundPos} vs ${numFoundNeg}`);
+    }
+    if (Math.abs(amountFoundPos - amountFoundNeg) > 0.000001) {
+      throw new Error(`discrepancy in amountFound ${amountFoundPos} vs ${amountFoundNeg}`);
+    }
+    this.stats[2] = {
+      numFound: numFoundPos,
+      totalAmount: amountFoundPos,
+    };
+  }
   getNode(name: string): Jerboa {
     this.ensureNode(name);
     return this.nodes[name];
+  }
+  getNodes(): Jerboa[] {
+    return Object.values(this.nodes);
   }
 }
