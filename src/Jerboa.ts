@@ -41,9 +41,31 @@ export class Jerboa {
     console.log('receiveScout', sender, probeId, amount, debugInfo);
   }
   // assumes all loop hops exist
-  getSmallestWeight(loop: string[]): number {
+  getSmallestWeight(probeId: string, loop: string[]): number {
     if (loop.length < 3) {
-      throw new Error();
+      throw new Error('loop too short');
+    }
+    if (loop[0] !== this.name) {
+      throw new Error('loop doesnt start here');
+    }
+    if (loop[loop.length - 1] !== this.name) {
+      throw new Error('loop doesnt end here');
+    }
+    if (this.probes[probeId].in.length === 1) {
+      // was minted here, O loop
+    } else  if (this.probes[probeId].in.length == 2) {
+      // P loop
+    } else {
+      console.log(this.probes);
+      throw new Error(`expected one or two in events for probe ${probeId}`);
+    }
+    if (this.probes[probeId].out.length === 1) {
+      // O or P loop, not backtracked
+    } else if (this.probes[probeId].out.length > 1) {
+        // O or P loop, after having backtracked
+    } else {
+      console.log(this.probes);
+      throw new Error(`expected one or more out events for probe ${probeId}`);
     }
     let smallestWeight = Infinity;
     let found = false;
@@ -113,12 +135,12 @@ export class Jerboa {
       this.receiveProbe(popped, '1', { path: debugInfo.path, backtracked: [nackSender].concat(debugInfo.backtracked) });
     }
   }
-  spliceLoop(sender: string, path: string[]): boolean {
+  spliceLoop(sender: string, probeId: string, path: string[]): boolean {
     // chop off loop if there is one:
     const pos = path.indexOf(this.name);
     if (pos !== -1) {
       const loop = path.splice(pos).concat([sender, this.name]);
-      const smallestWeight = this.getSmallestWeight(loop);
+      const smallestWeight = this.getSmallestWeight(probeId, loop);
       if ((smallestWeight < MIN_LOOP_WEIGHT) || (smallestWeight > MAX_LOOP_WEIGHT)) {
         // console.log('ignoring loop with this amount', smallestWeight);
       } else { 
@@ -144,7 +166,7 @@ export class Jerboa {
     this.ensureProbe(probeId);
     this.probes[probeId].in.push(sender);
     // console.log(`receiveProbe ${sender} => ${this.name}`, path);
-    const loopFound = this.spliceLoop(sender, debugInfo.path);
+    const loopFound = this.spliceLoop(sender, probeId, debugInfo.path);
     if (loopFound) {
       if (debugInfo.path.length >= 1) {
         // console.log('                   continuing by popping old sender from', path);

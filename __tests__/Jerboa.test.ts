@@ -41,6 +41,7 @@ describe('Jerboa', () => {
     const a = new Jerboa('a', graph);
     a.addWeight('b', 9);
     expect(graph.messaging.sendMessage).toHaveBeenCalledWith('a', 'b', ['transfer', '9']);
+    a.receiveMessage('x', ['probe', '1', JSON.stringify({ path: ['b', 'c'], backtracked: [] })]);
     a.receiveMessage('x', ['probe', '1', JSON.stringify({ path: ['b', 'c', 'a', 'd'], backtracked: [] })]); // so the loop is a-d-x-a and b-c-a is the old prefix
     expect(graph.messaging.sendMessage).toHaveBeenCalledWith('a', 'b', ['probe', '1', JSON.stringify({ path: ['b', 'c'], backtracked: []})]);
   });
