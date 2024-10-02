@@ -26,6 +26,12 @@ export class Jerboa {
   private outgoingLinks: {
     [friend: string]: boolean
   } = {};
+  private probes: {
+    [probeId: string]: {
+      in: string[],
+      out: string[],
+    }
+  } = {};
   constructor(name: string, graph: Graph) {
     this.name = name;
     this.graph = graph;
@@ -126,7 +132,17 @@ export class Jerboa {
     }
     return false;
   }
+  ensureProbe(probeId: string): void {
+    if (typeof this.probes[probeId] === 'undefined') {
+      this.probes[probeId] = {
+        in: [],
+        out: [],
+       };
+    }
+  }
   receiveProbe(sender: string, probeId: string, debugInfo: { path: string[], backtracked: string[] }): void {
+    this.ensureProbe(probeId);
+    this.probes[probeId].in.push(sender);
     // console.log(`receiveProbe ${sender} => ${this.name}`, path);
     const loopFound = this.spliceLoop(sender, debugInfo.path);
     if (loopFound) {
@@ -221,6 +237,8 @@ export class Jerboa {
     return this.balances.getArchiveWeights(this.name);
   }
   sendProbeMessage(to: string, probeId: string, debugInfo: object): void {
+    this.ensureProbe(probeId);
+    this.probes[probeId].out.push(to);
     this.sendMessage(to, ['probe', probeId, JSON.stringify(debugInfo)]);
   }
   sendNackMessage(to: string, debugInfo: object): void {
