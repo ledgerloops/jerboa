@@ -145,9 +145,9 @@ export class Jerboa {
   }
   // assumes all loop hops exist
   scoutLoop(probeId: string, loop: string[]): void {
-    console.log(`${this.name} scouting loop`);
+    // console.log(`${this.name} scouting loop`);
     for (let k = 0; k < loop.length - 1; k++) {
-      console.log(loop, `hop ${loop[k]}->${loop[k+1]}`, this.graph.getNode(loop[k]).getBalance(loop[k+1]), this.graph.getNode(loop[k+1]).getBalance(loop[k]));
+      // console.log(loop, `hop ${loop[k]}->${loop[k+1]}`, this.graph.getNode(loop[k]).getBalance(loop[k+1]), this.graph.getNode(loop[k+1]).getBalance(loop[k]));
       if (this.graph.getNode(loop[k]).getBalance(loop[k+1]) + this.graph.getNode(loop[k+1]).getBalance(loop[k]) !== 0) {
         throw new Error('balance dispute!');
       }
@@ -171,12 +171,12 @@ export class Jerboa {
     }
     const incomingNeighbour = loop[loop.length - 2];
     const incomingBalance = this.balances.getBalance(incomingNeighbour);
-    console.log('scoutLoop considering incoming balance', this.name, incomingNeighbour, incomingBalance);
+    // console.log('scoutLoop considering incoming balance', this.name, incomingNeighbour, incomingBalance);
     if (incomingBalance > -MIN_LOOP_WEIGHT) {
       console.log(this.name, incomingNeighbour, incomingBalance, 'incoming balance not negative enough');
       throw new Error('jar');
     } else {
-      console.log('calling sendScoutMessage');
+      // console.log('calling sendScoutMessage');
       this.sendScoutMessage(incomingNeighbour, { command: 'scout', probeId, amount: -incomingBalance, debugInfo: { loop } });
     }
     // return;
@@ -227,6 +227,7 @@ export class Jerboa {
   //   return firstZeroPos;
   // }
   sendMessage(to: string, msg: TransferMessage | ProbeMessage | NackMessage | ScoutMessage | ProposeMessage | CommitMessage): void {
+    // console.log('sending message', this.name, to, msg);
     this.graph.messaging.sendMessage(this.name, to, msg);
   }
   receiveTransfer(sender: string, msg: TransferMessage): void {
@@ -402,7 +403,7 @@ export class Jerboa {
     this.sendProbeMessage(newStep, { command: 'probe', probeId, debugInfo: { path: debugInfo.path, backtracked: [] } });
   };
   receiveMessage(from: string, msg: TransferMessage | ProbeMessage | NackMessage | ScoutMessage | ProposeMessage | CommitMessage ): void {
-    console.log('receiveMessage', from, this.name, msg);
+    // console.log('receiveMessage', from, this.name, msg);
     switch((msg as { command: string }).command) {
       case 'probe': {
         return this.receiveProbe(from, msg as ProbeMessage);

@@ -34,7 +34,7 @@ describe('Jerboa', () => {
     a.receiveMessage('x', { command: 'probe', probeId: '1', debugInfo: { path: ['b', 'c'], backtracked: [] } } as ProbeMessage);
     expect(graph.messaging.sendMessage).toHaveBeenCalledWith('a', 'b', { command: 'probe', probeId: '1', debugInfo: { path: ['b', 'c', 'x'], backtracked: []} });
   });
-  it.only('splices off a loop if it can', () => {
+  it('splices off a loop if it can', () => {
     const graph = new Graph();
     graph.messaging = new Messaging(graph);
     graph.messaging.sendMessage = jest.fn();
@@ -58,7 +58,7 @@ describe('Jerboa', () => {
     d.receiveMessage('c', { command: 'probe', probeId: 'probe-id', debugInfo: { path: ['a', 'b'], backtracked: [] } });
     expect(graph.messaging.sendMessage).toHaveBeenCalledWith('d', 'e', { command: 'probe', probeId: 'probe-id', debugInfo: { path: ['a', 'b', 'c'], backtracked: [] } });
     d.receiveMessage('f', { command: 'probe', probeId: 'probe-id', debugInfo: { path: ['a', 'b', 'c', 'd', 'e'], backtracked: [] } }); // so the probe has P-looped as: a-b-c-[d-e-f-d]
-    expect(graph.messaging.sendMessage).toHaveBeenCalledWith('d', 'f', { command: 'scout', probeId: 'probe-id', amount: 0, debugInfo: { loop: ['d', 'e', 'f', 'd']} });
+    expect(graph.messaging.sendMessage).toHaveBeenCalledWith('d', 'f', { command: 'scout', probeId: 'probe-id', amount: 9, debugInfo: { loop: ['d', 'e', 'f', 'd']} });
   });
   it ('replies with nack if it is a leaf', () => {
     const graph = new Graph();
