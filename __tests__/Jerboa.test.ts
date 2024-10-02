@@ -10,7 +10,7 @@ describe('Jerboa', () => {
   it ('returns false if it cannot initiate a probe', () => {
     const graph = new Graph();
     const a = new Jerboa('a', graph);
-    const result = a.startProbe();
+    const result = a.startProbe('1');
     expect(result).toEqual(false);
   });
   it ('initiates a probe if it can', () => {
@@ -20,9 +20,9 @@ describe('Jerboa', () => {
     const a = new Jerboa('a', graph);
     a.addWeight('b', 9);
     expect(graph.messaging.sendMessage).toHaveBeenCalledWith('a', 'b', ['transfer', '9']);
-    const result = a.startProbe();
+    const result = a.startProbe('12');
     expect(result).toEqual(true);
-    expect(graph.messaging.sendMessage).toHaveBeenCalledWith('a', 'b', ['probe', '1', '{"path":[],"backtracked":[]}']);
+    expect(graph.messaging.sendMessage).toHaveBeenCalledWith('a', 'b', ['probe', '12', '{"path":[],"backtracked":[]}']);
   });
   it('forwards a probe if it can', () => {
     const graph = new Graph();

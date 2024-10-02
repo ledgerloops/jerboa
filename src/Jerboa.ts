@@ -31,8 +31,14 @@ export class Jerboa {
     this.graph = graph;
   }
 
+  receiveScout(sender: string, probeId: string, amount: number, debugInfo: { loop: string[] }): void {
+    console.log('receiveScout', sender, probeId, amount, debugInfo);
+  }
   // assumes all loop hops exist
   getSmallestWeight(loop: string[]): number {
+    if (loop.length < 3) {
+      throw new Error();
+    }
     let smallestWeight = Infinity;
     let found = false;
     if (loop.length === 0) {
@@ -60,11 +66,7 @@ export class Jerboa {
   }
 
   // assumes all loop hops exist
-  netLoop(loop: string[]): number {
-    const smallestWeight = this.getSmallestWeight(loop);
-    if ((smallestWeight < MIN_LOOP_WEIGHT) || (smallestWeight > MAX_LOOP_WEIGHT)) {
-      return 0;
-    }
+  netLoop(smallestWeight: number, loop: string[]): number {
     let firstZeroPos;
     for (let k = 0; k < loop.length - 1; k++) {
       if ((this.graph.getWeight(loop[k], loop[k+1]) === smallestWeight) && (typeof firstZeroPos === 'undefined')) {
@@ -110,7 +112,12 @@ export class Jerboa {
     const pos = path.indexOf(this.name);
     if (pos !== -1) {
       const loop = path.splice(pos).concat([sender, this.name]);
-      this.netLoop(loop);
+      const smallestWeight = this.getSmallestWeight(loop);
+      if ((smallestWeight < MIN_LOOP_WEIGHT) || (smallestWeight > MAX_LOOP_WEIGHT)) {
+        // console.log('ignoring loop with this amount', smallestWeight);
+      } else { 
+        this.netLoop(smallestWeight, loop);
+      }
       // console.log(`Found loop`, loop, ` pos ${pos}`);
       if (process.env.PROBING_REPORT) {  
         console.log(`found loop `, path, loop);
@@ -167,11 +174,20 @@ export class Jerboa {
     }
     case 'transfer': {
       return this.receiveTransfer(from, JSON.parse(parts[1]) as number);
+    }
+    case 'scout': {
+      const probeId = parts[1];
+      const amount: number = JSON.parse(parts[2]);
+      const debugInfo: {
+        loop: string[]
+      } = JSON.parse(parts[3]);
+      return this.receiveScout(from, probeId, amount, debugInfo);
+    }
+
     //   case 'propose':
     //     return this.receivePropose(from, parts[1], JSON.parse(parts[2]) as number);
     // case 'commit':
     //   return this.receiveCommit(from, parts[1], JSON.parse(parts[2]) as number);
-    }
     default:
       throw new Error('unknown task');
     }
@@ -213,12 +229,15 @@ export class Jerboa {
   sendTransferMessage(to: string, weight: number): void {
     this.sendMessage(to, ['transfer', JSON.stringify(weight)]);
   }
-  startProbe(): boolean {
+  sendScoutMessage(to: string, probeId: string, amount: number, debugInfo: { loop: string[] }): void {
+    this.sendMessage(to, ['scout', probeId, JSON.stringify(amount), JSON.stringify(debugInfo)]);
+  }
+  startProbe(probeId: string): boolean {
     const nodes = this.getOutgoingLinks();
     if (nodes.length === 0) {
       return false;
     }
-    this.sendProbeMessage(nodes[0], '1', { path: [], backtracked: [] });
+    this.sendProbeMessage(nodes[0], probeId, { path: [], backtracked: [] });
     return true;
   }
 }
