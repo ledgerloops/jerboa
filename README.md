@@ -35,17 +35,19 @@ now it takes 220 seconds:
 npm install
 npm test
 npm run build
+npm start
+
 time node build/src/birdsEyeAnalysis.js __tests__/fixture-30.csv > birdseye-30.out
 time node build/src/birdsEyeAnalysis.js __tests__/fixture-300.csv > birdseye-300.out
 time node build/src/birdsEyeAnalysis.js __tests__/fixture-3k.csv > birdseye-3k.out
 time node build/src/birdsEyeAnalysis.js __tests__/fixture-30k.csv > birdseye-30k.out
 time node build/src/birdsEyeAnalysis.js __tests__/fixture-300k.csv > birdseye-300k.out
 
-PROBING_REPORT=1 time node build/src/analysis.js __tests__/fixture-30.csv > jerboa-30.out
-PROBING_REPORT=1 time node build/src/analysis.js __tests__/fixture-300.csv > jerboa-300.out
-PROBING_REPORT=1 time node build/src/analysis.js __tests__/fixture-3k.csv > jerboa-3k.out
-PROBING_REPORT=1 time node build/src/analysis.js __tests__/fixture-30k.csv > jerboa-30k.out
-PROBING_REPORT=1 time node build/src/analysis.js __tests__/fixture-300k.csv > jerboa-300k.out
+PROBING_REPORT=1 time node build/src/main.js __tests__/fixture-30.csv > jerboa-30.out
+PROBING_REPORT=1 time node build/src/main.js __tests__/fixture-300.csv > jerboa-300.out
+PROBING_REPORT=1 time node build/src/main.js __tests__/fixture-3k.csv > jerboa-3k.out
+PROBING_REPORT=1 time node build/src/main.js __tests__/fixture-30k.csv > jerboa-30k.out
+PROBING_REPORT=1 time node build/src/main.js __tests__/fixture-300k.csv > jerboa-300k.out
 
 diff ./jerboa-30.out ./birdseye-30.out
 diff ./jerboa-300.out ./birdseye-300.out

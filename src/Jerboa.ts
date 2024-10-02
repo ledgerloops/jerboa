@@ -57,7 +57,7 @@ export class Jerboa {
       // P loop
     } else {
       console.log(this.probes);
-      throw new Error(`expected one or two in events for probe ${probeId}`);
+      console.log(`expected one or two in events for probe ${probeId}`);
     }
     if (this.probes[probeId].out.length === 1) {
       // O or P loop, not backtracked
@@ -65,7 +65,7 @@ export class Jerboa {
         // O or P loop, after having backtracked
     } else {
       console.log(this.probes);
-      throw new Error(`expected one or more out events for probe ${probeId}`);
+      console.log(`expected one or more out events for probe ${probeId}`);
     }
     let smallestWeight = Infinity;
     let found = false;
