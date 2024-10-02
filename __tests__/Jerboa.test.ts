@@ -34,12 +34,26 @@ describe('Jerboa', () => {
     a.receiveMessage('x', { command: 'probe', probeId: '1', debugInfo: { path: ['b', 'c'], backtracked: [] } } as ProbeMessage);
     expect(graph.messaging.sendMessage).toHaveBeenCalledWith('a', 'b', { command: 'probe', probeId: '1', debugInfo: { path: ['b', 'c', 'x'], backtracked: []} });
   });
-  it('splices off a loop if it can', () => {
+  it.only('splices off a loop if it can', () => {
     const graph = new Graph();
     graph.messaging = new Messaging(graph);
     graph.messaging.sendMessage = jest.fn();
-    const d = new Jerboa('d', graph);
+    // rather than calling `new Jerboa('d'), getting the Jerboas from the graph
+    // will allow them to query each other for debugging
+    // do note though that since we mocked graph.messaging, messages sent by these
+    // nodes will still not arrive:
+    const d = graph.getNode('d');
+    const e = graph.getNode('e');
+    const f = graph.getNode('f');
     d.addWeight('e', 9);
+    e.receiveMessage('d', { command: 'transfer', amount: 9 });
+    e.addWeight('f', 9);
+    f.receiveMessage('e', { command: 'transfer', amount: 9 });
+    f.addWeight('d', 9);
+    d.receiveMessage('f', { command: 'transfer', amount: 9 });
+    expect(d.getBalances()).toEqual({ e: 9, f: -9 });
+    expect(e.getBalances()).toEqual({ f: 9, d: -9 });
+    expect(f.getBalances()).toEqual({ d: 9, e: -9 });
     expect(graph.messaging.sendMessage).toHaveBeenCalledWith('d', 'e', {"amount": 9, "command": "transfer"});
     d.receiveMessage('c', { command: 'probe', probeId: 'probe-id', debugInfo: { path: ['a', 'b'], backtracked: [] } });
     expect(graph.messaging.sendMessage).toHaveBeenCalledWith('d', 'e', { command: 'probe', probeId: 'probe-id', debugInfo: { path: ['a', 'b', 'c'], backtracked: [] } });

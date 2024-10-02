@@ -41,6 +41,7 @@ export type NackMessage = {
   },
 };
 export type ScoutMessage = {
+  command: string,
   probeId: string,
   amount: number,
   debugInfo: {
@@ -139,7 +140,7 @@ export class Jerboa {
       if (amountOut <= MIN_LOOP_WEIGHT) {
         throw new Error('scout amount too small');
       }
-      this.sendScoutMessage(forwardTo, { probeId, amount: amountOut, debugInfo });
+      this.sendScoutMessage(forwardTo, { command: 'scout', probeId, amount: amountOut, debugInfo });
     }
   }
   // assumes all loop hops exist
@@ -170,11 +171,13 @@ export class Jerboa {
     }
     const incomingNeighbour = loop[loop.length - 2];
     const incomingBalance = this.balances.getBalance(incomingNeighbour);
+    console.log('scoutLoop considering incoming balance', this.name, incomingNeighbour, incomingBalance);
     if (incomingBalance > -MIN_LOOP_WEIGHT) {
       console.log(this.name, incomingNeighbour, incomingBalance, 'incoming balance not negative enough');
       throw new Error('jar');
     } else {
-      this.sendScoutMessage(incomingNeighbour, { probeId, amount: -incomingBalance, debugInfo: { loop } });
+      console.log('calling sendScoutMessage');
+      this.sendScoutMessage(incomingNeighbour, { command: 'scout', probeId, amount: -incomingBalance, debugInfo: { loop } });
     }
     // return;
     // if (this.probes[probeId].out.length === 1) {
