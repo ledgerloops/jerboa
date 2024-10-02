@@ -1,6 +1,7 @@
 Opening __tests__/fixture-30.csv
 backtracked [ '5', '6' ] [ '8' ]
 found loop  [] [ '5', '6', '9', '5' ]
+receiveScout 5 1 -12 { loop: [ '5', '6', '9', '5' ] }
 backtracked [ '5' ] [ '6' ]
 finished    [] [ '5', '8' ]
 backtracked [ '9' ] [ '5' ]
@@ -21,4 +22,4 @@ After 22 transactions with a total amount of 0 million
 0 million (8%) was immediately netted bilaterally
 And a further 0 million (5%) was netted in 1 loops
 Leaving 0 million (87%) to be settled out of band
-Sent 52 messages, that's 2 messages per transfer
+Sent 53 messages, that's 2 messages per transfer

@@ -3,6 +3,7 @@ backtracked [ '1' ] [ '0' ]
 backtracked [ '1', '3' ] [ '0' ]
 backtracked [ '1', '3', '2' ] [ '0' ]
 found loop  [] [ '1', '3', '2', '1' ]
+receiveScout 1 1 -18 { loop: [ '1', '3', '2', '1' ] }
 backtracked [ '1' ] [ '11', '5', '26' ]
 backtracked [ '1' ] [ '54' ]
 backtracked [ '1' ] [ '74' ]
@@ -241,4 +242,4 @@ After 300 transactions with a total amount of 0 million
 0 million (1%) was immediately netted bilaterally
 And a further 0 million (0%) was netted in 1 loops
 Leaving 0 million (99%) to be settled out of band
-Sent 798 messages, that's 3 messages per transfer
+Sent 799 messages, that's 3 messages per transfer
