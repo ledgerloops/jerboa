@@ -3,7 +3,7 @@ import { randomBytes, createHash } from "node:crypto";
 import { Graph } from "./Graph.js";
 import { Balances } from "./Balances.js";
 const MIN_LOOP_WEIGHT = 0.00000001;
-const MAX_LOOP_WEIGHT = 1000000000;
+// const MAX_LOOP_WEIGHT = 1000000000;
 const RANDOM_NEXT_STEP = false;
 
 function randomStringFromArray(arr: string[]): string {
@@ -20,6 +20,49 @@ function randomStringFromArray(arr: string[]): string {
     return arr[0];
   }
 }
+
+export type TransferMessage = {
+  amount: number,
+};
+export type ProbeMessage = {
+  command: string,
+  probeId: string,
+  debugInfo: {
+    path: string[],
+    backtracked: string[],
+  },
+};
+export type NackMessage = {
+  command: string,
+  probeId: string,
+  debugInfo: {
+    path: string[],
+    backtracked: string[],
+  },
+};
+export type ScoutMessage = {
+  probeId: string,
+  amount: number,
+  debugInfo: {
+    loop: string[],
+  },
+};
+export type ProposeMessage = {
+  probeId: string,
+  amount: number,
+  hash: string,
+  debugInfo: {
+    loop: string[],
+  },
+};
+export type CommitMessage = {
+  probeId: string,
+  amount: number,
+  preimage: string,
+  debugInfo: {
+    loop: string[],
+  },
+};
 
 export class Jerboa {
   private balances: Balances = new Balances();
@@ -39,6 +82,7 @@ export class Jerboa {
           proposeTo?: string,
           commitTo?: string,
           preimage?: string,
+          amount?: number,
         }
       },
       preimage?: string,
@@ -50,7 +94,8 @@ export class Jerboa {
     this.graph = graph;
   }
 
-  receiveScout(sender: string, probeId: string, amount: number, debugInfo: { loop: string[] }): void {
+  receiveScout(sender: string, msg: ScoutMessage): void {
+    const { probeId, amount, debugInfo } = msg;
     // console.log(`${this.name} received a scout message from ${sender} for probeId ${probeId} (amount ${amount})`, this.probes[probeId], debugInfo);
     // unknown probe
     if (typeof this.probes[probeId] === 'undefined') {
@@ -81,20 +126,31 @@ export class Jerboa {
       // }
       const forwardTo = this.probes[probeId].in[0];
       const outBalance = this.balances.getBalance(sender);
-      if (amount > outBalance) {
+      let amountOut = amount;
+      if (amountOut > outBalance) {
         console.log(`${this.name} adjust the scout amount from ${amount} to ${outBalance} based on out balance to ${sender}`);
-        amount = outBalance;
+        amountOut = outBalance;
       }
       const inBalance = this.balances.getBalance(sender);
-      if (amount > inBalance) {
+      if (amountOut > inBalance) {
         console.log(`${this.name} adjust the scout amount from ${amount} to ${inBalance} based on in balance from ${forwardTo}`);
-        amount = inBalance;
+        amountOut = inBalance;
       }
-      this.sendScoutMessage(forwardTo, probeId, amount, debugInfo);
+      if (amountOut <= MIN_LOOP_WEIGHT) {
+        throw new Error('scout amount too small');
+      }
+      this.sendScoutMessage(forwardTo, { probeId, amount: amountOut, debugInfo });
     }
   }
   // assumes all loop hops exist
-  getSmallestWeight(probeId: string, loop: string[]): number {
+  scoutLoop(probeId: string, loop: string[]): void {
+    console.log(`${this.name} scouting loop`);
+    for (let k = 0; k < loop.length - 1; k++) {
+      console.log(loop, `hop ${loop[k]}->${loop[k+1]}`, this.graph.getNode(loop[k]).getBalance(loop[k+1]), this.graph.getNode(loop[k+1]).getBalance(loop[k]));
+      if (this.graph.getNode(loop[k]).getBalance(loop[k+1]) + this.graph.getNode(loop[k+1]).getBalance(loop[k]) !== 0) {
+        throw new Error('balance dispute!');
+      }
+    }
     if (loop.length < 3) {
       throw new Error('loop too short');
     }
@@ -113,62 +169,74 @@ export class Jerboa {
       console.log(`expected one or two in events for probe ${probeId}`);
     }
     const incomingNeighbour = loop[loop.length - 2];
-    this.sendScoutMessage(incomingNeighbour, probeId, this.balances.getBalance(incomingNeighbour), { loop });
-    if (this.probes[probeId].out.length === 1) {
-      // O or P loop, not backtracked
-    } else if (this.probes[probeId].out.length > 1) {
-        // O or P loop, after having backtracked
+    const incomingBalance = this.balances.getBalance(incomingNeighbour);
+    if (incomingBalance > -MIN_LOOP_WEIGHT) {
+      console.log(this.name, incomingNeighbour, incomingBalance, 'incoming balance not negative enough');
+      throw new Error('jar');
     } else {
-      console.log(this.probes);
-      console.log(`expected one or more out events for probe ${probeId}`);
+      this.sendScoutMessage(incomingNeighbour, { probeId, amount: -incomingBalance, debugInfo: { loop } });
     }
-    let smallestWeight = Infinity;
-    let found = false;
-    if (loop.length === 0) {
-      throw new Error('loop has length 0');
-    }
-    // const weights = [];
-    // console.log('finding smallest weight on loop', loop);
-    for (let k = 0; k < loop.length - 1; k++) {
-      const thisWeight = this.graph.getWeight(loop[k], loop[k+1]);
-      // weights.push(thisWeight);
-      if (typeof thisWeight !== 'number') {
-        throw new Error('weight is not a number');
-      }
-      // console.log(`Weight on loop from ${loop[k]} to ${loop[k+1]} is ${thisWeight}`);
-      if (thisWeight < smallestWeight) {
-        smallestWeight = thisWeight;
-        found = true;
-      }
-    }
-    if (!found) {
-      throw new Error('not found, weird');
-    }
-    // console.log('smallestWeight found', loop, weights, smallestWeight);
-    return smallestWeight;
+    // return;
+    // if (this.probes[probeId].out.length === 1) {
+    //   // O or P loop, not backtracked
+    // } else if (this.probes[probeId].out.length > 1) {
+    //     // O or P loop, after having backtracked
+    // } else {
+    //   console.log(this.probes);
+    //   console.log(`expected one or more out events for probe ${probeId}`);
+    // }
+    // let smallestWeight = Infinity;
+    // let found = false;
+    // if (loop.length === 0) {
+    //   throw new Error('loop has length 0');
+    // }
+    // // const weights = [];
+    // // console.log('finding smallest weight on loop', loop);
+    // for (let k = 0; k < loop.length - 1; k++) {
+    //   const thisWeight = this.graph.getWeight(loop[k], loop[k+1]);
+    //   // weights.push(thisWeight);
+    //   if (typeof thisWeight !== 'number') {
+    //     throw new Error('weight is not a number');
+    //   }
+    //   // console.log(`Weight on loop from ${loop[k]} to ${loop[k+1]} is ${thisWeight}`);
+    //   if (thisWeight < smallestWeight) {
+    //     smallestWeight = thisWeight;
+    //     found = true;
+    //   }
+    // }
+    // if (!found) {
+    //   throw new Error('not found, weird');
+    // }
+    // // console.log('smallestWeight found', loop, weights, smallestWeight);
+    // return smallestWeight;
   }
 
-  // assumes all loop hops exist
-  netLoop(smallestWeight: number, loop: string[]): number {
-    let firstZeroPos;
-    for (let k = 0; k < loop.length - 1; k++) {
-      if ((this.graph.getWeight(loop[k], loop[k+1]) === smallestWeight) && (typeof firstZeroPos === 'undefined')) {
-        firstZeroPos = k;
-      }
-      this.graph.addWeight(loop[k], loop[k+1], -smallestWeight);
-    }
-    this.graph.report(loop.length - 1, smallestWeight);
-    return firstZeroPos;
+  // // assumes all loop hops exist
+  // netLoop(smallestWeight: number, loop: string[]): number {
+  //   let firstZeroPos;
+  //   for (let k = 0; k < loop.length - 1; k++) {
+  //     if ((this.graph.getWeight(loop[k], loop[k+1]) === smallestWeight) && (typeof firstZeroPos === 'undefined')) {
+  //       firstZeroPos = k;
+  //     }
+  //     this.graph.addWeight(loop[k], loop[k+1], -smallestWeight);
+  //   }
+  //   this.graph.report(loop.length - 1, smallestWeight);
+  //   return firstZeroPos;
+  // }
+  sendMessage(to: string, msg: TransferMessage | ProbeMessage | NackMessage | ScoutMessage | ProposeMessage | CommitMessage): void {
+    this.graph.messaging.sendMessage(this.name, to, msg);
   }
-  sendMessage(to: string, task: string[]): void {
-    this.graph.messaging.sendMessage(this.name, to, task);
-  }
-  receiveTransfer(sender: string, amount: number): void {
+  receiveTransfer(sender: string, msg: TransferMessage): void {
     // console.log(`${sender}->${this.name}: ${amount}`);
-    this.balances.adjustReceived(sender, amount);
+    this.balances.adjustReceived(sender, msg.amount);
     this.checkFriendCache(sender);
+    if (this.graph.getNode(this.name).getBalance(sender) + this.graph.getNode(sender).getBalance(this.name) !== 0) {
+      console.log(this.name, sender, this.graph.getNode(this.name).getBalance(sender), this.graph.getNode(sender).getBalance(this.name));
+      throw new Error('balance dispute!');
+    }
   }
-  receivePropose(sender: string, probeId: string, amount: number, hash: string, debugInfo: { loop: string[] }): void {
+  receivePropose(sender: string, msg: ProposeMessage): void {
+    const { probeId, amount, hash, debugInfo } = msg;
     if (typeof this.probes[probeId] === 'undefined') {
       throw new Error('propose message for unknown probe!');
     }
@@ -180,15 +248,16 @@ export class Jerboa {
         throw new Error('too many in events for this probe!');
       }
       const proposeTo = this.probes[probeId].in[0];
-      this.probes[probeId].loops[hash] = { proposeTo, proposeFrom: sender };
-      this.sendProposeMessage(proposeTo, probeId, amount, hash, debugInfo);
+      this.probes[probeId].loops[hash] = { proposeTo, proposeFrom: sender, amount };
+      this.sendProposeMessage(proposeTo, { probeId, amount, hash, debugInfo });
     } else {
-      // console.log('our hashlock', hash, this.probes[probeId]);
+      console.log('our hashlock', hash, this.probes[probeId], amount);
       this.balances.adjustReceived(sender, amount);
-      this.sendCommitMessage(sender, probeId, amount, this.probes[probeId].loops[hash].preimage, debugInfo);
+      this.sendCommitMessage(sender, { probeId, amount, preimage: this.probes[probeId].loops[hash].preimage, debugInfo });
     }
   }
-  receiveCommit(sender: string, probeId: string, amount: number, preimage: string, debugInfo: { loop: string[] }): void {
+  receiveCommit(sender: string, msg: CommitMessage): void {
+    const { probeId, amount, preimage, debugInfo } = msg;
     if (typeof this.probes[probeId] === 'undefined') {
       throw new Error('commit message for unknown probe!');
     }
@@ -201,19 +270,28 @@ export class Jerboa {
     this.probes[probeId].loops[hash].commitFrom = sender;
     this.balances.adjustSent(sender, amount);
     if (typeof this.probes[probeId].loops[hash].proposeFrom === 'undefined') {
-      // console.log('loop clearing completed');
+      console.log('loop clearing completed');
+      const loop = debugInfo.loop;
+      for (let k = 0; k < loop.length - 1; k++) {
+        console.log(loop, `hop ${loop[k]}->${loop[k+1]}`, this.graph.getNode(loop[k]).getBalance(loop[k+1]), this.graph.getNode(loop[k+1]).getBalance(loop[k]));
+        if (this.graph.getNode(loop[k]).getBalance(loop[k+1]) + this.graph.getNode(loop[k+1]).getBalance(loop[k]) !== 0) {
+          throw new Error('balance dispute!');
+        }
+      }
+  
     } else {
-      this.sendCommitMessage(this.probes[probeId].loops[hash].proposeFrom, probeId, amount, preimage, debugInfo);
+      this.sendCommitMessage(this.probes[probeId].loops[hash].proposeFrom, msg);
     }
   }
   initiatePropose(to: string, probeId: string, amount: number, debugInfo: { loop: string[] }): void {
     const preimage = randomBytes(8).toString("hex");
     const hash = createHash('sha256').update(preimage).digest('base64');
-    this.probes[probeId].loops[hash] = { preimage,  proposeTo: to };
+    this.probes[probeId].loops[hash] = { preimage,  proposeTo: to, amount };
     // console.log('initiating propose', this.probes[probeId], { to, probeId, amount, hash, debugInfo });
-    this.sendProposeMessage(to, probeId, amount, hash, debugInfo);
+    this.sendProposeMessage(to, { probeId, amount, hash, debugInfo });
   }
-  receiveNack(nackSender: string, probeId: string, debugInfo: { path: string[], backtracked: string[] }): void {
+  receiveNack(nackSender: string, msg: NackMessage): void {
+    const { probeId, debugInfo } = msg;
     delete this.outgoingLinks[nackSender];
     if (debugInfo.path.length === 0) {
       const nodes = this.getOutgoingLinks();
@@ -227,7 +305,7 @@ export class Jerboa {
         }
         const newStep = randomStringFromArray(nodes);
         // console.log(`${this.name} sends probe message to ${newStep} for probeId ${probeId} after receiving nack from ${nackSender}`);
-        this.sendProbeMessage(newStep, probeId, { path: debugInfo.path, backtracked: [] });
+        this.sendProbeMessage(newStep, { command: 'probe', probeId, debugInfo: { path: debugInfo.path, backtracked: [] } } as ProbeMessage);
       }
     } else {
       // console.log('backtracked', path.concat(this.name), [ nackSender ].concat(backtracked));
@@ -242,12 +320,12 @@ export class Jerboa {
     const pos = path.indexOf(this.name);
     if (pos !== -1) {
       const loop = path.splice(pos).concat([sender, this.name]);
-      const smallestWeight = this.getSmallestWeight(probeId, loop);
-      if ((smallestWeight < MIN_LOOP_WEIGHT) || (smallestWeight > MAX_LOOP_WEIGHT)) {
-        // console.log('ignoring loop with this amount', smallestWeight);
-      } else { 
-        this.netLoop(smallestWeight, loop);
-      }
+      this.scoutLoop(probeId, loop);
+      // if ((smallestWeight < MIN_LOOP_WEIGHT) || (smallestWeight > MAX_LOOP_WEIGHT)) {
+      //   // console.log('ignoring loop with this amount', smallestWeight);
+      // } else { 
+      //   this.netLoop(smallestWeight, loop);
+      // }
       // console.log(`Found loop`, loop, ` pos ${pos}`);
       if (process.env.PROBING_REPORT) {  
         console.log(`found loop `, path, loop);
@@ -282,7 +360,8 @@ export class Jerboa {
     // console.log(`probe ${probeId} was sent to`,this.probes[probeId].out, `(checking whether ${to} is in that list: ${ret})`);
     return ret;
   }
-  receiveProbe(sender: string, probeId: string, debugInfo: { path: string[], backtracked: string[] }): void {
+  receiveProbe(sender: string, msg: ProbeMessage): void {
+    const { probeId, debugInfo } = msg;
     this.recordProbeTraffic(sender, 'in', probeId);
     // console.log(`receiveProbe "${probeId}"`, debugInfo.path.concat([sender, this.name]));
     this.considerProbe(sender, probeId, debugInfo);
@@ -317,49 +396,28 @@ export class Jerboa {
     debugInfo.path.push(sender);
     const newStep = randomStringFromArray(nodes);
     // console.log(`forwarding from ${this.name} to ${newStep} (balance ${this.balances.getBalance(newStep)})`);
-    this.sendProbeMessage(newStep, probeId, { path: debugInfo.path, backtracked: [] });
+    this.sendProbeMessage(newStep, { command: 'probe', probeId, debugInfo: { path: debugInfo.path, backtracked: [] } });
   };
-  receiveMessage(from: string, parts: string[]): void {
-    // console.log('receiveMessage', from, this.name, parts);
-    switch(parts[0]) {
+  receiveMessage(from: string, msg: TransferMessage | ProbeMessage | NackMessage | ScoutMessage | ProposeMessage | CommitMessage ): void {
+    console.log('receiveMessage', from, this.name, msg);
+    switch((msg as { command: string }).command) {
       case 'probe': {
-        const probeId = parts[1];
-        const debugInfo: {
-          path: string[],
-          backtracked: string[]
-        } = JSON.parse(parts[2]);
-        return this.receiveProbe(from, probeId, debugInfo);
+        return this.receiveProbe(from, msg as ProbeMessage);
       }
     case 'nack': {
-      const probeId = parts[1];
-      const debugInfo: {
-        path: string[],
-        backtracked: string[]
-      } = JSON.parse(parts[2]);
-      return this.receiveNack(from, probeId, debugInfo);
+      return this.receiveNack(from, msg as NackMessage);
     }
     case 'transfer': {
-      return this.receiveTransfer(from, JSON.parse(parts[1]) as number);
+      return this.receiveTransfer(from, msg as TransferMessage);
     }
     case 'scout': {
-      const probeId = parts[1];
-      const amount: number = JSON.parse(parts[2]);
-      const debugInfo: {
-        loop: string[]
-      } = JSON.parse(parts[3]);
-      return this.receiveScout(from, probeId, amount, debugInfo);
+      return this.receiveScout(from, msg as ScoutMessage);
     }
     case 'propose': {
-      // ['propose', probeId, JSON.stringify(amount), hash, JSON.stringify(amount), JSON.stringify(debugInfo)]
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const [ _command, probeId, amountStr, hash, debugInfoStr ] = parts;
-      return this.receivePropose(from, probeId, JSON.parse(amountStr) as number, hash, JSON.parse(debugInfoStr) as { loop: string[] });
+      return this.receivePropose(from, msg as ProposeMessage);
     }
     case 'commit': {
-      // ['commit', probeId, JSON.stringify(amount), preimage, JSON.stringify(amount), JSON.stringify(debugInfo)]
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const [ _command, probeId, amountStr, preimage, debugInfoStr ] = parts;
-      return this.receiveCommit(from, probeId, JSON.parse(amountStr) as number, preimage, JSON.parse(debugInfoStr) as { loop: string[] });
+      return this.receiveCommit(from, msg as CommitMessage);
     }
     default:
       throw new Error('unknown task');
@@ -393,25 +451,25 @@ export class Jerboa {
   getArchiveWeights(): { [to: string]: number } {
     return this.balances.getArchiveWeights(this.name);
   }
-  sendProbeMessage(to: string, probeId: string, debugInfo: object): void {
+  sendProbeMessage(to: string, msg: ProbeMessage): void {
     // console.log(`sendProbeMessage ${this.name} => ${to}`, debugInfo);
-    this.recordProbeTraffic(to, 'out', probeId);
-    this.sendMessage(to, ['probe', probeId, JSON.stringify(debugInfo)]);
+    this.recordProbeTraffic(to, 'out', msg.probeId);
+    this.sendMessage(to, msg);
   }
-  sendNackMessage(to: string, probeId: string, debugInfo: object): void {
-    this.sendMessage(to, ['nack', probeId, JSON.stringify(debugInfo)]);
+  sendNackMessage(to: string, probeId: string, debugInfo: { path: string[], backtracked: string[] }): void {
+    this.sendMessage(to, { command: 'nack', probeId, debugInfo });
   }
-  sendTransferMessage(to: string, weight: number): void {
-    this.sendMessage(to, ['transfer', JSON.stringify(weight)]);
+  sendTransferMessage(to: string, amount: number): void {
+    this.sendMessage(to, { command: 'transfer', amount });
   }
-  sendScoutMessage(to: string, probeId: string, amount: number, debugInfo: { loop: string[] }): void {
-    this.sendMessage(to, ['scout', probeId, JSON.stringify(amount), JSON.stringify(debugInfo)]);
+  sendScoutMessage(to: string, msg: ScoutMessage): void {
+    this.sendMessage(to, msg);
   }
-  sendProposeMessage(to: string, probeId: string, amount: number, hash: string, debugInfo: { loop: string[] }): void {
-    this.sendMessage(to, ['propose', probeId, JSON.stringify(amount), hash, JSON.stringify(amount), JSON.stringify(debugInfo)]);
+  sendProposeMessage(to: string, msg: ProposeMessage): void {
+    this.sendMessage(to, msg);
   }
-  sendCommitMessage(to: string, probeId: string, amount: number, preimage: string, debugInfo: { loop: string[] }): void {
-    this.sendMessage(to, ['commit', probeId, JSON.stringify(amount), preimage, JSON.stringify(amount), JSON.stringify(debugInfo)]);
+  sendCommitMessage(to: string, msg: CommitMessage): void {
+    this.sendMessage(to, msg);
   }
   startProbe(probeId: string): boolean {
     // console.log(`Node ${this.name} starting probe ${probeId}`);
@@ -419,7 +477,7 @@ export class Jerboa {
     if (nodes.length === 0) {
       return false;
     }
-    this.sendProbeMessage(nodes[0], probeId, { path: [], backtracked: [] });
+    this.sendProbeMessage(nodes[0], { command: 'probe', probeId, debugInfo: { path: [], backtracked: [] } });
     return true;
   }
 }
