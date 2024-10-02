@@ -49,6 +49,7 @@ export type ScoutMessage = {
   },
 };
 export type ProposeMessage = {
+  command: string,
   probeId: string,
   amount: number,
   hash: string,
@@ -57,6 +58,7 @@ export type ProposeMessage = {
   },
 };
 export type CommitMessage = {
+  command: string,
   probeId: string,
   amount: number,
   preimage: string,
@@ -90,6 +92,7 @@ export class Jerboa {
       hash?: string,
     }
   } = {};
+  private loopsTried: string[] = [];
   constructor(name: string, graph: Graph) {
     this.name = name;
     this.graph = graph;
@@ -138,13 +141,19 @@ export class Jerboa {
         amountOut = inBalance;
       }
       if (amountOut <= MIN_LOOP_WEIGHT) {
-        throw new Error('scout amount too small');
+        console.log('scout amount too small');
+      } else {
+        this.sendScoutMessage(forwardTo, { command: 'scout', probeId, amount: amountOut, debugInfo });
       }
-      this.sendScoutMessage(forwardTo, { command: 'scout', probeId, amount: amountOut, debugInfo });
     }
   }
   // assumes all loop hops exist
   scoutLoop(probeId: string, loop: string[]): void {
+    if (this.loopsTried.indexOf(loop.join(' ')) !== -1) {
+      console.log('loop already tried');
+      return;
+    }
+    this.loopsTried.push(loop.join(' '));
     // console.log(`${this.name} scouting loop`);
     for (let k = 0; k < loop.length - 1; k++) {
       // console.log(loop, `hop ${loop[k]}->${loop[k+1]}`, this.graph.getNode(loop[k]).getBalance(loop[k+1]), this.graph.getNode(loop[k+1]).getBalance(loop[k]));
@@ -253,11 +262,12 @@ export class Jerboa {
       }
       const proposeTo = this.probes[probeId].in[0];
       this.probes[probeId].loops[hash] = { proposeTo, proposeFrom: sender, amount };
-      this.sendProposeMessage(proposeTo, { probeId, amount, hash, debugInfo });
+      this.sendProposeMessage(proposeTo, { command: 'propose', probeId, amount, hash, debugInfo });
     } else {
       console.log('our hashlock', hash, this.probes[probeId], amount);
-      this.balances.adjustReceived(sender, amount);
-      this.sendCommitMessage(sender, { probeId, amount, preimage: this.probes[probeId].loops[hash].preimage, debugInfo });
+      this.probes[probeId].loops[hash].commitTo = sender;
+      this.balances.adjustReceived(this.probes[probeId].loops[hash].commitTo, amount);
+      this.sendCommitMessage(this.probes[probeId].loops[hash].commitTo, { command: 'commit', probeId, amount, preimage: this.probes[probeId].loops[hash].preimage, debugInfo });
     }
   }
   receiveCommit(sender: string, msg: CommitMessage): void {
@@ -284,7 +294,9 @@ export class Jerboa {
       }
   
     } else {
-      this.sendCommitMessage(this.probes[probeId].loops[hash].proposeFrom, msg);
+      this.probes[probeId].loops[hash].commitTo = this.probes[probeId].loops[hash].proposeFrom;
+      this.balances.adjustReceived(this.probes[probeId].loops[hash].commitTo, amount);
+      this.sendCommitMessage(this.probes[probeId].loops[hash].commitTo, msg);
     }
   }
   initiatePropose(to: string, probeId: string, amount: number, debugInfo: { loop: string[] }): void {
@@ -292,7 +304,7 @@ export class Jerboa {
     const hash = createHash('sha256').update(preimage).digest('base64');
     this.probes[probeId].loops[hash] = { preimage,  proposeTo: to, amount };
     // console.log('initiating propose', this.probes[probeId], { to, probeId, amount, hash, debugInfo });
-    this.sendProposeMessage(to, { probeId, amount, hash, debugInfo });
+    this.sendProposeMessage(to, { command: 'propose', probeId, amount, hash, debugInfo });
   }
   receiveNack(nackSender: string, msg: NackMessage): void {
     const { probeId, debugInfo } = msg;
@@ -403,7 +415,7 @@ export class Jerboa {
     this.sendProbeMessage(newStep, { command: 'probe', probeId, debugInfo: { path: debugInfo.path, backtracked: [] } });
   };
   receiveMessage(from: string, msg: TransferMessage | ProbeMessage | NackMessage | ScoutMessage | ProposeMessage | CommitMessage ): void {
-    // console.log('receiveMessage', from, this.name, msg);
+    console.log('receiveMessage', from, this.name, msg);
     switch((msg as { command: string }).command) {
       case 'probe': {
         return this.receiveProbe(from, msg as ProbeMessage);
@@ -424,6 +436,7 @@ export class Jerboa {
       return this.receiveCommit(from, msg as CommitMessage);
     }
     default:
+      console.log(from, this.name, msg);
       throw new Error('unknown task');
     }
   }
