@@ -233,12 +233,6 @@ export class Jerboa {
       throw new Error('propose message for unknown probe!');
     }
     if (typeof this.probes[probeId].loops[hash] === 'undefined') {
-      if (Object.keys(this.probes[probeId].in).length === 0) {
-        throw new Error('no in events for this probe!');
-      }
-      if (Object.keys(this.probes[probeId].in).length > 1) {
-        throw new Error('too many in events for this probe!');
-      }
       const proposeTo = this.pickIncarnation(probeId, maxIncarnation);
       this.probes[probeId].loops[hash] = { proposeTo, proposeFrom: sender, amount };
       this.sendProposeMessage(proposeTo, { command: 'propose', probeId, maxIncarnation, amount, hash, debugInfo });
