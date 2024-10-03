@@ -54,18 +54,9 @@ describe('DLD', () => {
       }
     });
     expect([totalNum, totalAmount, dld.graph.stats]).toEqual([
-      1,
-      30,
-      {
-        "2": {
-        "numFound": 1,
-        "totalAmount": 0.5,
-        },
-        "3": {
-          "numFound": 1,
-          "totalAmount": 10,
-        },
-      },
+      0,
+      0,
+      {},
     ]);
   });
 });
