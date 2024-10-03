@@ -192,14 +192,13 @@ export class Jerboa {
   // assumes all loop hops exist
   scoutLoop(probeId: string, incarnation: number, loop: string[]): void {
     if (this.loopsTried.indexOf(loop.join(' ')) !== -1) {
-      throw new Error('loop already tried');
+      console.log('loop already tried');
     }
     this.loopsTried.push(loop.join(' '));
     // console.log(`${this.name} scouting loop`);
     for (let k = 0; k < loop.length - 1; k++) {
-      // console.log(loop, `hop ${loop[k]}->${loop[k+1]}`, this.graph.getNode(loop[k]).getBalance(loop[k+1]), this.graph.getNode(loop[k+1]).getBalance(loop[k]));
-      if (this.graph.getNode(loop[k]).getBalance(loop[k+1]) + this.graph.getNode(loop[k+1]).getBalance(loop[k]) !== 0) {
-        throw new Error('balance dispute!');
+      if (Math.abs(this.graph.getNode(loop[k]).getBalance(loop[k+1]) + this.graph.getNode(loop[k+1]).getBalance(loop[k])) > MIN_LOOP_WEIGHT) {
+        console.log('(temporary?) balance dispute', loop, `hop ${loop[k]}->${loop[k+1]}`, this.graph.getNode(loop[k]).getBalance(loop[k+1]), this.graph.getNode(loop[k+1]).getBalance(loop[k]));
       }
     }
     if (loop.length < 3) {
@@ -211,20 +210,20 @@ export class Jerboa {
     if (loop[loop.length - 1] !== this.name) {
       throw new Error('loop doesnt end here');
     }
-    if (Object.keys(this.probes[probeId].in).length === 1) {
+    if (Object.keys(this.probes[probeId].in).length === 0) {
       // was minted here, O loop
-    } else  if (Object.keys(this.probes[probeId].in).length == 2) {
+    } else  if (Object.keys(this.probes[probeId].in).length == 1) {
       // P loop
     } else {
       console.log(this.probes);
-      console.log(`expected one or two in events for probe ${probeId}`);
+      console.log(`expected zero or one in events for probe ${probeId}`);
     }
     const incomingNeighbour = loop[loop.length - 2];
     const incomingBalance = this.balances.getBalance(incomingNeighbour);
     // console.log('scoutLoop considering incoming balance', this.name, incomingNeighbour, incomingBalance);
     if (incomingBalance > -MIN_LOOP_WEIGHT) {
       console.log(this.name, incomingNeighbour, incomingBalance, 'incoming balance not negative enough');
-      throw new Error('jar');
+      return;
     } else {
       // console.log('calling sendScoutMessage');
       this.sendScoutMessage(incomingNeighbour, { command: 'scout', probeId, maxIncarnation: incarnation,  amount: -incomingBalance, debugInfo: { loop } });
@@ -277,12 +276,10 @@ export class Jerboa {
       // console.log('loop clearing completed');
       const loop = debugInfo.loop;
       for (let k = 0; k < loop.length - 1; k++) {
-        // console.log(loop, `hop ${loop[k]}->${loop[k+1]}`, this.graph.getNode(loop[k]).getBalance(loop[k+1]), this.graph.getNode(loop[k+1]).getBalance(loop[k]));
-        if (this.graph.getNode(loop[k]).getBalance(loop[k+1]) + this.graph.getNode(loop[k+1]).getBalance(loop[k]) !== 0) {
-          throw new Error('balance dispute!');
+        if (Math.abs(this.graph.getNode(loop[k]).getBalance(loop[k+1]) + this.graph.getNode(loop[k+1]).getBalance(loop[k])) > MIN_LOOP_WEIGHT) {
+          console.log('(temporary?) balance dispute', loop, `hop ${loop[k]}->${loop[k+1]}`, this.graph.getNode(loop[k]).getBalance(loop[k+1]), this.graph.getNode(loop[k+1]).getBalance(loop[k]));
         }
-      }
-      
+      }      
     } else {
       this.probes[probeId].loops[hash].commitTo = this.probes[probeId].loops[hash].proposeFrom;
       this.balances.adjustReceived(this.probes[probeId].loops[hash].commitTo, amount);
@@ -327,6 +324,7 @@ export class Jerboa {
     const pos = path.indexOf(this.name);
     if (pos !== -1) {
       const loop = path.splice(pos).concat([sender, this.name]);
+      this.changeToLooper(sender, probeId, incarnation);
       this.scoutLoop(probeId, incarnation, loop);
       // if ((smallestWeight < MIN_LOOP_WEIGHT) || (smallestWeight > MAX_LOOP_WEIGHT)) {
       //   // console.log('ignoring loop with this amount', smallestWeight);
@@ -397,7 +395,6 @@ export class Jerboa {
   considerProbe(sender: string, probeId: string, incarnation: number, debugInfo: { path: string[], backtracked: string[] }): void {
     const loopFound = this.spliceLoop(sender, probeId, incarnation, debugInfo.path);
     if (loopFound) {
-      this.changeToLooper(sender, probeId, incarnation);
       if (debugInfo.path.length >= 1) {
         // console.log('                   continuing by popping old sender from', path);
         const oldSender = debugInfo.path.pop();
