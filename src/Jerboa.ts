@@ -110,16 +110,16 @@ export class Jerboa {
     if (numOptions === 1) {
       return Object.keys(this.probes[probeId].in)[0];
     }
-    console.log(`${this.name} received a message for probeId (${probeId}:${maxIncarnation}) but have multiple in messages for that probe ${JSON.stringify(this.probes[probeId])}`);
+    // console.log(`${this.name} received a message for probeId (${probeId}:${maxIncarnation}) but have multiple in messages for that probe ${JSON.stringify(this.probes[probeId])}`);
     let bestPickProbeSender;
     let bestPickIncarnation = -1;
     Object.keys(this.probes[probeId].in).forEach((probeSender: string) => {
       if (this.probes[probeId].in[probeSender] > maxIncarnation) {
-        console.log('discarding newer incarnation', probeSender, this.probes[probeId].in[probeSender]);
+        // console.log('discarding newer incarnation', probeSender, this.probes[probeId].in[probeSender]);
       } else if (this.probes[probeId].in[probeSender] > bestPickIncarnation) {
         bestPickProbeSender = probeSender;
         bestPickIncarnation = this.probes[probeId].in[probeSender];
-        console.log('best pick so far', bestPickProbeSender, bestPickIncarnation);
+        // console.log('best pick so far', bestPickProbeSender, bestPickIncarnation);
       }
     });
     if (typeof bestPickProbeSender === 'undefined') {
