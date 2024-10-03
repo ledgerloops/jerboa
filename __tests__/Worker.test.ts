@@ -1,8 +1,12 @@
 import { Worker } from '../src/Worker.js';
+import { Message } from '../src/Jerboa.js';
 
 describe('addWeight', () => {
   it('adds a link', () => {
-    const worker = new Worker(0, 1);
+    const sendMessage = (from: string, to: string, message: Message) => {
+      worker.deliverMessageToNodeInThisWorker(from, to, message);
+    };
+    const worker = new Worker(0, 1, sendMessage);
     worker.addWeight('0', '1', 3);
     worker.runTasks();
     expect(worker.getOurBalances()).toEqual({
@@ -15,11 +19,17 @@ describe('addWeight', () => {
     });
   });
   it('refuses zero weight', () => {
-    const graph = new Worker(0, 1);
-    expect(() => { graph.addWeight('0', '1', 0)}).toThrow();
+    const sendMessage = (from: string, to: string, message: Message) => {
+      worker.deliverMessageToNodeInThisWorker(from, to, message);
+    };
+    const worker = new Worker(0, 1, sendMessage);
+    expect(() => { worker.addWeight('0', '1', 0)}).toThrow();
   });
   it('adds another link', () => {
-    const worker = new Worker(0, 1);
+    const sendMessage = (from: string, to: string, message: Message) => {
+      worker.deliverMessageToNodeInThisWorker(from, to, message);
+    };
+    const worker = new Worker(0, 1, sendMessage);
     worker.addWeight('0', '1', 3);
     worker.runTasks();
     worker.addWeight('0', '2', 5);
@@ -38,7 +48,10 @@ describe('addWeight', () => {
     });
   });
   it('prepends a link to a path', () => {
-    const worker = new Worker(0, 1);
+    const sendMessage = (from: string, to: string, message: Message) => {
+      worker.deliverMessageToNodeInThisWorker(from, to, message);
+    };
+    const worker = new Worker(0, 1, sendMessage);
     worker.addWeight('0', '1', 3);
     worker.runTasks();
     worker.addWeight('2', '0', 5);
@@ -57,7 +70,10 @@ describe('addWeight', () => {
     });
   });
   it('nets a higher amount', () => {
-    const worker = new Worker(0, 1);
+    const sendMessage = (from: string, to: string, message: Message) => {
+      worker.deliverMessageToNodeInThisWorker(from, to, message);
+    };
+    const worker = new Worker(0, 1, sendMessage);
     worker.addWeight('0', '1', 3);
     worker.runTasks();
     worker.addWeight('1', '0', 7);
@@ -72,7 +88,10 @@ describe('addWeight', () => {
     });
   });
   it('nets a lower amount', () => {
-    const worker = new Worker(0, 1);
+    const sendMessage = (from: string, to: string, message: Message) => {
+      worker.deliverMessageToNodeInThisWorker(from, to, message);
+    };
+    const worker = new Worker(0, 1, sendMessage);
     worker.addWeight('0', '1', 3);
     worker.runTasks();
     worker.addWeight('1', '0', 2);
@@ -87,7 +106,10 @@ describe('addWeight', () => {
     });
   });
   it('nets an equal amount', () => {
-    const worker = new Worker(0, 1);
+    const sendMessage = (from: string, to: string, message: Message) => {
+      worker.deliverMessageToNodeInThisWorker(from, to, message);
+    };
+    const worker = new Worker(0, 1, sendMessage);
     worker.addWeight('0', '1', 3);
     worker.runTasks();
     worker.addWeight('1', '0', 3);
@@ -103,14 +125,20 @@ describe('addWeight', () => {
 
 describe('getFirstNode', () => {
   it('works when passing no after argument', () => {
-    const worker = new Worker(0, 1);
+    const sendMessage = (from: string, to: string, message: Message) => {
+      worker.deliverMessageToNodeInThisWorker(from, to, message);
+    };
+    const worker = new Worker(0, 1, sendMessage);
     worker.addWeight('0', '1', 3);
     worker.runTasks();
     expect(worker.getOurFirstNode(false)).toEqual('0');
   });
   it('works when passing an after argument', () => {
-    const worker = new Worker(0, 1);
-    worker.addWeight('0', '1', 3);
+    const sendMessage = (from: string, to: string, message: Message) => {
+      worker.deliverMessageToNodeInThisWorker(from, to, message);
+    };
+    const worker = new Worker(0, 1, sendMessage);
+   worker.addWeight('0', '1', 3);
     worker.runTasks();
     expect(worker.getOurFirstNode(false, '0')).toEqual('1');
   });
@@ -118,13 +146,19 @@ describe('getFirstNode', () => {
 
 describe('hasOutgoingLinks', () => {
   it('works in the positive case', () => {
-    const worker = new Worker(0, 1);
+    const sendMessage = (from: string, to: string, message: Message) => {
+      worker.deliverMessageToNodeInThisWorker(from, to, message);
+    };
+    const worker = new Worker(0, 1, sendMessage);
     worker.addWeight('0', '1', 3);
     worker.runTasks();
     expect(worker.hasOutgoingLinks('0')).toEqual(true);
   });
   it('works in the negative case', () => {
-    const worker = new Worker(0, 1);
+    const sendMessage = (from: string, to: string, message: Message) => {
+      worker.deliverMessageToNodeInThisWorker(from, to, message);
+    };
+    const worker = new Worker(0, 1, sendMessage);
     worker.addWeight('0', '1', 3);
     worker.runTasks();
     expect(worker.hasOutgoingLinks('1')).toEqual(false);

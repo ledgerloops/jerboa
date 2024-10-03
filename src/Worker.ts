@@ -18,11 +18,13 @@ export class Worker {
   } = {};
   private shard: number;
   private noShards: number;
-  constructor(shard: number, noShards: number) {
+  private sendMessage: (from: string, to: string, message: Message) => void;
+  constructor(shard: number, noShards: number, sendMessage: (from: string, to: string, message: Message) => void) {
     this.shard = shard;
     this.noShards = noShards;
+    this.sendMessage = sendMessage;
   }
-  public sendMessage(from: string, to: string, message: Message): void {
+  public queueMessageForLocalDelivery(from: string, to: string, message: Message): void {
     if (this.nodeIsOurs(to)) {
       // instead of delivering immediately, queue it up until runTasks is called on this worker:
       // this.getNode(to).receiveMessage(from, message);
@@ -32,7 +34,7 @@ export class Worker {
       throw Error('to node is not ours');
     }
   }
-  deliverMessage(from: string, to: string, message: Message): void {
+  deliverMessageToNodeInThisWorker(from: string, to: string, message: Message): void {
     this.messagesSent++;
     // console.log('delivering message', from, to, message, this.messages.length);
     return this.getNode(to).receiveMessage(from, message);
@@ -44,7 +46,7 @@ export class Worker {
       const { from, to, message } = this.messages.pop();
       // console.log('popped', from, to, message);
       hadWorkToDo = true;
-      this.deliverMessage(from, to, message);
+      this.deliverMessageToNodeInThisWorker(from, to, message);
     }
     return hadWorkToDo;
   }

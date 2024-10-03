@@ -1,4 +1,5 @@
 import { Worker } from './Worker.js';
+import { Message } from './Jerboa.js';
 
 const NUM_WORKERS = 1;
 
@@ -7,8 +8,12 @@ export class DLD {
   constructor() {
     for (let i = 0; i < NUM_WORKERS; i++) {
       // console.log(`Instantiating worker ${i} of ${NUM_WORKERS}`);
-      this.workers[i] = new Worker(i, NUM_WORKERS);
+      this.workers[i] = new Worker(i, NUM_WORKERS, this.dispatchMessage.bind(this));
     }
+  }
+  dispatchMessage(from: string, to: string, message: Message): void {
+    const receivingWorker = this.getWorker(parseInt(to));
+    receivingWorker.deliverMessageToNodeInThisWorker(from, to, message);
   }
   // removes dead ends as it finds them.
   // nets loops as it finds them.

@@ -101,10 +101,10 @@ export class Jerboa {
       hash?: string,
     }
   } = {};
-  private sendMessage: (to: string, message: TransferMessage | ProbeMessage | NackMessage | ScoutMessage | ProposeMessage | CommitMessage) => void;
+  private sendMessage: (to: string, message: Message) => void;
   private deregister: () => void;
   private loopsTried: string[] = [];
-  constructor(name: string, sendMessage: (to: string, message: TransferMessage | ProbeMessage | NackMessage | ScoutMessage | ProposeMessage | CommitMessage) => void, deregister: () => void) {
+  constructor(name: string, sendMessage: (to: string, message: Message) => void, deregister: () => void) {
     this.name = name;
     this.sendMessage = sendMessage;
     this.deregister = deregister;
@@ -420,7 +420,7 @@ export class Jerboa {
     // console.log(`forwarding from ${this.name} to ${newStep} (balance ${this.balances.getBalance(newStep)})`);
     this.sendProbeMessage(newStep, { command: 'probe', probeId, incarnation, debugInfo: { path: debugInfo.path, backtracked: [] } });
   };
-  receiveMessage(from: string, msg: TransferMessage | ProbeMessage | NackMessage | ScoutMessage | ProposeMessage | CommitMessage ): void {
+  receiveMessage(from: string, msg: Message ): void {
     // console.log('receiveMessage', from, this.name, msg);
     switch((msg as { command: string }).command) {
       case 'probe': {
