@@ -45,6 +45,7 @@ export type NackMessage = {
 export type ScoutMessage = {
   command: string,
   probeId: string,
+  incarnation: number,
   amount: number,
   debugInfo: {
     loop: string[],
@@ -101,7 +102,7 @@ export class Jerboa {
   }
 
   receiveScout(sender: string, msg: ScoutMessage): void {
-    const { probeId, amount, debugInfo } = msg;
+    const { probeId, amount, incarnation, debugInfo } = msg;
     // console.log(`${this.name} received a scout message from ${sender} for probeId ${probeId} (amount ${amount})`, this.probes[probeId], debugInfo);
     // unknown probe
     if (typeof this.probes[probeId] === 'undefined') {
@@ -109,7 +110,7 @@ export class Jerboa {
     }
     // no out messages
     if (Object.keys(this.probes[probeId].out).length === 0) {
-      throw new Error(`${this.name} received a scout message from ${sender} for probeId ${probeId} but have no out messages for that probe`);
+      throw new Error(`${this.name} received a scout message from ${sender} for probeId (${probeId}:${incarnation}) but have no out messages for that probe`);
     }
     // no in messages
     if (Object.keys(this.probes[probeId].in).length === 0) {
@@ -117,15 +118,15 @@ export class Jerboa {
     }
     // sender not one of the out messages
     if (typeof this.probes[probeId].out[sender] === 'undefined') {
-      throw new Error(`${this.name} received a scout message from ${sender} for probeId ${probeId} but expected it to come from one of ${JSON.stringify(this.probes[probeId].out)}`);
+      throw new Error(`${this.name} received a scout message from ${sender} for probeId (${probeId}:${incarnation}) but expected it to come from one of ${JSON.stringify(this.probes[probeId].out)}`);
     }
     if (this.name === debugInfo.loop[0]) {
       this.initiatePropose(debugInfo.loop[ debugInfo.loop.length - 2], probeId, amount, debugInfo);
     } else {
       // multiple in messages
       if (Object.keys(this.probes[probeId].in).length > 1) {
-        console.log(`${this.name} received a scout message from ${sender} for probeId ${probeId} but have multiple in messages for that probe ${JSON.stringify(this.probes[probeId])}`);
-        throw new Error(`${this.name} received a scout message from ${sender} for probeId ${probeId} but have multiple in messages for that probe ${JSON.stringify(this.probes[probeId])}`);
+        console.log(`${this.name} received a scout message from ${sender} for probeId (${probeId}:${incarnation}) but have multiple in messages for that probe ${JSON.stringify(this.probes[probeId])}`);
+        throw new Error(`${this.name} received a scout message from ${sender} for probeId (${probeId}:${incarnation}) but have multiple in messages for that probe ${JSON.stringify(this.probes[probeId])}`);
       }
 
       // // multiple out messages
@@ -147,12 +148,12 @@ export class Jerboa {
       if (amountOut <= MIN_LOOP_WEIGHT) {
         console.log('scout amount too small');
       } else {
-        this.sendScoutMessage(forwardTo, { command: 'scout', probeId, amount: amountOut, debugInfo });
+        this.sendScoutMessage(forwardTo, { command: 'scout', probeId, incarnation, amount: amountOut, debugInfo });
       }
     }
   }
   // assumes all loop hops exist
-  scoutLoop(probeId: string, loop: string[]): void {
+  scoutLoop(probeId: string, incarnation: number, loop: string[]): void {
     if (this.loopsTried.indexOf(loop.join(' ')) !== -1) {
       throw new Error('loop already tried');
     }
@@ -189,7 +190,7 @@ export class Jerboa {
       throw new Error('jar');
     } else {
       // console.log('calling sendScoutMessage');
-      this.sendScoutMessage(incomingNeighbour, { command: 'scout', probeId, amount: -incomingBalance, debugInfo: { loop } });
+      this.sendScoutMessage(incomingNeighbour, { command: 'scout', probeId, incarnation,  amount: -incomingBalance, debugInfo: { loop } });
     }
   }
   sendMessage(to: string, msg: TransferMessage | ProbeMessage | NackMessage | ScoutMessage | ProposeMessage | CommitMessage): void {
@@ -290,12 +291,12 @@ export class Jerboa {
       this.considerProbe(popped, probeId, incarnation, { path: debugInfo.path, backtracked: [nackSender].concat(debugInfo.backtracked) });
     }
   }
-  spliceLoop(sender: string, probeId: string, incarnation, path: string[]): boolean {
+  spliceLoop(sender: string, probeId: string, incarnation: number, path: string[]): boolean {
     // chop off loop if there is one:
     const pos = path.indexOf(this.name);
     if (pos !== -1) {
       const loop = path.splice(pos).concat([sender, this.name]);
-      this.scoutLoop(probeId, loop);
+      this.scoutLoop(probeId, incarnation, loop);
       // if ((smallestWeight < MIN_LOOP_WEIGHT) || (smallestWeight > MAX_LOOP_WEIGHT)) {
       //   // console.log('ignoring loop with this amount', smallestWeight);
       // } else { 
