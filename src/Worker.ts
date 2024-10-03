@@ -2,13 +2,13 @@ import { Jerboa } from './Jerboa.js';
 import { Messaging } from './Messaging.js';
 
 export class Worker {
-  private nodes: {
+  private ourNodes: {
     [from: string]: Jerboa
   } = {};
-  private nodesToStartFrom: {
+  private ourNodesToStartFrom: {
     [from: string]: boolean
   } = {};
-  public messaging: Messaging = new Messaging(this);
+  public ourMessaging: Messaging = new Messaging(this);
   stats: {
     [loopLength: number]: {
       numFound: number;
@@ -17,13 +17,13 @@ export class Worker {
   } = {};
  
   private ensureNode(name: string): void {
-    if (typeof this.nodes[name] === 'undefined') {
-      this.nodes[name] = new Jerboa(name, this);
-      this.nodesToStartFrom[name] = true;
+    if (typeof this.ourNodes[name] === 'undefined') {
+      this.ourNodes[name] = new Jerboa(name, this);
+      this.ourNodesToStartFrom[name] = true;
     }
   }
   public deregister(name: string): void {
-    delete this.nodesToStartFrom[name];
+    delete this.ourNodesToStartFrom[name];
   }
   public addWeight(from: string, to: string, weight: number): void {
     if (typeof from !== 'string') {
@@ -41,7 +41,7 @@ export class Worker {
       throw new Error('weight should be greater than zero');
     }
     this.ensureNode(from);
-    this.nodes[from].addWeight(to, weight);
+    this.ourNodes[from].addWeight(to, weight);
   }
 
   public getFirstNode(withOutgoingLinks: boolean, after?: string): string {
@@ -51,20 +51,20 @@ export class Worker {
 
     let nodes: string[];
     if (typeof after === 'string') {
-      const nodesObj = this.nodes[after];
+      const nodesObj = this.ourNodes[after];
       if (typeof nodesObj === 'undefined') {
         throw new Error(`No outgoing links from node ${after}`);
       }
       nodes = nodesObj.getOutgoingLinks();
     } else {
-      nodes = Object.keys(this.nodesToStartFrom);
+      nodes = Object.keys(this.ourNodesToStartFrom);
       if (nodes.length === 0) {
         throw new Error('Graph is empty');
       }
     }
     if (withOutgoingLinks) {
       for (let i = 0; i < nodes.length; i++) {
-        if ((typeof this.nodes[nodes[i]] !== 'undefined') && (this.nodes[nodes[i]].getOutgoingLinks().length >= 1)) {
+        if ((typeof this.ourNodes[nodes[i]] !== 'undefined') && (this.ourNodes[nodes[i]].getOutgoingLinks().length >= 1)) {
           return nodes[i];
         }
       }
@@ -77,7 +77,7 @@ export class Worker {
     if (typeof after !== 'string') {
       throw new Error(`after param ${JSON.stringify(after)} is not a string in call to hasOutgoingLinks`);
     }
-    return ((typeof this.nodes[after] !== 'undefined') && (this.nodes[after].getOutgoingLinks().length >= 1));
+    return ((typeof this.ourNodes[after] !== 'undefined') && (this.ourNodes[after].getOutgoingLinks().length >= 1));
   }
   public getWeight(from: string, to: string): number {
     if (typeof from !== 'string') {
@@ -86,10 +86,10 @@ export class Worker {
     if (typeof to !== 'string') {
       throw new Error(`to param ${JSON.stringify(to)} is not a string in call to getWeight`);
     }
-    if (typeof this.nodes[from] === 'undefined') {
+    if (typeof this.ourNodes[from] === 'undefined') {
       return 0;
     }
-    return this.nodes[from].getBalance(to);
+    return this.ourNodes[from].getBalance(to);
   }
   public getBalances(): {
     [from: string]: {
@@ -97,25 +97,25 @@ export class Worker {
     }
   } {
     const links = {};
-    Object.keys(this.nodes).forEach(name => {
-      links[name] = this.nodes[name].getBalances();
+    Object.keys(this.ourNodes).forEach(name => {
+      links[name] = this.ourNodes[name].getBalances();
     });
     return links;
   }
   public logNumNodesAndLinks(): void {
-    const numNodes = Object.keys(this.nodes).length;
+    const numNodes = Object.keys(this.ourNodes).length;
     let numLinks = 0;
-    Object.keys(this.nodes).forEach(name => {
-      const outgoingLinks = Object.keys(this.nodes[name].getBalances());
+    Object.keys(this.ourNodes).forEach(name => {
+      const outgoingLinks = Object.keys(this.ourNodes[name].getBalances());
       numLinks += outgoingLinks.length;
     });
     console.log(`Graph has ${numNodes} nodes and ${numLinks} links left`);
   }
   public getTotalWeight(): number {
     let total = 0;
-    Object.keys(this.nodes).forEach(from => {
-      Object.keys(this.nodes[from]).forEach(to => {
-        total += this.nodes[from].getBalance(to);
+    Object.keys(this.ourNodes).forEach(from => {
+      Object.keys(this.ourNodes[from]).forEach(to => {
+        total += this.ourNodes[from].getBalance(to);
       });
     });
     return total;
@@ -136,8 +136,8 @@ export class Worker {
     let amountFoundPos = 0;
     let amountFoundNeg = 0;
     
-    Object.keys(this.nodes).forEach((name: string) => {
-      const archiveWeights = this.nodes[name].getArchiveWeights();
+    Object.keys(this.ourNodes).forEach((name: string) => {
+      const archiveWeights = this.ourNodes[name].getArchiveWeights();
       Object.keys(archiveWeights).forEach((other: string) => {
         // console.log('archiveWeights', name, other, archiveWeights[other]);
         if (archiveWeights[other] > 0) {
@@ -163,9 +163,9 @@ export class Worker {
   }
   getNode(name: string): Jerboa {
     this.ensureNode(name);
-    return this.nodes[name];
+    return this.ourNodes[name];
   }
   getNodes(): Jerboa[] {
-    return Object.values(this.nodes);
+    return Object.values(this.ourNodes);
   }
 }

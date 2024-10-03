@@ -223,7 +223,7 @@ export class Jerboa {
   }
   sendMessage(to: string, msg: TransferMessage | ProbeMessage | NackMessage | ScoutMessage | ProposeMessage | CommitMessage): void {
     // console.log('sending message', this.name, to, msg);
-    this.graph.messaging.sendMessage(this.name, to, msg);
+    this.graph.ourMessaging.sendMessage(this.name, to, msg);
   }
   receiveTransfer(sender: string, msg: TransferMessage): void {
     // console.log(`${sender}->${this.name}: ${amount}`);

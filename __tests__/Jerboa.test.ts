@@ -15,29 +15,29 @@ describe('Jerboa', () => {
   });
   it ('initiates a probe if it can', () => {
     const graph = new Worker();
-    graph.messaging = new Messaging(graph);
-    graph.messaging.sendMessage = jest.fn();
+    graph.ourMessaging = new Messaging(graph);
+    graph.ourMessaging.sendMessage = jest.fn();
     const a = new Jerboa('a', graph);
     a.addWeight('b', 9);
-    expect(graph.messaging.sendMessage).toHaveBeenCalledWith('a', 'b', {"amount": 9, "command": "transfer"});
+    expect(graph.ourMessaging.sendMessage).toHaveBeenCalledWith('a', 'b', {"amount": 9, "command": "transfer"});
     const result = a.startProbe('probe-id');
     expect(result).toEqual(true);
-    expect(graph.messaging.sendMessage).toHaveBeenCalledWith('a', 'b', { command: 'probe', probeId: 'probe-id', incarnation: 0, debugInfo: {"path":[],"backtracked":[]} });
+    expect(graph.ourMessaging.sendMessage).toHaveBeenCalledWith('a', 'b', { command: 'probe', probeId: 'probe-id', incarnation: 0, debugInfo: {"path":[],"backtracked":[]} });
   });
   it('forwards a probe if it can', () => {
     const graph = new Worker();
-    graph.messaging = new Messaging(graph);
-    graph.messaging.sendMessage = jest.fn();
+    graph.ourMessaging = new Messaging(graph);
+    graph.ourMessaging.sendMessage = jest.fn();
     const a = new Jerboa('a', graph);
     a.addWeight('b', 9);
-    expect(graph.messaging.sendMessage).toHaveBeenCalledWith('a', 'b', {"amount": 9, "command": "transfer"});
+    expect(graph.ourMessaging.sendMessage).toHaveBeenCalledWith('a', 'b', {"amount": 9, "command": "transfer"});
     a.receiveMessage('x', { command: 'probe', probeId: '1', incarnation: 123, debugInfo: { path: ['b', 'c'], backtracked: [] } } as ProbeMessage);
-    expect(graph.messaging.sendMessage).toHaveBeenCalledWith('a', 'b', { command: 'probe', probeId: '1', incarnation: 123, debugInfo: { path: ['b', 'c', 'x'], backtracked: []} });
+    expect(graph.ourMessaging.sendMessage).toHaveBeenCalledWith('a', 'b', { command: 'probe', probeId: '1', incarnation: 123, debugInfo: { path: ['b', 'c', 'x'], backtracked: []} });
   });
   it('splices off a loop if it can', () => {
     const graph = new Worker();
-    graph.messaging = new Messaging(graph);
-    graph.messaging.sendMessage = jest.fn();
+    graph.ourMessaging = new Messaging(graph);
+    graph.ourMessaging.sendMessage = jest.fn();
     // rather than calling `new Jerboa('d'), getting the Jerboas from the graph
     // will allow them to query each other for debugging
     // do note though that since we mocked graph.messaging, messages sent by these
@@ -54,18 +54,18 @@ describe('Jerboa', () => {
     expect(d.getBalances()).toEqual({ e: 9, f: -9 });
     expect(e.getBalances()).toEqual({ f: 9, d: -9 });
     expect(f.getBalances()).toEqual({ d: 9, e: -9 });
-    expect(graph.messaging.sendMessage).toHaveBeenCalledWith('d', 'e', {"amount": 9, "command": "transfer"});
+    expect(graph.ourMessaging.sendMessage).toHaveBeenCalledWith('d', 'e', {"amount": 9, "command": "transfer"});
     d.receiveMessage('c', { command: 'probe', probeId: 'probe-id', incarnation: 0, debugInfo: { path: ['a', 'b'], backtracked: [] } });
-    expect(graph.messaging.sendMessage).toHaveBeenCalledWith('d', 'e', { command: 'probe', probeId: 'probe-id', incarnation: 0, debugInfo: { path: ['a', 'b', 'c'], backtracked: [] } });
+    expect(graph.ourMessaging.sendMessage).toHaveBeenCalledWith('d', 'e', { command: 'probe', probeId: 'probe-id', incarnation: 0, debugInfo: { path: ['a', 'b', 'c'], backtracked: [] } });
     d.receiveMessage('f', { command: 'probe', probeId: 'probe-id', incarnation: 0, debugInfo: { path: ['a', 'b', 'c', 'd', 'e'], backtracked: [] } }); // so the probe has P-looped as: a-b-c-[d-e-f-d]
-    expect(graph.messaging.sendMessage).toHaveBeenCalledWith('d', 'f', { command: 'scout', probeId: 'probe-id', maxIncarnation: 0, amount: 9, debugInfo: { loop: ['d', 'e', 'f', 'd']} });
+    expect(graph.ourMessaging.sendMessage).toHaveBeenCalledWith('d', 'f', { command: 'scout', probeId: 'probe-id', maxIncarnation: 0, amount: 9, debugInfo: { loop: ['d', 'e', 'f', 'd']} });
   });
   it ('replies with nack if it is a leaf', () => {
     const graph = new Worker();
-    graph.messaging = new Messaging(graph);
-    graph.messaging.sendMessage = jest.fn();
+    graph.ourMessaging = new Messaging(graph);
+    graph.ourMessaging.sendMessage = jest.fn();
     const a = new Jerboa('a', graph);
     a.receiveMessage('x', { command: 'probe', probeId: 'probe-id', incarnation: 0, debugInfo: { path: [], backtracked: [] } });
-    expect(graph.messaging.sendMessage).toHaveBeenCalledWith('a', 'x', { command: 'nack', probeId: 'probe-id', incarnation: 0, debugInfo: { path: [], backtracked: []} });
+    expect(graph.ourMessaging.sendMessage).toHaveBeenCalledWith('a', 'x', { command: 'nack', probeId: 'probe-id', incarnation: 0, debugInfo: { path: [], backtracked: []} });
   });
 });
