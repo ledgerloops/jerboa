@@ -322,11 +322,11 @@ export class Jerboa {
         }
       } else {
         if (process.env.PROBING_REPORT) {
-          console.log(`backtracked (${probeId}:${incarnation})`, [ this.name ], [nackSender].concat(debugInfo.backtracked));
+          console.log(`backtrack21 (${probeId}:${incarnation})`, [ this.name ], [nackSender].concat(debugInfo.backtracked));
         }
         const newStep = randomStringFromArray(nodes);
         // console.log(`${this.name} sends probe message to ${newStep} for probeId ${probeId} after receiving nack from ${nackSender}`);
-        this.sendProbeMessage(newStep, { command: 'probe', probeId, debugInfo: { path: debugInfo.path, backtracked: [] } } as ProbeMessage);
+        this.sendProbeMessage(newStep, { command: 'probe', probeId, incarnation: incarnation + 1, debugInfo: { path: debugInfo.path, backtracked: [] } } as ProbeMessage);
       }
     } else {
       // console.log('backtracked', path.concat(this.name), [ nackSender ].concat(backtracked));
@@ -398,7 +398,7 @@ export class Jerboa {
       if (debugInfo.path.length >= 1) {
         // console.log('                   continuing by popping old sender from', path);
         const oldSender = debugInfo.path.pop();
-        this.considerProbe(oldSender, probeId, incarnation, { path: debugInfo.path, backtracked: [] });
+        this.considerProbe(oldSender, probeId, incarnation + 1, { path: debugInfo.path, backtracked: [] });
       }
       return;
     }
@@ -417,12 +417,13 @@ export class Jerboa {
       if (process.env.PROBING_REPORT) {
         console.log(`backtracked (${probeId}:${incarnation})`, debugInfo.path.concat([sender, this.name]), debugInfo.backtracked);
       }
+      incarnation++;
     }
     // console.log('         did we print?', sender, this.name, path, backtracked);
     debugInfo.path.push(sender);
     const newStep = randomStringFromArray(nodes);
     // console.log(`forwarding from ${this.name} to ${newStep} (balance ${this.balances.getBalance(newStep)})`);
-    this.sendProbeMessage(newStep, { command: 'probe', probeId, incarnation: incarnation, debugInfo: { path: debugInfo.path, backtracked: [] } });
+    this.sendProbeMessage(newStep, { command: 'probe', probeId, incarnation, debugInfo: { path: debugInfo.path, backtracked: [] } });
   };
   receiveMessage(from: string, msg: TransferMessage | ProbeMessage | NackMessage | ScoutMessage | ProposeMessage | CommitMessage ): void {
     // console.log('receiveMessage', from, this.name, msg);
