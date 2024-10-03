@@ -2,10 +2,10 @@ import { Worker } from '../src/Worker.js';
 
 describe('addWeight', () => {
   it('adds a link', () => {
-    const graph = new Worker(0, 1);
-    graph.addWeight('0', '1', 3);
-    graph.ourMessaging.runTasks();
-    expect(graph.getOurBalances()).toEqual({
+    const worker = new Worker(0, 1);
+    worker.addWeight('0', '1', 3);
+    worker.runTasks();
+    expect(worker.getOurBalances()).toEqual({
       '0': {
         '1': 3,
       },
@@ -19,12 +19,12 @@ describe('addWeight', () => {
     expect(() => { graph.addWeight('0', '1', 0)}).toThrow();
   });
   it('adds another link', () => {
-    const graph = new Worker(0, 1);
-    graph.addWeight('0', '1', 3);
-    graph.ourMessaging.runTasks();
-    graph.addWeight('0', '2', 5);
-    graph.ourMessaging.runTasks();
-    expect(graph.getOurBalances()).toEqual({
+    const worker = new Worker(0, 1);
+    worker.addWeight('0', '1', 3);
+    worker.runTasks();
+    worker.addWeight('0', '2', 5);
+    worker.runTasks();
+    expect(worker.getOurBalances()).toEqual({
       '0': {
         '1': 3,
         '2': 5,
@@ -38,12 +38,12 @@ describe('addWeight', () => {
     });
   });
   it('prepends a link to a path', () => {
-    const graph = new Worker(0, 1);
-    graph.addWeight('0', '1', 3);
-    graph.ourMessaging.runTasks();
-    graph.addWeight('2', '0', 5);
-    graph.ourMessaging.runTasks();
-    expect(graph.getOurBalances()).toEqual({
+    const worker = new Worker(0, 1);
+    worker.addWeight('0', '1', 3);
+    worker.runTasks();
+    worker.addWeight('2', '0', 5);
+    worker.runTasks();
+    expect(worker.getOurBalances()).toEqual({
       '0': {
         '1': 3,
         '2': -5,
@@ -57,12 +57,12 @@ describe('addWeight', () => {
     });
   });
   it('nets a higher amount', () => {
-    const graph = new Worker(0, 1);
-    graph.addWeight('0', '1', 3);
-    graph.ourMessaging.runTasks();
-    graph.addWeight('1', '0', 7);
-    graph.ourMessaging.runTasks();
-    expect(graph.getOurBalances()).toEqual({
+    const worker = new Worker(0, 1);
+    worker.addWeight('0', '1', 3);
+    worker.runTasks();
+    worker.addWeight('1', '0', 7);
+    worker.runTasks();
+    expect(worker.getOurBalances()).toEqual({
       '0': {
         '1': -4
       },
@@ -72,12 +72,12 @@ describe('addWeight', () => {
     });
   });
   it('nets a lower amount', () => {
-    const graph = new Worker(0, 1);
-    graph.addWeight('0', '1', 3);
-    graph.ourMessaging.runTasks();
-    graph.addWeight('1', '0', 2);
-    graph.ourMessaging.runTasks();
-    expect(graph.getOurBalances()).toEqual({
+    const worker = new Worker(0, 1);
+    worker.addWeight('0', '1', 3);
+    worker.runTasks();
+    worker.addWeight('1', '0', 2);
+    worker.runTasks();
+    expect(worker.getOurBalances()).toEqual({
       '0': {
         '1': 1
       },
@@ -87,12 +87,12 @@ describe('addWeight', () => {
     });
   });
   it('nets an equal amount', () => {
-    const graph = new Worker(0, 1);
-    graph.addWeight('0', '1', 3);
-    graph.ourMessaging.runTasks();
-    graph.addWeight('1', '0', 3);
-    graph.ourMessaging.runTasks();
-    expect(graph.getOurBalances()).toEqual({
+    const worker = new Worker(0, 1);
+    worker.addWeight('0', '1', 3);
+    worker.runTasks();
+    worker.addWeight('1', '0', 3);
+    worker.runTasks();
+    expect(worker.getOurBalances()).toEqual({
       '0': {
       },
       '1': {
@@ -103,31 +103,31 @@ describe('addWeight', () => {
 
 describe('getFirstNode', () => {
   it('works when passing no after argument', () => {
-    const graph = new Worker(0, 1);
-    graph.addWeight('0', '1', 3);
-    graph.ourMessaging.runTasks();
-    expect(graph.getOurFirstNode(false)).toEqual('0');
+    const worker = new Worker(0, 1);
+    worker.addWeight('0', '1', 3);
+    worker.runTasks();
+    expect(worker.getOurFirstNode(false)).toEqual('0');
   });
   it('works when passing an after argument', () => {
-    const graph = new Worker(0, 1);
-    graph.addWeight('0', '1', 3);
-    graph.ourMessaging.runTasks();
-    expect(graph.getOurFirstNode(false, '0')).toEqual('1');
+    const worker = new Worker(0, 1);
+    worker.addWeight('0', '1', 3);
+    worker.runTasks();
+    expect(worker.getOurFirstNode(false, '0')).toEqual('1');
   });
 });
 
 describe('hasOutgoingLinks', () => {
   it('works in the positive case', () => {
-    const graph = new Worker(0, 1);
-    graph.addWeight('0', '1', 3);
-    graph.ourMessaging.runTasks();
-    expect(graph.hasOutgoingLinks('0')).toEqual(true);
+    const worker = new Worker(0, 1);
+    worker.addWeight('0', '1', 3);
+    worker.runTasks();
+    expect(worker.hasOutgoingLinks('0')).toEqual(true);
   });
   it('works in the negative case', () => {
-    const graph = new Worker(0, 1);
-    graph.addWeight('0', '1', 3);
-    graph.ourMessaging.runTasks();
-    expect(graph.hasOutgoingLinks('1')).toEqual(false);
-    expect(graph.hasOutgoingLinks('2')).toEqual(false);
+    const worker = new Worker(0, 1);
+    worker.addWeight('0', '1', 3);
+    worker.runTasks();
+    expect(worker.hasOutgoingLinks('1')).toEqual(false);
+    expect(worker.hasOutgoingLinks('2')).toEqual(false);
   });
 });

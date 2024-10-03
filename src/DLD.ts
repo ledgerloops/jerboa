@@ -23,7 +23,7 @@ export class DLD {
         }
       }
       this.workers[0].getNode(newStep).startProbe(probeId.toString());
-      this.workers[0].ourMessaging.runTasks();
+      this.workers[0].runTasks();
       // console.log('running probe from', newStep);
     } while (!done);
   }

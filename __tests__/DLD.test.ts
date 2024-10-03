@@ -42,7 +42,7 @@ describe('DLD', () => {
     const dld = new DLD();
     await readCsv((source: string, target: string, weight: number) => {
       dld.getWorker().addWeight(source,target, weight);
-      dld.getWorker().ourMessaging.runTasks();
+      dld.getWorker().runTasks();
     });
     dld.runWorm();
     let totalNum = 0;

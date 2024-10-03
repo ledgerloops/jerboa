@@ -34,7 +34,7 @@ lineReader.on('line', function (line) {
 
 lineReader.on('close', function () {
   console.log(`${numTrans} primary transfers with value of ${totalTransAmount} done, now inviting bilateral netting`);
-  dld.getWorker().ourMessaging.runTasks();
+  dld.getWorker().runTasks();
   console.log('bilateral netting done, now inviting probes');
   dld.runWorm();
   console.log('done');

@@ -1,15 +1,15 @@
 import { Jerboa } from './Jerboa.js';
-import { Messaging } from "./Messaging.js";
 import { Message } from "./Jerboa.js";
 
 export class Worker {
+  messagesSent: number = 0;
+  messages: { from: string, to: string, message: Message }[] = [];
   private ourNodes: {
     [from: string]: Jerboa
   } = {};
   private ourNodesToStartFrom: {
     [from: string]: boolean
   } = {};
-  public ourMessaging: Messaging = new Messaging(this);
   stats: {
     [loopLength: number]: {
       numFound: number;
@@ -22,13 +22,26 @@ export class Worker {
     this.shard = shard;
     this.noShards = noShards;
   }
-  public receiveMessage(from: string, to: string, message: Message): void {
+  public sendMessage(from: string, to: string, message: Message): void {
     if (this.nodeIsOurs(to)) {
       // instead of delivering immediately, queue it up until runTasks is called on this worker:
       // this.getNode(to).receiveMessage(from, message);
-      this.ourMessaging.sendMessage(from , to, message);
+      this.messages.push({from, to, message });
     }
   }
+  deliverMessage(from: string, to: string, message: Message): void {
+    this.messagesSent++;
+    // console.log('delivering message', from, to, message, this.messages.length);
+    return this.getNode(to).receiveMessage(from, message);
+  }
+  runTasks(): void {
+    // console.log('running tasks', this.messages);
+    while (this.messages.length > 0) {
+      const { from, to, message } = this.messages.pop();
+      this.deliverMessage(from, to, message);
+    }
+  }
+
   private nodeIsOurs(name: string) : boolean {
     const nodeNo = parseInt(name);
     if (isNaN(nodeNo)) {
@@ -43,7 +56,7 @@ export class Worker {
     if (typeof this.ourNodes[name] === 'undefined') {
       this.ourNodes[name] = new Jerboa(name, (to: string, message: Message) => {
         // console.log('our node', name, to, message);
-        this.receiveMessage(name, to, message);
+        this.sendMessage(name, to, message);
       }, () => {
         this.deregister(name);
       });
