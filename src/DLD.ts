@@ -2,7 +2,7 @@ import { Worker } from './Worker.js';
 
 export class DLD {
   tasks: string[] = [];
-  graph: Worker = new Worker();
+  workers: Worker[] = [ new Worker() ];
 
   // removes dead ends as it finds them.
   // nets loops as it finds them.
@@ -13,7 +13,7 @@ export class DLD {
       let newStep: string;
       probeId++;
       try {
-        newStep = this.graph.getFirstNode(true);
+        newStep = this.workers[0].getFirstNode(true);
         // console.log('picked first new step!', newStep, this.graph.getNode(newStep).getOutgoingLinks());
       } catch (e) {
         if ((e.message === 'Graph is empty') || (e.message == 'no nodes have outgoing links')) {
@@ -23,8 +23,8 @@ export class DLD {
           throw e;
         }
       }
-      this.graph.getNode(newStep).startProbe(probeId.toString());
-      this.graph.messaging.runTasks();
+      this.workers[0].getNode(newStep).startProbe(probeId.toString());
+      this.workers[0].messaging.runTasks();
       // console.log('running probe from', newStep);
     } while (!done);
   }

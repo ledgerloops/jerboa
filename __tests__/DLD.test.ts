@@ -41,19 +41,19 @@ describe('DLD', () => {
   it('finds loops', async () => {
     const dld = new DLD();
     await readCsv((source: string, target: string, weight: number) => {
-      dld.graph.addWeight(source,target, weight);
-      dld.graph.messaging.runTasks();
+      dld.workers[0].addWeight(source,target, weight);
+      dld.workers[0].messaging.runTasks();
     });
     dld.runWorm();
     let totalNum = 0;
     let totalAmount = 0;
-    Object.keys(dld.graph.stats).map(numStr => {
+    Object.keys(dld.workers[0].stats).map(numStr => {
       if (numStr !== '2') {
-        totalAmount += dld.graph.stats[numStr].totalAmount * parseInt(numStr);
-        totalNum += dld.graph.stats[numStr].numFound;
+        totalAmount += dld.workers[0].stats[numStr].totalAmount * parseInt(numStr);
+        totalNum += dld.workers[0].stats[numStr].numFound;
       }
     });
-    expect([totalNum, totalAmount, dld.graph.stats]).toEqual([
+    expect([totalNum, totalAmount, dld.workers[0].stats]).toEqual([
       0,
       0,
       {},
