@@ -132,12 +132,12 @@ export class Jerboa {
       const outBalance = this.balances.getBalance(sender);
       let amountOut = amount;
       if (amountOut > outBalance) {
-        console.log(`${this.name} adjust the scout amount from ${amount} to ${outBalance} based on out balance to ${sender}`);
+        // console.log(`${this.name} adjust the scout amount from ${amount} to ${outBalance} based on out balance to ${sender}`);
         amountOut = outBalance;
       }
       const inBalance = this.balances.getBalance(sender);
       if (amountOut > inBalance) {
-        console.log(`${this.name} adjust the scout amount from ${amount} to ${inBalance} based on in balance from ${forwardTo}`);
+        // console.log(`${this.name} adjust the scout amount from ${amount} to ${inBalance} based on in balance from ${forwardTo}`);
         amountOut = inBalance;
       }
       if (amountOut <= MIN_LOOP_WEIGHT) {
@@ -263,7 +263,7 @@ export class Jerboa {
       this.probes[probeId].loops[hash] = { proposeTo, proposeFrom: sender, amount };
       this.sendProposeMessage(proposeTo, { command: 'propose', probeId, amount, hash, debugInfo });
     } else {
-      console.log('our hashlock', hash, this.probes[probeId], amount);
+      // console.log('our hashlock', hash, this.probes[probeId], amount);
       this.probes[probeId].loops[hash].commitTo = sender;
       this.balances.adjustReceived(this.probes[probeId].loops[hash].commitTo, amount);
       this.checkFriendCache(this.probes[probeId].loops[hash].commitTo);
@@ -285,10 +285,10 @@ export class Jerboa {
     this.balances.adjustSent(sender, amount);
     this.checkFriendCache(sender);
     if (typeof this.probes[probeId].loops[hash].proposeFrom === 'undefined') {
-      console.log('loop clearing completed');
+      // console.log('loop clearing completed');
       const loop = debugInfo.loop;
       for (let k = 0; k < loop.length - 1; k++) {
-        console.log(loop, `hop ${loop[k]}->${loop[k+1]}`, this.graph.getNode(loop[k]).getBalance(loop[k+1]), this.graph.getNode(loop[k+1]).getBalance(loop[k]));
+        // console.log(loop, `hop ${loop[k]}->${loop[k+1]}`, this.graph.getNode(loop[k]).getBalance(loop[k+1]), this.graph.getNode(loop[k+1]).getBalance(loop[k]));
         if (this.graph.getNode(loop[k]).getBalance(loop[k+1]) + this.graph.getNode(loop[k+1]).getBalance(loop[k]) !== 0) {
           throw new Error('balance dispute!');
         }
@@ -417,7 +417,7 @@ export class Jerboa {
     this.sendProbeMessage(newStep, { command: 'probe', probeId, debugInfo: { path: debugInfo.path, backtracked: [] } });
   };
   receiveMessage(from: string, msg: TransferMessage | ProbeMessage | NackMessage | ScoutMessage | ProposeMessage | CommitMessage ): void {
-    console.log('receiveMessage', from, this.name, msg);
+    // console.log('receiveMessage', from, this.name, msg);
     switch((msg as { command: string }).command) {
       case 'probe': {
         return this.receiveProbe(from, msg as ProbeMessage);
