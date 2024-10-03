@@ -54,6 +54,7 @@ export type ScoutMessage = {
 export type ProposeMessage = {
   command: string,
   probeId: string,
+  incarnation: number,
   amount: number,
   hash: string,
   debugInfo: {
@@ -121,7 +122,7 @@ export class Jerboa {
       throw new Error(`${this.name} received a scout message from ${sender} for probeId (${probeId}:${incarnation}) but expected it to come from one of ${JSON.stringify(this.probes[probeId].out)}`);
     }
     if (this.name === debugInfo.loop[0]) {
-      this.initiatePropose(debugInfo.loop[ debugInfo.loop.length - 2], probeId, amount, debugInfo);
+      this.initiatePropose(debugInfo.loop[ debugInfo.loop.length - 2], probeId, incarnation, amount, debugInfo);
     } else {
       // multiple in messages
       let forwardTo;
@@ -220,7 +221,7 @@ export class Jerboa {
     // }
   }
   receivePropose(sender: string, msg: ProposeMessage): void {
-    const { probeId, amount, hash, debugInfo } = msg;
+    const { probeId, incarnation, amount, hash, debugInfo } = msg;
     if (typeof this.probes[probeId] === 'undefined') {
       throw new Error('propose message for unknown probe!');
     }
@@ -233,7 +234,7 @@ export class Jerboa {
       }
       const proposeTo = Object.keys(this.probes[probeId].in)[0];
       this.probes[probeId].loops[hash] = { proposeTo, proposeFrom: sender, amount };
-      this.sendProposeMessage(proposeTo, { command: 'propose', probeId, amount, hash, debugInfo });
+      this.sendProposeMessage(proposeTo, { command: 'propose', probeId, incarnation, amount, hash, debugInfo });
     } else {
       // console.log('our hashlock', hash, this.probes[probeId], amount);
       this.probes[probeId].loops[hash].commitTo = sender;
@@ -273,12 +274,12 @@ export class Jerboa {
       this.sendCommitMessage(this.probes[probeId].loops[hash].commitTo, msg);
     }
   }
-  initiatePropose(to: string, probeId: string, amount: number, debugInfo: { loop: string[] }): void {
+  initiatePropose(to: string, probeId: string, incarnation: number, amount: number, debugInfo: { loop: string[] }): void {
     const preimage = randomBytes(8).toString("hex");
     const hash = createHash('sha256').update(preimage).digest('base64');
     this.probes[probeId].loops[hash] = { preimage,  proposeTo: to, amount };
     // console.log('initiating propose', this.probes[probeId], { to, probeId, amount, hash, debugInfo });
-    this.sendProposeMessage(to, { command: 'propose', probeId, amount, hash, debugInfo });
+    this.sendProposeMessage(to, { command: 'propose', probeId, incarnation, amount, hash, debugInfo });
   }
   receiveNack(nackSender: string, msg: NackMessage): void {
     const { probeId, incarnation, debugInfo } = msg;
