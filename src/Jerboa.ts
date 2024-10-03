@@ -210,14 +210,6 @@ export class Jerboa {
     if (loop[loop.length - 1] !== this.name) {
       throw new Error('loop doesnt end here');
     }
-    if (Object.keys(this.probes[probeId].in).length === 0) {
-      // was minted here, O loop
-    } else  if (Object.keys(this.probes[probeId].in).length == 1) {
-      // P loop
-    } else {
-      console.log(this.probes);
-      console.log(`expected zero or one in events for probe ${probeId}`);
-    }
     const incomingNeighbour = loop[loop.length - 2];
     const incomingBalance = this.balances.getBalance(incomingNeighbour);
     // console.log('scoutLoop considering incoming balance', this.name, incomingNeighbour, incomingBalance);

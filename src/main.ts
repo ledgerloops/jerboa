@@ -33,7 +33,7 @@ lineReader.on('line', function (line) {
 });
 
 lineReader.on('close', function () {
-  console.log('primary transfers done, now inviting bilateral netting');
+  console.log(`${numTrans} primary transfers with value of ${totalTransAmount} done, now inviting bilateral netting`);
   dld.graph.messaging.runTasks();
   console.log('bilateral netting done, now inviting probes');
   dld.runWorm();
