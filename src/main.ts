@@ -26,7 +26,7 @@ lineReader.on('line', function (line) {
     nodes[target] = (counter++).toString();
   }
   if (transfer_subtype === 'STANDARD') {
-    dld.getWorker().addWeight(nodes[source], nodes[target], parseFloat(weight));
+    dld.getWorker(parseInt(nodes[source])).addWeight(nodes[source], nodes[target], parseFloat(weight));
     numTrans++;
     totalTransAmount += parseFloat(weight);
   }
@@ -34,7 +34,7 @@ lineReader.on('line', function (line) {
 
 lineReader.on('close', function () {
   console.log(`${numTrans} primary transfers with value of ${totalTransAmount} done, now inviting bilateral netting`);
-  dld.getWorker().runTasks();
+  dld.runAllTasks();
   console.log('bilateral netting done, now inviting probes');
   dld.runWorm();
   console.log('done');

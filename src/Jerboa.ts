@@ -25,7 +25,7 @@ export type Message =
  | ScoutMessage
  | ProposeMessage
  | CommitMessage;
- 
+
 export type TransferMessage = {
   amount: number,
 };
@@ -453,6 +453,7 @@ export class Jerboa {
     } else {
       delete this.outgoingLinks[friend];
       if (Object.keys(this.outgoingLinks).length === 0) {
+        console.log('calling deregister');
         this.deregister();
       }
     }
@@ -495,9 +496,11 @@ export class Jerboa {
     this.sendMessage(to, msg);
   }
   startProbe(probeId: string): boolean {
-    // console.log(`Node ${this.name} starting probe ${probeId}`);
+    console.log(`Node ${this.name} starting probe ${probeId}`);
     const nodes = this.getOutgoingLinks();
+    console.log('got outgoing links', nodes);
     if (nodes.length === 0) {
+      console.log('returning false on startProbe');
       return false;
     }
     this.sendProbeMessage(nodes[0], { command: 'probe', probeId, incarnation: 0, debugInfo: { path: [], backtracked: [] } });
