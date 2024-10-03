@@ -146,17 +146,22 @@ export class Jerboa {
     if (Object.keys(this.probes[probeId].out).length === 0) {
       throw new Error(`${this.name} received a scout message from ${sender} for probeId (${probeId}:${incarnation}) but have no out messages for that probe`);
     }
-    // no in messages
-    if (Object.keys(this.probes[probeId].in).length === 0) {
-      throw new Error(`${this.name} received a scout message from ${sender} for probeId ${probeId} but have no in messages for that probe`);
-    }
     // sender not one of the out messages
     if (typeof this.probes[probeId].out[sender] === 'undefined') {
       throw new Error(`${this.name} received a scout message from ${sender} for probeId (${probeId}:${incarnation}) but expected it to come from one of ${JSON.stringify(this.probes[probeId].out)}`);
     }
     if (this.name === debugInfo.loop[0]) {
+      // no looper messages
+      if (Object.keys(this.probes[probeId].looper).length === 0) {
+        throw new Error(`${this.name} looped a scout message from ${sender} for probeId ${probeId} but have no looper messages for that probe`);
+      }
       this.initiatePropose(debugInfo.loop[ debugInfo.loop.length - 2], probeId, incarnation, amount, debugInfo);
     } else {
+      // no in messages
+      if (Object.keys(this.probes[probeId].in).length === 0) {
+        throw new Error(`${this.name} received a scout message from ${sender} for probeId ${probeId} but have no in messages for that probe`);
+      }
+
       const forwardTo = this.pickIncarnation(probeId, incarnation);
       if (debugInfo.loop.indexOf(forwardTo) === -1) {
         throw new Error(`${this.name} picked ${forwardTo} who is not on the loop ${JSON.stringify(msg)} - ${JSON.stringify(this.probes[probeId])}`);
@@ -346,18 +351,6 @@ export class Jerboa {
        };
     }
   }
-  isLooper(probeId: string): boolean {
-    if (typeof this.probes[probeId] === 'undefined') {
-      return false;
-    }
-    if (Object.keys(this.probes[probeId].in).length === 0) {
-      return false;
-    }
-    if (Object.keys(this.probes[probeId].out).length === 0) {
-      return false;
-    }
-    return true;
-  }
   recordProbeTraffic(other: string, direction: string, probeId: string, incarnation: number): void {
     this.ensureProbe(probeId);
     if (typeof this.probes[probeId][direction][other] !== 'undefined') {
@@ -385,12 +378,26 @@ export class Jerboa {
   receiveProbe(sender: string,  msg: ProbeMessage): void {
     const { probeId, incarnation, debugInfo } = msg;
     // console.log(`${this.name} recording probe traffic in from receiveProbe "${probeId}"`, debugInfo.path.concat([sender, this.name]));
-    this.recordProbeTraffic(sender, (this.isLooper(probeId) ? 'looper' : 'in'), probeId, incarnation);
+    this.recordProbeTraffic(sender, 'in', probeId, incarnation);
     this.considerProbe(sender, probeId, incarnation, debugInfo);
+  }
+  changeToLooper(sender: string, probeId: string, incarnation: number): void {
+    if (typeof this.probes[probeId] === 'undefined') {
+      throw new Error('probe record not found');
+    }
+    if (typeof this.probes[probeId].in[sender] === 'undefined') {
+      throw new Error('in record not found');
+    }
+    if (this.probes[probeId].in[sender] !== incarnation) {
+      throw new Error('in record has wrong incarnation');
+    }
+    this.probes[probeId].looper[sender] = this.probes[probeId].in[sender];
+    delete this.probes[probeId].in[sender];
   }
   considerProbe(sender: string, probeId: string, incarnation: number, debugInfo: { path: string[], backtracked: string[] }): void {
     const loopFound = this.spliceLoop(sender, probeId, incarnation, debugInfo.path);
     if (loopFound) {
+      this.changeToLooper(sender, probeId, incarnation);
       if (debugInfo.path.length >= 1) {
         // console.log('                   continuing by popping old sender from', path);
         const oldSender = debugInfo.path.pop();
