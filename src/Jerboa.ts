@@ -314,11 +314,11 @@ export class Jerboa {
       const nodes = this.getOutgoingLinks();
       if (nodes.length === 0) {
         if (process.env.PROBING_REPORT) {
-          console.log('finished   ', [], [this.name, nackSender].concat(debugInfo.backtracked));
+          console.log(`finished   (${probeId})`, [], [this.name, nackSender].concat(debugInfo.backtracked));
         }
       } else {
         if (process.env.PROBING_REPORT) {
-          console.log('backtracked', [ this.name ], [nackSender].concat(debugInfo.backtracked));
+          console.log(`backtracked (${probeId})`, [ this.name ], [nackSender].concat(debugInfo.backtracked));
         }
         const newStep = randomStringFromArray(nodes);
         // console.log(`${this.name} sends probe message to ${newStep} for probeId ${probeId} after receiving nack from ${nackSender}`);
@@ -345,7 +345,7 @@ export class Jerboa {
       // }
       // console.log(`Found loop`, loop, ` pos ${pos}`);
       if (process.env.PROBING_REPORT) {  
-        console.log(`found loop `, path, loop);
+        console.log(`found loop (${probeId})`, path, loop);
       }
       return true;
     }
@@ -406,7 +406,7 @@ export class Jerboa {
       return;
     } else if (debugInfo.backtracked.length > 0) {
       if (process.env.PROBING_REPORT) {
-        console.log(`backtracked`, debugInfo.path.concat([sender, this.name]), debugInfo.backtracked);
+        console.log(`backtracked (${probeId})`, debugInfo.path.concat([sender, this.name]), debugInfo.backtracked);
       }
     }
     // console.log('         did we print?', sender, this.name, path, backtracked);
