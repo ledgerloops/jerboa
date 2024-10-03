@@ -1,7 +1,7 @@
 import { Worker } from './Worker.js';
 import { Message } from './Jerboa.js';
 
-const NUM_WORKERS = 1;
+const NUM_WORKERS = 20;
 
 export class DLD {
   private workers: Worker[] = [];
@@ -13,7 +13,7 @@ export class DLD {
   }
   dispatchMessage(from: string, to: string, message: Message): void {
     const receivingWorker = this.getWorker(parseInt(to));
-    receivingWorker.deliverMessageToNodeInThisWorker(from, to, message);
+    receivingWorker.queueMessageForLocalDelivery(from, to, message);
   }
   // removes dead ends as it finds them.
   // nets loops as it finds them.
