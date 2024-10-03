@@ -1,7 +1,7 @@
 import { Worker } from './Worker.js';
 import { Message } from './Jerboa.js';
 
-const NUM_WORKERS = 20;
+const NUM_WORKERS = 1;
 
 export class DLD {
   private workers: Worker[] = [];
@@ -14,32 +14,6 @@ export class DLD {
   dispatchMessage(from: string, to: string, message: Message): void {
     const receivingWorker = this.getWorker(parseInt(to));
     receivingWorker.queueMessageForLocalDelivery(from, to, message);
-  }
-  // removes dead ends as it finds them.
-  // nets loops as it finds them.
-  runWorm(): number {
-    let done = false;
-    let probeId = 0;
-    do {
-      let newStep: string;
-      probeId++;
-      // console.log('starting probe', probeId);
-      try {
-        newStep = this.workers[probeId % NUM_WORKERS].getOurFirstNode(true);
-        // console.log('picked first new step!', newStep, this.graph.getNode(newStep).getOutgoingLinks());
-      } catch (e) {
-        if ((e.message === 'Graph is empty') || (e.message == 'no nodes have outgoing links')) {
-          done = true;
-          return probeId;
-        } else {;
-          throw e;
-        }
-      }
-      this.workers[parseInt(newStep) % NUM_WORKERS].getNode(newStep).startProbe(probeId.toString());
-      // console.log('running probe from', newStep);
-      this.runAllTasks();
-    } while (!done);
-    return probeId;
   }
   getWorker(nodeNo: number): Worker {
     return this.workers[nodeNo % NUM_WORKERS];
@@ -56,5 +30,23 @@ export class DLD {
         }
       }
     } while (hadWorkToDo);
+  }
+  runAllWorms(): number {
+    let hadWorkToDo: boolean;
+    let cumm = 0;
+    // console.log('running all worms');
+    do {
+      hadWorkToDo = false;
+      for (let i = 0; i < NUM_WORKERS; i++) {
+        // console.log('running worm in worker', i);
+        const numThisRun = this.workers[i].runWorm();
+        // console.log('had work to do in worker', i);
+        if (numThisRun > 0) {
+          hadWorkToDo = true;
+        }
+        cumm += numThisRun;
+      }
+    } while (hadWorkToDo);
+    return cumm;
   }
 }

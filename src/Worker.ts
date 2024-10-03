@@ -168,4 +168,29 @@ export class Worker {
   getOurNodes(): Jerboa[] {
     return Object.values(this.ourNodes);
   }
+  runWorm(): number {
+    let done = false;
+    let probeId = 0;
+    do {
+      let newStep: string;
+      // console.log('starting probe', probeId);
+      try {
+        newStep = this.getOurFirstNode(true);
+        // console.log('picked first new step!', newStep, this.graph.getNode(newStep).getOutgoingLinks());
+      } catch (e) {
+        if ((e.message === 'Graph is empty') || (e.message == 'no nodes have outgoing links')) {
+          done = true;
+          return probeId;
+        } else {;
+          throw e;
+        }
+      }
+      // console.log('calling startProbe', newStep, probeId);
+      this.getNode(newStep).startProbe(probeId.toString());
+      // console.log('result of probe from', newStep, result);
+      this.runTasks();
+      probeId++;
+    } while (!done);
+    return probeId;
+  }
 }

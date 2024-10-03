@@ -46,7 +46,8 @@ describe('DLD', () => {
       worker.addWeight(source, target, weight);
       worker.runTasks();
     });
-    const finalProbeId = dld.runWorm();
-    expect(finalProbeId).toEqual(178);
+    // console.log('running all DLD worms');
+    const finalProbeId = dld.runAllWorms();
+    expect(finalProbeId).toEqual(177);
   });
 });
