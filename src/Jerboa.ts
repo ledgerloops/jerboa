@@ -130,6 +130,12 @@ export class Jerboa {
   }
   receiveScout(sender: string, msg: ScoutMessage): void {
     const { probeId, amount, maxIncarnation: incarnation, debugInfo } = msg;
+    if (debugInfo.loop.indexOf(this.name) === -1) {
+      throw new Error(`${this.name} received scout message but not on the loop ${JSON.stringify(msg)}`);
+    }
+    if (debugInfo.loop.indexOf(sender) === -1) {
+      throw new Error(`${this.name} received scout message from ${sender} who is not on the loop ${JSON.stringify(msg)}`);
+    }
     // console.log(`${this.name} received a scout message from ${sender} for probeId ${probeId} (amount ${amount})`, this.probes[probeId], debugInfo);
     // unknown probe
     if (typeof this.probes[probeId] === 'undefined') {
@@ -151,6 +157,9 @@ export class Jerboa {
       this.initiatePropose(debugInfo.loop[ debugInfo.loop.length - 2], probeId, incarnation, amount, debugInfo);
     } else {
       const forwardTo = this.pickIncarnation(probeId, incarnation);
+      if (debugInfo.loop.indexOf(forwardTo) === -1) {
+        throw new Error(`${this.name} picked ${forwardTo} who is not on the loop ${JSON.stringify(msg)} - ${JSON.stringify(this.probes[probeId])}`);
+      }
 
       // // multiple out messages
       // if (Object.keys(this.probes[probeId].out).length > 1) {
