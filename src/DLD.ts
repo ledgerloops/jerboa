@@ -12,7 +12,7 @@ export class DLD {
       let newStep: string;
       probeId++;
       try {
-        newStep = this.workers[0].getFirstNode(true);
+        newStep = this.workers[0].getOurFirstNode(true);
         // console.log('picked first new step!', newStep, this.graph.getNode(newStep).getOutgoingLinks());
       } catch (e) {
         if ((e.message === 'Graph is empty') || (e.message == 'no nodes have outgoing links')) {
