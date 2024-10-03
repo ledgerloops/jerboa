@@ -40,9 +40,10 @@ export class DLD {
   }
   runAllTasks(): void {
     let hadWorkToDo: boolean;
+    console.log('running all tasks')
     do {
       hadWorkToDo = false;
-      for (let i = 0; i > NUM_WORKERS; i++) {
+      for (let i = 0; i < NUM_WORKERS; i++) {
         if (this.workers[i].runTasks()) {
           console.log('had work to do in worker', i);
           hadWorkToDo = true;

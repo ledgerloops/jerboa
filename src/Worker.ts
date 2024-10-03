@@ -39,7 +39,7 @@ export class Worker {
   }
   runTasks(): boolean {
     let hadWorkToDo = false;
-    // console.log('running tasks', this.messages);
+    console.log('running tasks', this.messages.length);
     while (this.messages.length > 0) {
       const { from, to, message } = this.messages.pop();
       console.log('popped', from, to, message);
