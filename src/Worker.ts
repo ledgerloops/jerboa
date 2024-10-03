@@ -15,8 +15,23 @@ export class Worker {
       totalAmount: number;
     }
   } = {};
- 
+  private shard: number;
+  private noShards: number;
+  constructor(shard: number, noShards: number) {
+    this.shard = shard;
+    this.noShards = noShards;
+  }
+  private nodeIsOurs(name: string) : boolean {
+    const nodeNo = parseInt(name);
+    if (isNaN(nodeNo)) {
+      throw new Error('node name is not a number ' + name);
+    }
+    return (nodeNo % this.noShards === this.shard);    
+  }
   private ensureNode(name: string): void {
+    if (!this.nodeIsOurs(name)) {
+      throw new Error('node is not ours!');
+    }
     if (typeof this.ourNodes[name] === 'undefined') {
       this.ourNodes[name] = new Jerboa(name, this);
       this.ourNodesToStartFrom[name] = true;

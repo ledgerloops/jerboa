@@ -48,12 +48,4 @@ PROBING_REPORT=1 time node build/src/main.js __tests__/fixture-300.csv > jerboa-
 PROBING_REPORT=1 time node build/src/main.js __tests__/fixture-3k.csv > jerboa-3k.out
 PROBING_REPORT=1 time node build/src/main.js __tests__/fixture-30k.csv > jerboa-30k.out
 PROBING_REPORT=1 time node build/src/main.js __tests__/fixture-300k.csv > jerboa-300k.out
-
-diff ./jerboa-30.out ./birdseye-30.out
-diff ./jerboa-300.out ./birdseye-300.out
-diff ./jerboa-3k.out ./birdseye-3k.out
-diff ./jerboa-30k.out ./birdseye-30k.out
-diff ./jerboa-300k.out ./birdseye-300k.out
 ```
-
-The diff output is expected to show that BirdsEyeAnalysis does more netting, because it nets after every transfer, and Jerboa only nets the balances after all transfers are finished.

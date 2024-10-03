@@ -1,7 +1,7 @@
 import { Worker } from './Worker.js';
 
 export class DLD {
-  private workers: Worker[] = [ new Worker() ];
+  private workers: Worker[] = [ new Worker(0, 1) ];
 
   // removes dead ends as it finds them.
   // nets loops as it finds them.
