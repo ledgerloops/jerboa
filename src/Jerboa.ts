@@ -81,6 +81,7 @@ export class Jerboa {
   private probes: {
     [probeId: string]: {
       in: { [from: string]: number },
+      looper: { [from: string]: number },
       out: { [from: string]: number },
       loops: {
         [hash: string]: {
@@ -339,10 +340,23 @@ export class Jerboa {
     if (typeof this.probes[probeId] === 'undefined') {
       this.probes[probeId] = {
         in: {},
+        looper: {},
         out: {},
         loops: {},
        };
     }
+  }
+  isLooper(probeId: string): boolean {
+    if (typeof this.probes[probeId] === 'undefined') {
+      return false;
+    }
+    if (Object.keys(this.probes[probeId].in).length === 0) {
+      return false;
+    }
+    if (Object.keys(this.probes[probeId].out).length === 0) {
+      return false;
+    }
+    return true;
   }
   recordProbeTraffic(other: string, direction: string, probeId: string, incarnation: number): void {
     this.ensureProbe(probeId);
@@ -353,6 +367,8 @@ export class Jerboa {
     this.probes[probeId][direction][other] = incarnation;
     // if (direction === 'in') {
     //   console.log(`${this.name} recorded ${direction}coming probe incarnation (${probeId}:${incarnation}) from ${other}`, this.probes[probeId]);
+    // } else if (direction === 'looper') {
+    //   console.log(`${this.name} recorded ${direction} probe incarnation (${probeId}:${incarnation}) from ${other}`, this.probes[probeId]);
     // } else {
     //   console.log(`${this.name} recorded ${direction}going probe incarnation (${probeId}:${incarnation}) to ${other}`, this.probes[probeId]);
     // }
@@ -369,7 +385,7 @@ export class Jerboa {
   receiveProbe(sender: string,  msg: ProbeMessage): void {
     const { probeId, incarnation, debugInfo } = msg;
     // console.log(`${this.name} recording probe traffic in from receiveProbe "${probeId}"`, debugInfo.path.concat([sender, this.name]));
-    this.recordProbeTraffic(sender, 'in', probeId, incarnation);
+    this.recordProbeTraffic(sender, (this.isLooper(probeId) ? 'looper' : 'in'), probeId, incarnation);
     this.considerProbe(sender, probeId, incarnation, debugInfo);
   }
   considerProbe(sender: string, probeId: string, incarnation: number, debugInfo: { path: string[], backtracked: string[] }): void {
