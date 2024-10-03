@@ -1,6 +1,6 @@
 import { Jerboa } from './Jerboa.js';
 import { Messaging } from "./Messaging.js";
-import { TransferMessage, ProbeMessage, NackMessage, ScoutMessage, ProposeMessage, CommitMessage } from "./Jerboa.js";
+import { Message } from "./Jerboa.js";
 
 export class Worker {
   private ourNodes: {
@@ -22,7 +22,7 @@ export class Worker {
     this.shard = shard;
     this.noShards = noShards;
   }
-  public receiveMessage(from: string, to: string, message: TransferMessage | ProbeMessage | NackMessage | ScoutMessage | ProposeMessage | CommitMessage) {
+  public receiveMessage(from: string, to: string, message: Message): void {
     if (this.nodeIsOurs(to)) {
       // instead of delivering immediately, queue it up until runTasks is called on this worker:
       // this.getNode(to).receiveMessage(from, message);
@@ -41,7 +41,12 @@ export class Worker {
       throw new Error('node is not ours!');
     }
     if (typeof this.ourNodes[name] === 'undefined') {
-      this.ourNodes[name] = new Jerboa(name, this);
+      this.ourNodes[name] = new Jerboa(name, (to: string, message: Message) => {
+        // console.log('our node', name, to, message);
+        this.receiveMessage(name, to, message);
+      }, () => {
+        this.deregister(name);
+      });
       this.ourNodesToStartFrom[name] = true;
     }
   }
