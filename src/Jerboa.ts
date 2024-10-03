@@ -45,7 +45,7 @@ export type NackMessage = {
 export type ScoutMessage = {
   command: string,
   probeId: string,
-  incarnation: number,
+  maxIncarnation: number,
   amount: number,
   debugInfo: {
     loop: string[],
@@ -54,7 +54,7 @@ export type ScoutMessage = {
 export type ProposeMessage = {
   command: string,
   probeId: string,
-  incarnation: number,
+  maxIncarnation: number,
   amount: number,
   hash: string,
   debugInfo: {
@@ -101,9 +101,35 @@ export class Jerboa {
     this.name = name;
     this.graph = graph;
   }
+  private pickIncarnation(probeId: string, maxIncarnation: number): string {
+    const numOptions = Object.keys(this.probes[probeId].in).length;
+    if (numOptions === 0) {
+      console.log(probeId, maxIncarnation, this.probes[probeId]);
+      throw new Error('no probe senders to pick from!');
+    }
+    if (numOptions === 1) {
+      return Object.keys(this.probes[probeId].in)[0];
+    }
+    console.log(`${this.name} received a message for probeId (${probeId}:${maxIncarnation}) but have multiple in messages for that probe ${JSON.stringify(this.probes[probeId])}`);
+    let bestPickProbeSender;
+    let bestPickIncarnation = -1;
+    Object.keys(this.probes[probeId].in).forEach((probeSender: string) => {
+      if (this.probes[probeId].in[probeSender] > maxIncarnation) {
+        console.log('discarding newer incarnation', probeSender, this.probes[probeId].in[probeSender]);
+      } else if (this.probes[probeId].in[probeSender] > bestPickIncarnation) {
+        bestPickProbeSender = probeSender;
+        bestPickIncarnation = this.probes[probeId].in[probeSender];
+        console.log('best pick so far', bestPickProbeSender, bestPickIncarnation);
+      }
+    });
+    if (typeof bestPickProbeSender === 'undefined') {
+      throw new Error(`${this.name} received a scout message for probeId (${probeId}:${maxIncarnation}) but all probe senders were from higher incarnations? ${JSON.stringify(this.probes[probeId])}`);
+    }
+    return bestPickProbeSender;
 
+  }
   receiveScout(sender: string, msg: ScoutMessage): void {
-    const { probeId, amount, incarnation, debugInfo } = msg;
+    const { probeId, amount, maxIncarnation: incarnation, debugInfo } = msg;
     // console.log(`${this.name} received a scout message from ${sender} for probeId ${probeId} (amount ${amount})`, this.probes[probeId], debugInfo);
     // unknown probe
     if (typeof this.probes[probeId] === 'undefined') {
@@ -124,26 +150,7 @@ export class Jerboa {
     if (this.name === debugInfo.loop[0]) {
       this.initiatePropose(debugInfo.loop[ debugInfo.loop.length - 2], probeId, incarnation, amount, debugInfo);
     } else {
-      // multiple in messages
-      let forwardTo;
-      if (Object.keys(this.probes[probeId].in).length > 1) {
-        console.log(`${this.name} received a scout message from ${sender} for probeId (${probeId}:${incarnation}) but have multiple in messages for that probe ${JSON.stringify(this.probes[probeId])}`);
-        let bestPickIncarnation = -1;
-        Object.keys(this.probes[probeId].in).forEach((probeSender: string) => {
-          if (this.probes[probeId].in[probeSender] > incarnation) {
-            console.log('discarding newer incarnation', probeSender, this.probes[probeId].in[probeSender]);
-          } else if (this.probes[probeId].in[probeSender] > bestPickIncarnation) {
-            forwardTo = probeSender;
-            bestPickIncarnation = this.probes[probeId].in[probeSender];
-            console.log('best pick so far', forwardTo, bestPickIncarnation);
-          }
-        });
-        if (typeof forwardTo === 'undefined') {
-          throw new Error('${this.name} received a scout message from ${sender} for probeId (${probeId}:${incarnation}) but all probe senders were from higher incarnations? ${JSON.stringify(this.probes[probeId])}');
-        }
-      } else {
-        forwardTo = Object.keys(this.probes[probeId].in)[0];
-      }
+      const forwardTo = this.pickIncarnation(probeId, incarnation);
 
       // // multiple out messages
       // if (Object.keys(this.probes[probeId].out).length > 1) {
@@ -163,7 +170,7 @@ export class Jerboa {
       if (amountOut <= MIN_LOOP_WEIGHT) {
         console.log('scout amount too small');
       } else {
-        this.sendScoutMessage(forwardTo, { command: 'scout', probeId, incarnation, amount: amountOut, debugInfo });
+        this.sendScoutMessage(forwardTo, { command: 'scout', probeId, maxIncarnation: incarnation, amount: amountOut, debugInfo });
       }
     }
   }
@@ -205,7 +212,7 @@ export class Jerboa {
       throw new Error('jar');
     } else {
       // console.log('calling sendScoutMessage');
-      this.sendScoutMessage(incomingNeighbour, { command: 'scout', probeId, incarnation,  amount: -incomingBalance, debugInfo: { loop } });
+      this.sendScoutMessage(incomingNeighbour, { command: 'scout', probeId, maxIncarnation: incarnation,  amount: -incomingBalance, debugInfo: { loop } });
     }
   }
   sendMessage(to: string, msg: TransferMessage | ProbeMessage | NackMessage | ScoutMessage | ProposeMessage | CommitMessage): void {
@@ -221,7 +228,7 @@ export class Jerboa {
     // }
   }
   receivePropose(sender: string, msg: ProposeMessage): void {
-    const { probeId, incarnation, amount, hash, debugInfo } = msg;
+    const { probeId, maxIncarnation, amount, hash, debugInfo } = msg;
     if (typeof this.probes[probeId] === 'undefined') {
       throw new Error('propose message for unknown probe!');
     }
@@ -232,9 +239,9 @@ export class Jerboa {
       if (Object.keys(this.probes[probeId].in).length > 1) {
         throw new Error('too many in events for this probe!');
       }
-      const proposeTo = Object.keys(this.probes[probeId].in)[0];
+      const proposeTo = this.pickIncarnation(probeId, maxIncarnation);
       this.probes[probeId].loops[hash] = { proposeTo, proposeFrom: sender, amount };
-      this.sendProposeMessage(proposeTo, { command: 'propose', probeId, incarnation, amount, hash, debugInfo });
+      this.sendProposeMessage(proposeTo, { command: 'propose', probeId, maxIncarnation, amount, hash, debugInfo });
     } else {
       // console.log('our hashlock', hash, this.probes[probeId], amount);
       this.probes[probeId].loops[hash].commitTo = sender;
@@ -279,7 +286,7 @@ export class Jerboa {
     const hash = createHash('sha256').update(preimage).digest('base64');
     this.probes[probeId].loops[hash] = { preimage,  proposeTo: to, amount };
     // console.log('initiating propose', this.probes[probeId], { to, probeId, amount, hash, debugInfo });
-    this.sendProposeMessage(to, { command: 'propose', probeId, incarnation, amount, hash, debugInfo });
+    this.sendProposeMessage(to, { command: 'propose', probeId, maxIncarnation: incarnation, amount, hash, debugInfo });
   }
   receiveNack(nackSender: string, msg: NackMessage): void {
     const { probeId, incarnation, debugInfo } = msg;
