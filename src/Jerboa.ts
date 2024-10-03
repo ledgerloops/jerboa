@@ -113,11 +113,6 @@ export class Jerboa {
     if (this.probes[probeId].in.length === 0) {
       throw new Error(`${this.name} received a scout message from ${sender} for probeId ${probeId} but have no in messages for that probe`);
     }
-    // multiple in messages
-    if (this.probes[probeId].in.length > 1) {
-      console.log(`${this.name} received a scout message from ${sender} for probeId ${probeId} but have multiple in messages for that probe ${JSON.stringify(this.probes[probeId])}`);
-      throw new Error(`${this.name} received a scout message from ${sender} for probeId ${probeId} but have multiple in messages for that probe ${JSON.stringify(this.probes[probeId])}`);
-    }
     // sender not one of the out messages
     if (this.probes[probeId].out.indexOf(sender) === -1) {
       throw new Error(`${this.name} received a scout message from ${sender} for probeId ${probeId} but expected it to come from one of ${JSON.stringify(this.probes[probeId].out)}`);
@@ -125,6 +120,12 @@ export class Jerboa {
     if (this.name === debugInfo.loop[0]) {
       this.initiatePropose(debugInfo.loop[ debugInfo.loop.length - 2], probeId, amount, debugInfo);
     } else {
+      // multiple in messages
+      if (this.probes[probeId].in.length > 1) {
+        console.log(`${this.name} received a scout message from ${sender} for probeId ${probeId} but have multiple in messages for that probe ${JSON.stringify(this.probes[probeId])}`);
+        throw new Error(`${this.name} received a scout message from ${sender} for probeId ${probeId} but have multiple in messages for that probe ${JSON.stringify(this.probes[probeId])}`);
+      }
+
       // // multiple out messages
       // if (this.probes[probeId].out.length > 1) {
       //   throw new Error(`${this.name} received a scout message from ${sender} for probeId ${probeId} but have multiple out messages for that probe ${JSON.stringify(this.probes[probeId])}`);
