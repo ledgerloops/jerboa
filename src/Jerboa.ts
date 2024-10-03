@@ -150,8 +150,7 @@ export class Jerboa {
   // assumes all loop hops exist
   scoutLoop(probeId: string, loop: string[]): void {
     if (this.loopsTried.indexOf(loop.join(' ')) !== -1) {
-      console.log('loop already tried');
-      return;
+      throw new Error('loop already tried');
     }
     this.loopsTried.push(loop.join(' '));
     // console.log(`${this.name} scouting loop`);
@@ -267,6 +266,7 @@ export class Jerboa {
       console.log('our hashlock', hash, this.probes[probeId], amount);
       this.probes[probeId].loops[hash].commitTo = sender;
       this.balances.adjustReceived(this.probes[probeId].loops[hash].commitTo, amount);
+      this.checkFriendCache(this.probes[probeId].loops[hash].commitTo);
       this.sendCommitMessage(this.probes[probeId].loops[hash].commitTo, { command: 'commit', probeId, amount, preimage: this.probes[probeId].loops[hash].preimage, debugInfo });
     }
   }
@@ -283,6 +283,7 @@ export class Jerboa {
     this.probes[probeId].loops[hash].preimage = preimage;
     this.probes[probeId].loops[hash].commitFrom = sender;
     this.balances.adjustSent(sender, amount);
+    this.checkFriendCache(sender);
     if (typeof this.probes[probeId].loops[hash].proposeFrom === 'undefined') {
       console.log('loop clearing completed');
       const loop = debugInfo.loop;
@@ -292,10 +293,11 @@ export class Jerboa {
           throw new Error('balance dispute!');
         }
       }
-  
+      
     } else {
       this.probes[probeId].loops[hash].commitTo = this.probes[probeId].loops[hash].proposeFrom;
       this.balances.adjustReceived(this.probes[probeId].loops[hash].commitTo, amount);
+      this.checkFriendCache(this.probes[probeId].loops[hash].commitTo);
       this.sendCommitMessage(this.probes[probeId].loops[hash].commitTo, msg);
     }
   }
