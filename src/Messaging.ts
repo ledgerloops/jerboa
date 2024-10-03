@@ -10,12 +10,12 @@ export class Messaging {
   }
   deliverMessage(from: string, to: string, message: TransferMessage | ProbeMessage | NackMessage | ScoutMessage | ProposeMessage | CommitMessage): void {
     this.messagesSent++;
-    console.log('delivering message', from, to, message, this.messages.length);
+    // console.log('delivering message', from, to, message, this.messages.length);
     return this.graph.getNode(to).receiveMessage(from, message);
   }
   sendMessage(from: string, to: string, message: TransferMessage | ProbeMessage | NackMessage | ScoutMessage | ProposeMessage | CommitMessage): void {
     this.messages.push({from, to, message });
-    console.log('message queued', from, to, message, this.messages.length);
+    // console.log('message queued', from, to, message, this.messages.length);
   }
   runTasks(): void {
     // console.log('running tasks', this.messages);

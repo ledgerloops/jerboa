@@ -369,11 +369,11 @@ export class Jerboa {
       throw new Error('repeated entry!');
     }
     this.probes[probeId][direction].push(other);
-    if (direction === 'in') {
-      console.log(`${this.name} recorded ${direction}coming probe (${probeId}) from ${other}`, this.probes[probeId]);
-    } else {
-      console.log(`${this.name} recorded ${direction}going probe (${probeId}) to ${other}`, this.probes[probeId]);
-    }
+    // if (direction === 'in') {
+    //   console.log(`${this.name} recorded ${direction}coming probe (${probeId}) from ${other}`, this.probes[probeId]);
+    // } else {
+    //   console.log(`${this.name} recorded ${direction}going probe (${probeId}) to ${other}`, this.probes[probeId]);
+    // }
   }
   probeAlreadySent(probeId: string, to: string): boolean {
     if (typeof this.probes[probeId] === 'undefined') {
@@ -386,7 +386,7 @@ export class Jerboa {
   }
   receiveProbe(sender: string, msg: ProbeMessage): void {
     const { probeId, debugInfo } = msg;
-    console.log(`${this.name} recording probe traffic in from receiveProbe "${probeId}"`, debugInfo.path.concat([sender, this.name]));
+    // console.log(`${this.name} recording probe traffic in from receiveProbe "${probeId}"`, debugInfo.path.concat([sender, this.name]));
     this.recordProbeTraffic(sender, 'in', probeId);
     this.considerProbe(sender, probeId, debugInfo);
   }
@@ -477,7 +477,7 @@ export class Jerboa {
     return this.balances.getArchiveWeights(this.name);
   }
   sendProbeMessage(to: string, msg: ProbeMessage): void {
-    console.log(`${this.name} recording probe traffic out sendProbeMessage to ${to}`, msg.debugInfo);
+    // console.log(`${this.name} recording probe traffic out sendProbeMessage to ${to}`, msg.debugInfo);
     this.recordProbeTraffic(to, 'out', msg.probeId);
     this.sendMessage(to, msg);
   }
