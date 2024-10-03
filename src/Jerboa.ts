@@ -115,7 +115,8 @@ export class Jerboa {
     }
     // multiple in messages
     if (this.probes[probeId].in.length > 1) {
-      throw new Error(`${this.name} received a scout message from ${sender} for probeId ${probeId} but have multiple in messages for that probe ${JSON.stringify(this.probes[probeId].out)}`);
+      console.log(`${this.name} received a scout message from ${sender} for probeId ${probeId} but have multiple in messages for that probe ${JSON.stringify(this.probes[probeId])}`);
+      throw new Error(`${this.name} received a scout message from ${sender} for probeId ${probeId} but have multiple in messages for that probe ${JSON.stringify(this.probes[probeId])}`);
     }
     // sender not one of the out messages
     if (this.probes[probeId].out.indexOf(sender) === -1) {
@@ -126,7 +127,7 @@ export class Jerboa {
     } else {
       // // multiple out messages
       // if (this.probes[probeId].out.length > 1) {
-      //   throw new Error(`${this.name} received a scout message from ${sender} for probeId ${probeId} but have multiple out messages for that probe ${JSON.stringify(this.probes[probeId].out)}`);
+      //   throw new Error(`${this.name} received a scout message from ${sender} for probeId ${probeId} but have multiple out messages for that probe ${JSON.stringify(this.probes[probeId])}`);
       // }
       const forwardTo = this.probes[probeId].in[0];
       const outBalance = this.balances.getBalance(sender);
@@ -363,10 +364,15 @@ export class Jerboa {
   recordProbeTraffic(other: string, direction: string, probeId: string): void {
     this.ensureProbe(probeId);
     if (this.probes[probeId][direction].indexOf(other) !== -1) {
-      console.log(`recording entry ${direction} with ${other} for ${probeId}`, this.probes[probeId]);
+      console.log(`recording entry ${direction} with ${other} for probe (${probeId})`, this.probes[probeId]);
       throw new Error('repeated entry!');
     }
     this.probes[probeId][direction].push(other);
+    if (direction === 'in') {
+      console.log(`${this.name} recorded ${direction}coming probe (${probeId}) from ${other}`, this.probes[probeId]);
+    } else {
+      console.log(`${this.name} recorded ${direction}going probe (${probeId}) to ${other}`, this.probes[probeId]);
+    }
   }
   probeAlreadySent(probeId: string, to: string): boolean {
     if (typeof this.probes[probeId] === 'undefined') {
@@ -379,8 +385,8 @@ export class Jerboa {
   }
   receiveProbe(sender: string, msg: ProbeMessage): void {
     const { probeId, debugInfo } = msg;
+    console.log(`${this.name} recording probe traffic in from receiveProbe "${probeId}"`, debugInfo.path.concat([sender, this.name]));
     this.recordProbeTraffic(sender, 'in', probeId);
-    // console.log(`receiveProbe "${probeId}"`, debugInfo.path.concat([sender, this.name]));
     this.considerProbe(sender, probeId, debugInfo);
   }
   considerProbe(sender: string, probeId: string, debugInfo: { path: string[], backtracked: string[] }): void {
@@ -470,7 +476,7 @@ export class Jerboa {
     return this.balances.getArchiveWeights(this.name);
   }
   sendProbeMessage(to: string, msg: ProbeMessage): void {
-    // console.log(`sendProbeMessage ${this.name} => ${to}`, debugInfo);
+    console.log(`${this.name} recording probe traffic out sendProbeMessage to ${to}`, msg.debugInfo);
     this.recordProbeTraffic(to, 'out', msg.probeId);
     this.sendMessage(to, msg);
   }
