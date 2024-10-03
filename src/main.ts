@@ -29,33 +29,13 @@ lineReader.on('line', function (line) {
     dld.graph.addWeight(nodes[source], nodes[target], parseFloat(weight));
     numTrans++;
     totalTransAmount += parseFloat(weight);
-    // dld.graph.messaging.runTasks();
-    // dld.graph.runBilateralStats();  
   }
 });
 
 lineReader.on('close', function () {
-  // console.log('primary transfers done, now inviting bilateral netting');
+  console.log('primary transfers done, now inviting bilateral netting');
   dld.graph.messaging.runTasks();
-  dld.graph.runBilateralStats();
-  const totalImmediatelyNetted = dld.graph.stats[2].totalAmount;
-  // console.log('bilateral netting done, now inviting probes');
+  console.log('bilateral netting done, now inviting probes');
   dld.runWorm();
-  console.log(dld.graph.stats);
-  dld.graph.logNumNodesAndLinks();
-  console.log(`After ${numTrans} transactions with a total amount of ${Math.round(totalTransAmount / 1000000)} million`);
-  const totalBilateralAmount = 2 * totalImmediatelyNetted;
-  console.log(`${Math.round(totalBilateralAmount / 1000000)} million (${Math.round((totalBilateralAmount / totalTransAmount) * 100)}%) was immediately netted bilaterally`);
-  let totalNum = 0;
-  let totalAmount = 0;
-  Object.keys(dld.graph.stats).map(numStr => {
-    if (numStr !== '2') {
-      totalAmount += dld.graph.stats[numStr].totalAmount * parseInt(numStr);
-      totalNum += dld.graph.stats[numStr].numFound;
-    }
-  });
-  const amountLeft = totalTransAmount - totalBilateralAmount - totalAmount;
-  console.log(`And a further ${Math.round(totalAmount / 1000000)} million (${Math.round((totalAmount / totalTransAmount) * 100)}%) was netted in ${totalNum} loops`);
-  console.log(`Leaving ${Math.round(amountLeft / 1000000)} million (${Math.round((amountLeft / totalTransAmount) * 100)}%) to be settled out of band`);
-  console.log(`Sent ${dld.graph.messaging.messagesSent} messages, that's ${Math.round(dld.graph.messaging.messagesSent / numTrans)} messages per transfer`);
+  console.log('done');
 });
