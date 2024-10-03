@@ -1,8 +1,7 @@
 import { Worker } from './Worker.js';
 
 export class DLD {
-  tasks: string[] = [];
-  workers: Worker[] = [ new Worker() ];
+  private workers: Worker[] = [ new Worker() ];
 
   // removes dead ends as it finds them.
   // nets loops as it finds them.
@@ -27,5 +26,8 @@ export class DLD {
       this.workers[0].messaging.runTasks();
       // console.log('running probe from', newStep);
     } while (!done);
+  }
+  getWorker(): Worker {
+    return this.workers[0];
   }
 }
