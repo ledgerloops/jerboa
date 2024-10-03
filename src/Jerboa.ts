@@ -124,16 +124,30 @@ export class Jerboa {
       this.initiatePropose(debugInfo.loop[ debugInfo.loop.length - 2], probeId, amount, debugInfo);
     } else {
       // multiple in messages
+      let forwardTo;
       if (Object.keys(this.probes[probeId].in).length > 1) {
         console.log(`${this.name} received a scout message from ${sender} for probeId (${probeId}:${incarnation}) but have multiple in messages for that probe ${JSON.stringify(this.probes[probeId])}`);
-        throw new Error(`${this.name} received a scout message from ${sender} for probeId (${probeId}:${incarnation}) but have multiple in messages for that probe ${JSON.stringify(this.probes[probeId])}`);
+        let bestPickIncarnation = -1;
+        Object.keys(this.probes[probeId].in).forEach((probeSender: string) => {
+          if (this.probes[probeId].in[probeSender] > incarnation) {
+            console.log('discarding newer incarnation', probeSender, this.probes[probeId].in[probeSender]);
+          } else if (this.probes[probeId].in[probeSender] > bestPickIncarnation) {
+            forwardTo = probeSender;
+            bestPickIncarnation = this.probes[probeId].in[probeSender];
+            console.log('best pick so far', forwardTo, bestPickIncarnation);
+          }
+        });
+        if (typeof forwardTo === 'undefined') {
+          throw new Error('${this.name} received a scout message from ${sender} for probeId (${probeId}:${incarnation}) but all probe senders were from higher incarnations? ${JSON.stringify(this.probes[probeId])}');
+        }
+      } else {
+        forwardTo = Object.keys(this.probes[probeId].in)[0];
       }
 
       // // multiple out messages
       // if (Object.keys(this.probes[probeId].out).length > 1) {
       //   throw new Error(`${this.name} received a scout message from ${sender} for probeId ${probeId} but have multiple out messages for that probe ${JSON.stringify(this.probes[probeId])}`);
       // }
-      const forwardTo = Object.keys(this.probes[probeId].in)[0];
       const outBalance = this.balances.getBalance(sender);
       let amountOut = amount;
       if (amountOut > outBalance) {
