@@ -46,6 +46,7 @@ describe('DLD', () => {
       worker.addWeight(source, target, weight);
       worker.runTasks();
     });
-    dld.runWorm();
+    const finalProbeId = dld.runWorm();
+    expect(finalProbeId).toEqual(178);
   });
 });

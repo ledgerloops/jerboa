@@ -26,7 +26,7 @@ export class Worker {
     if (this.nodeIsOurs(to)) {
       // instead of delivering immediately, queue it up until runTasks is called on this worker:
       // this.getNode(to).receiveMessage(from, message);
-      console.log('pushing onto message queue of length', this.messages.length);
+      // console.log('pushing onto message queue of length', this.messages.length);
       this.messages.push({from, to, message });
     } else {
       throw Error('to node is not ours');
@@ -34,15 +34,15 @@ export class Worker {
   }
   deliverMessage(from: string, to: string, message: Message): void {
     this.messagesSent++;
-    console.log('delivering message', from, to, message, this.messages.length);
+    // console.log('delivering message', from, to, message, this.messages.length);
     return this.getNode(to).receiveMessage(from, message);
   }
   runTasks(): boolean {
     let hadWorkToDo = false;
-    console.log('running tasks', this.messages.length);
+    // console.log('running tasks', this.messages.length);
     while (this.messages.length > 0) {
       const { from, to, message } = this.messages.pop();
-      console.log('popped', from, to, message);
+      // console.log('popped', from, to, message);
       hadWorkToDo = true;
       this.deliverMessage(from, to, message);
     }
@@ -62,7 +62,7 @@ export class Worker {
     }
     if (typeof this.ourNodes[name] === 'undefined') {
       this.ourNodes[name] = new Jerboa(name, (to: string, message: Message) => {
-        console.log('our node', name, to, message);
+        // console.log('our node', name, to, message);
         this.sendMessage(name, to, message);
       }, () => {
         this.deregister(name);
