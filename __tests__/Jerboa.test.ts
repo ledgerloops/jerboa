@@ -1,5 +1,5 @@
 import { Jerboa, Message } from '../src/Jerboa.js';
-function makeJerboa(callback: () => {}, name: string): Jerboa {
+function makeJerboa(callback: () => void, name: string): Jerboa {
   return new Jerboa(name, callback, () => {});
 }
 
