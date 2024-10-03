@@ -1,0 +1,24 @@
+Opening __tests__/fixture-30.csv
+backtracked [ '5', '6' ] [ '8' ]
+found loop  [] [ '5', '6', '9', '5' ]
+backtracked [ '5' ] [ '6' ]
+finished    [] [ '5', '8' ]
+backtracked [ '9' ] [ '5' ]
+finished    [] [ '9', '8' ]
+backtracked [ '10' ] [ '5' ]
+finished    [] [ '10', '11' ]
+finished    [] [ '12', '13' ]
+finished    [] [ '14', '5' ]
+finished    [] [ '15', '16' ]
+finished    [] [ '17', '11' ]
+finished    [] [ '18', '16' ]
+Done after 23 steps
+{
+  '2': { numFound: 7, totalAmount: 52.5 },
+  '3': { numFound: 1, totalAmount: 10 }
+}
+Graph has 0 nodes and 0 links left
+After 22 transactions with a total amount of 0 million
+0 million (8%) was immediately netted bilaterally
+And a further 0 million (5%) was netted in 1 loops
+Leaving 0 million (87%) to be settled out of band

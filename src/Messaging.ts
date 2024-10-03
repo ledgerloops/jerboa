@@ -1,27 +1,27 @@
 import { Graph } from "./Graph.js";
+import { TransferMessage, ProbeMessage, NackMessage, ScoutMessage, ProposeMessage, CommitMessage } from "./Jerboa.js";
 
 export class Messaging {
   messagesSent: number = 0;
-  messages: string[][] = [];
+  messages: { from: string, to: string, message: TransferMessage | ProbeMessage | NackMessage | ScoutMessage | ProposeMessage | CommitMessage }[] = [];
   graph: Graph;
   constructor(graph: Graph) {
     this.graph = graph;
   }
-  deliverMessage(from: string, to: string, task: string): void {
+  deliverMessage(from: string, to: string, message: TransferMessage | ProbeMessage | NackMessage | ScoutMessage | ProposeMessage | CommitMessage): void {
     this.messagesSent++;
-    // console.log('deliverMessage', from, to, task);
-    const parts = task.split(' ');
-    return this.graph.getNode(to).receiveMessage(from, parts);
+    // console.log('delivering message', from, to, message, this.messages.length);
+    return this.graph.getNode(to).receiveMessage(from, message);
   }
-  sendMessage(from: string, to: string, task: string[]): void {
-    this.messages.push([from, to, task.join(' ')]);
-    // console.log('sendMessage', from, to, task);
+  sendMessage(from: string, to: string, message: TransferMessage | ProbeMessage | NackMessage | ScoutMessage | ProposeMessage | CommitMessage): void {
+    this.messages.push({from, to, message });
+    // console.log('message queued', from, to, message, this.messages.length);
   }
   runTasks(): void {
     // console.log('running tasks', this.messages);
     while (this.messages.length > 0) {
-      const [from, to, task] = this.messages.pop();
-      this.deliverMessage(from, to, task);
+      const { from, to, message } = this.messages.pop();
+      this.deliverMessage(from, to, message);
     }
   }
 }

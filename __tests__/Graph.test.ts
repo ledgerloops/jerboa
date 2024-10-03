@@ -59,6 +59,7 @@ describe('addWeight', () => {
   it('nets a higher amount', () => {
     const graph = new Graph();
     graph.addWeight('a', 'b', 3);
+    graph.messaging.runTasks();
     graph.addWeight('b', 'a', 7);
     graph.messaging.runTasks();
     expect(graph.getBalances()).toEqual({
@@ -73,6 +74,7 @@ describe('addWeight', () => {
   it('nets a lower amount', () => {
     const graph = new Graph();
     graph.addWeight('a', 'b', 3);
+    graph.messaging.runTasks();
     graph.addWeight('b', 'a', 2);
     graph.messaging.runTasks();
     expect(graph.getBalances()).toEqual({
@@ -87,6 +89,7 @@ describe('addWeight', () => {
   it('nets an equal amount', () => {
     const graph = new Graph();
     graph.addWeight('a', 'b', 3);
+    graph.messaging.runTasks();
     graph.addWeight('b', 'a', 3);
     graph.messaging.runTasks();
     expect(graph.getBalances()).toEqual({

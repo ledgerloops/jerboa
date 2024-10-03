@@ -8,8 +8,10 @@ export class DLD {
   // nets loops as it finds them.
   runWorm(): void {
     let done = false;
+    let probeId = 0;
     do {
       let newStep: string;
+      probeId++;
       try {
         newStep = this.graph.getFirstNode(true);
         // console.log('picked first new step!', newStep, this.graph.getNode(newStep).getOutgoingLinks());
@@ -21,7 +23,7 @@ export class DLD {
           throw e;
         }
       }
-      this.graph.getNode(newStep).startProbe();
+      this.graph.getNode(newStep).startProbe(probeId.toString());
       this.graph.messaging.runTasks();
       // console.log('running probe from', newStep);
     } while (!done);
