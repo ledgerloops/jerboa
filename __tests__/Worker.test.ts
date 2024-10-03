@@ -3,7 +3,7 @@ import { Message } from '../src/Jerboa.js';
 
 describe('addWeight', () => {
   it('adds a link', () => {
-    const sendMessage = (from: string, to: string, message: Message) => {
+    const sendMessage = (from: string, to: string, message: Message): void => {
       worker.deliverMessageToNodeInThisWorker(from, to, message);
     };
     const worker = new Worker(0, 1, sendMessage);
@@ -19,14 +19,14 @@ describe('addWeight', () => {
     });
   });
   it('refuses zero weight', () => {
-    const sendMessage = (from: string, to: string, message: Message) => {
+    const sendMessage = (from: string, to: string, message: Message): void => {
       worker.deliverMessageToNodeInThisWorker(from, to, message);
     };
     const worker = new Worker(0, 1, sendMessage);
     expect(() => { worker.addWeight('0', '1', 0)}).toThrow();
   });
   it('adds another link', () => {
-    const sendMessage = (from: string, to: string, message: Message) => {
+    const sendMessage = (from: string, to: string, message: Message): void => {
       worker.deliverMessageToNodeInThisWorker(from, to, message);
     };
     const worker = new Worker(0, 1, sendMessage);
@@ -48,7 +48,7 @@ describe('addWeight', () => {
     });
   });
   it('prepends a link to a path', () => {
-    const sendMessage = (from: string, to: string, message: Message) => {
+    const sendMessage = (from: string, to: string, message: Message): void => {
       worker.deliverMessageToNodeInThisWorker(from, to, message);
     };
     const worker = new Worker(0, 1, sendMessage);
@@ -70,7 +70,7 @@ describe('addWeight', () => {
     });
   });
   it('nets a higher amount', () => {
-    const sendMessage = (from: string, to: string, message: Message) => {
+    const sendMessage = (from: string, to: string, message: Message): void => {
       worker.deliverMessageToNodeInThisWorker(from, to, message);
     };
     const worker = new Worker(0, 1, sendMessage);
@@ -88,7 +88,7 @@ describe('addWeight', () => {
     });
   });
   it('nets a lower amount', () => {
-    const sendMessage = (from: string, to: string, message: Message) => {
+    const sendMessage = (from: string, to: string, message: Message): void => {
       worker.deliverMessageToNodeInThisWorker(from, to, message);
     };
     const worker = new Worker(0, 1, sendMessage);
@@ -106,7 +106,7 @@ describe('addWeight', () => {
     });
   });
   it('nets an equal amount', () => {
-    const sendMessage = (from: string, to: string, message: Message) => {
+    const sendMessage = (from: string, to: string, message: Message): void => {
       worker.deliverMessageToNodeInThisWorker(from, to, message);
     };
     const worker = new Worker(0, 1, sendMessage);
@@ -125,7 +125,7 @@ describe('addWeight', () => {
 
 describe('getFirstNode', () => {
   it('works when passing no after argument', () => {
-    const sendMessage = (from: string, to: string, message: Message) => {
+    const sendMessage = (from: string, to: string, message: Message): void => {
       worker.deliverMessageToNodeInThisWorker(from, to, message);
     };
     const worker = new Worker(0, 1, sendMessage);
@@ -134,7 +134,7 @@ describe('getFirstNode', () => {
     expect(worker.getOurFirstNode(false)).toEqual('0');
   });
   it('works when passing an after argument', () => {
-    const sendMessage = (from: string, to: string, message: Message) => {
+    const sendMessage = (from: string, to: string, message: Message): void => {
       worker.deliverMessageToNodeInThisWorker(from, to, message);
     };
     const worker = new Worker(0, 1, sendMessage);
@@ -146,7 +146,7 @@ describe('getFirstNode', () => {
 
 describe('hasOutgoingLinks', () => {
   it('works in the positive case', () => {
-    const sendMessage = (from: string, to: string, message: Message) => {
+    const sendMessage = (from: string, to: string, message: Message): void => {
       worker.deliverMessageToNodeInThisWorker(from, to, message);
     };
     const worker = new Worker(0, 1, sendMessage);
@@ -155,7 +155,7 @@ describe('hasOutgoingLinks', () => {
     expect(worker.hasOutgoingLinks('0')).toEqual(true);
   });
   it('works in the negative case', () => {
-    const sendMessage = (from: string, to: string, message: Message) => {
+    const sendMessage = (from: string, to: string, message: Message): void => {
       worker.deliverMessageToNodeInThisWorker(from, to, message);
     };
     const worker = new Worker(0, 1, sendMessage);
