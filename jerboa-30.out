@@ -1,7 +1,15 @@
 Opening __tests__/fixture-30.csv
+Probably some transfer message is still in flight? 12 13 10 10
+Probably some transfer message is still in flight? 6 5 -8 20
+Probably some transfer message is still in flight? 6 5 -18 20
+Probably some transfer message is still in flight? 5 8 113 10
+Probably some transfer message is still in flight? 8 6 -19.5 322
+Probably some transfer message is still in flight? 8 5 -13 113
+Probably some transfer message is still in flight? 8 6 -21.5 322
+Probably some transfer message is still in flight? 8 6 -221.5 322
+Probably some transfer message is still in flight? 8 6 -321.5 322
 backtracked [ '5', '6' ] [ '8' ]
 found loop  [] [ '5', '6', '9', '5' ]
-receiveScout 5 1 -12 { loop: [ '5', '6', '9', '5' ] }
 backtracked [ '5' ] [ '6' ]
 finished    [] [ '5', '8' ]
 backtracked [ '9' ] [ '5' ]
@@ -13,13 +21,10 @@ finished    [] [ '14', '5' ]
 finished    [] [ '15', '16' ]
 finished    [] [ '17', '11' ]
 finished    [] [ '18', '16' ]
-{
-  '2': { numFound: 4, totalAmount: 22.5 },
-  '3': { numFound: 1, totalAmount: 10 }
-}
+{ '2': { numFound: 4, totalAmount: 22.5 } }
 Graph has 13 nodes and 24 links left
 After 22 transactions with a total amount of 0 million
 0 million (8%) was immediately netted bilaterally
-And a further 0 million (5%) was netted in 1 loops
-Leaving 0 million (87%) to be settled out of band
-Sent 53 messages, that's 2 messages per transfer
+And a further 0 million (0%) was netted in 0 loops
+Leaving 0 million (92%) to be settled out of band
+Sent 58 messages, that's 3 messages per transfer

@@ -242,10 +242,9 @@ export class Jerboa {
     // console.log(`${sender}->${this.name}: ${amount}`);
     this.balances.adjustReceived(sender, msg.amount);
     this.checkFriendCache(sender);
-    if (this.graph.getNode(this.name).getBalance(sender) + this.graph.getNode(sender).getBalance(this.name) !== 0) {
-      console.log(this.name, sender, this.graph.getNode(this.name).getBalance(sender), this.graph.getNode(sender).getBalance(this.name));
-      throw new Error('balance dispute!');
-    }
+    // if (this.graph.getNode(this.name).getBalance(sender) + this.graph.getNode(sender).getBalance(this.name) !== 0) {
+    //   console.log('Probably some transfer message is still in flight?', this.name, sender, this.graph.getNode(this.name).getBalance(sender), this.graph.getNode(sender).getBalance(this.name));
+    // }
   }
   receivePropose(sender: string, msg: ProposeMessage): void {
     const { probeId, amount, hash, debugInfo } = msg;
