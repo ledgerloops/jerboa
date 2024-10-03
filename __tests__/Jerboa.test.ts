@@ -1,5 +1,5 @@
 import { Jerboa, ProbeMessage } from '../src/Jerboa.js';
-import { Graph } from '../src/Graph.js';
+import { Worker } from '../src/Worker.js';
 import { Messaging } from '../src/Messaging.js';
 // jest.mock('../src/Graph.js');
 jest.mock('../src/Messaging.js');
@@ -8,13 +8,13 @@ jest.mock('../src/Messaging.js');
 
 describe('Jerboa', () => {
   it ('returns false if it cannot initiate a probe', () => {
-    const graph = new Graph();
+    const graph = new Worker();
     const a = new Jerboa('a', graph);
     const result = a.startProbe('probe-id');
     expect(result).toEqual(false);
   });
   it ('initiates a probe if it can', () => {
-    const graph = new Graph();
+    const graph = new Worker();
     graph.messaging = new Messaging(graph);
     graph.messaging.sendMessage = jest.fn();
     const a = new Jerboa('a', graph);
@@ -25,7 +25,7 @@ describe('Jerboa', () => {
     expect(graph.messaging.sendMessage).toHaveBeenCalledWith('a', 'b', { command: 'probe', probeId: 'probe-id', incarnation: 0, debugInfo: {"path":[],"backtracked":[]} });
   });
   it('forwards a probe if it can', () => {
-    const graph = new Graph();
+    const graph = new Worker();
     graph.messaging = new Messaging(graph);
     graph.messaging.sendMessage = jest.fn();
     const a = new Jerboa('a', graph);
@@ -35,7 +35,7 @@ describe('Jerboa', () => {
     expect(graph.messaging.sendMessage).toHaveBeenCalledWith('a', 'b', { command: 'probe', probeId: '1', incarnation: 123, debugInfo: { path: ['b', 'c', 'x'], backtracked: []} });
   });
   it('splices off a loop if it can', () => {
-    const graph = new Graph();
+    const graph = new Worker();
     graph.messaging = new Messaging(graph);
     graph.messaging.sendMessage = jest.fn();
     // rather than calling `new Jerboa('d'), getting the Jerboas from the graph
@@ -61,7 +61,7 @@ describe('Jerboa', () => {
     expect(graph.messaging.sendMessage).toHaveBeenCalledWith('d', 'f', { command: 'scout', probeId: 'probe-id', maxIncarnation: 0, amount: 9, debugInfo: { loop: ['d', 'e', 'f', 'd']} });
   });
   it ('replies with nack if it is a leaf', () => {
-    const graph = new Graph();
+    const graph = new Worker();
     graph.messaging = new Messaging(graph);
     graph.messaging.sendMessage = jest.fn();
     const a = new Jerboa('a', graph);

@@ -1,6 +1,6 @@
 import { randomBytes, createHash } from "node:crypto";
 
-import { Graph } from "./Graph.js";
+import { Worker } from "./Worker.js";
 import { Balances } from "./Balances.js";
 const MIN_LOOP_WEIGHT = 0.00000001;
 // const MAX_LOOP_WEIGHT = 1000000000;
@@ -73,7 +73,7 @@ export type CommitMessage = {
 
 export class Jerboa {
   private balances: Balances = new Balances();
-  private graph: Graph;
+  private graph: Worker;
   private name: string;
   private outgoingLinks: {
     [friend: string]: boolean
@@ -98,7 +98,7 @@ export class Jerboa {
     }
   } = {};
   private loopsTried: string[] = [];
-  constructor(name: string, graph: Graph) {
+  constructor(name: string, graph: Worker) {
     this.name = name;
     this.graph = graph;
   }

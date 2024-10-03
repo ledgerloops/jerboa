@@ -1,8 +1,8 @@
-import { Graph } from './Graph.js';
+import { Worker } from './Worker.js';
 
 export class DLD {
   tasks: string[] = [];
-  graph: Graph = new Graph();
+  graph: Worker = new Worker();
 
   // removes dead ends as it finds them.
   // nets loops as it finds them.

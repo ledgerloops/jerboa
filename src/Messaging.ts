@@ -1,11 +1,11 @@
-import { Graph } from "./Graph.js";
+import { Worker } from "./Worker.js";
 import { TransferMessage, ProbeMessage, NackMessage, ScoutMessage, ProposeMessage, CommitMessage } from "./Jerboa.js";
 
 export class Messaging {
   messagesSent: number = 0;
   messages: { from: string, to: string, message: TransferMessage | ProbeMessage | NackMessage | ScoutMessage | ProposeMessage | CommitMessage }[] = [];
-  graph: Graph;
-  constructor(graph: Graph) {
+  graph: Worker;
+  constructor(graph: Worker) {
     this.graph = graph;
   }
   deliverMessage(from: string, to: string, message: TransferMessage | ProbeMessage | NackMessage | ScoutMessage | ProposeMessage | CommitMessage): void {

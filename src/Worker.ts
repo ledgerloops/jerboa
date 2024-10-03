@@ -1,7 +1,7 @@
 import { Jerboa } from './Jerboa.js';
 import { Messaging } from './Messaging.js';
 
-export class Graph {
+export class Worker {
   private nodes: {
     [from: string]: Jerboa
   } = {};
