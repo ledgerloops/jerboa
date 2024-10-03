@@ -27,6 +27,7 @@ export type TransferMessage = {
 export type ProbeMessage = {
   command: string,
   probeId: string,
+  incarnation: number,
   debugInfo: {
     path: string[],
     backtracked: string[],
@@ -35,6 +36,7 @@ export type ProbeMessage = {
 export type NackMessage = {
   command: string,
   probeId: string,
+  incarnation: number,
   debugInfo: {
     path: string[],
     backtracked: string[],
@@ -310,7 +312,7 @@ export class Jerboa {
     this.sendProposeMessage(to, { command: 'propose', probeId, amount, hash, debugInfo });
   }
   receiveNack(nackSender: string, msg: NackMessage): void {
-    const { probeId, debugInfo } = msg;
+    const { probeId, incarnation, debugInfo } = msg;
     delete this.outgoingLinks[nackSender];
     if (debugInfo.path.length === 0) {
       const nodes = this.getOutgoingLinks();
@@ -331,7 +333,7 @@ export class Jerboa {
       const popped = debugInfo.path.pop();
       // console.log(`                     combining nack sender, internal receiveProbe`, popped, this.name, path, [nackSender].concat(backtracked));
       // console.log(`${this.name} reconsiders probe ${probeId} from ${popped} after receiving nack from ${nackSender}`);
-      this.considerProbe(popped, probeId, { path: debugInfo.path, backtracked: [nackSender].concat(debugInfo.backtracked) });
+      this.considerProbe(popped, probeId, incarnation, { path: debugInfo.path, backtracked: [nackSender].concat(debugInfo.backtracked) });
     }
   }
   spliceLoop(sender: string, probeId: string, path: string[]): boolean {
@@ -384,19 +386,19 @@ export class Jerboa {
     // console.log(`probe ${probeId} was sent to`,this.probes[probeId].out, `(checking whether ${to} is in that list: ${ret})`);
     return ret;
   }
-  receiveProbe(sender: string, msg: ProbeMessage): void {
-    const { probeId, debugInfo } = msg;
+  receiveProbe(sender: string,  msg: ProbeMessage): void {
+    const { probeId, incarnation, debugInfo } = msg;
     // console.log(`${this.name} recording probe traffic in from receiveProbe "${probeId}"`, debugInfo.path.concat([sender, this.name]));
     this.recordProbeTraffic(sender, 'in', probeId);
-    this.considerProbe(sender, probeId, debugInfo);
+    this.considerProbe(sender, probeId, incarnation, debugInfo);
   }
-  considerProbe(sender: string, probeId: string, debugInfo: { path: string[], backtracked: string[] }): void {
+  considerProbe(sender: string, probeId: string, incarnation: number, debugInfo: { path: string[], backtracked: string[] }): void {
     const loopFound = this.spliceLoop(sender, probeId, debugInfo.path);
     if (loopFound) {
       if (debugInfo.path.length >= 1) {
         // console.log('                   continuing by popping old sender from', path);
         const oldSender = debugInfo.path.pop();
-        this.considerProbe(oldSender, probeId, { path: debugInfo.path, backtracked: [] });
+        this.considerProbe(oldSender, probeId, incarnation, { path: debugInfo.path, backtracked: [] });
       }
       return;
     }
@@ -409,7 +411,7 @@ export class Jerboa {
     // console.log('forwarding probe to first option from', this.getOutgoingLinks(), nodes);
     if (nodes.length === 0) {
       // console.log(`                     combining self, sending nack ${this.name}->${sender}`, path, backtracked);
-      this.sendNackMessage(sender, probeId, debugInfo);
+      this.sendNackMessage(sender, probeId, incarnation, debugInfo);
       return;
     } else if (debugInfo.backtracked.length > 0) {
       if (process.env.PROBING_REPORT) {
@@ -420,7 +422,7 @@ export class Jerboa {
     debugInfo.path.push(sender);
     const newStep = randomStringFromArray(nodes);
     // console.log(`forwarding from ${this.name} to ${newStep} (balance ${this.balances.getBalance(newStep)})`);
-    this.sendProbeMessage(newStep, { command: 'probe', probeId, debugInfo: { path: debugInfo.path, backtracked: [] } });
+    this.sendProbeMessage(newStep, { command: 'probe', probeId, incarnation: incarnation, debugInfo: { path: debugInfo.path, backtracked: [] } });
   };
   receiveMessage(from: string, msg: TransferMessage | ProbeMessage | NackMessage | ScoutMessage | ProposeMessage | CommitMessage ): void {
     // console.log('receiveMessage', from, this.name, msg);
@@ -481,8 +483,8 @@ export class Jerboa {
     this.recordProbeTraffic(to, 'out', msg.probeId);
     this.sendMessage(to, msg);
   }
-  sendNackMessage(to: string, probeId: string, debugInfo: { path: string[], backtracked: string[] }): void {
-    this.sendMessage(to, { command: 'nack', probeId, debugInfo });
+  sendNackMessage(to: string, probeId: string, incarnation: number, debugInfo: { path: string[], backtracked: string[] }): void {
+    this.sendMessage(to, { command: 'nack', probeId, incarnation, debugInfo });
   }
   sendTransferMessage(to: string, amount: number): void {
     this.sendMessage(to, { command: 'transfer', amount });
@@ -502,7 +504,7 @@ export class Jerboa {
     if (nodes.length === 0) {
       return false;
     }
-    this.sendProbeMessage(nodes[0], { command: 'probe', probeId, debugInfo: { path: [], backtracked: [] } });
+    this.sendProbeMessage(nodes[0], { command: 'probe', probeId, incarnation: 0, debugInfo: { path: [], backtracked: [] } });
     return true;
   }
 }
