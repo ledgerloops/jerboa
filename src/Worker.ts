@@ -194,7 +194,7 @@ export class Worker {
     } while (!done);
     return probeId;
   }
-  async run(filename: string): Promise<number> {
+  async readTransfersFromCsv(filename: string): Promise<void> {
     // this.sendMessage('123', '456', { command: 'test', probeId: '1', incarnation: 0, debugInfo: {} } as Message);
     // console.log('worker waiting 10s before finishing run', filename);
     // await new Promise(resolve => setTimeout(resolve, 10000));
@@ -209,13 +209,6 @@ export class Worker {
       }
     });
     console.log(`done reading csv`);
-    return 42;
-    // console.log(`[WORKER ${this.workerNo}] ${numTrans} primary transfers with value of ${totalTransAmount} done, now inviting bilateral netting`);
-    // this.runTasks();
-    // console.log(`[WORKER ${this.workerNo}] bilateral netting done, now inviting probes`);
-    // const maxProbeId = this.runWorm();
-    // console.log(`[WORKER ${this.workerNo}] done`);
-    // return maxProbeId;
   }
   teardown(): void {
     Object.keys(this.ourNodes).forEach(name => {

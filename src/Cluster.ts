@@ -71,7 +71,7 @@ export class Cluster {
       process.on('message', async (msg) => {
         // console.log(`Worker ${workerNo} received message from primary`, msg);
         if (msg === `start`) {
-          worker.run(this.filename);
+          worker.readTransfersFromCsv(this.filename);
         } else if (msg === `shutdown`) {
           console.log(`Worker ${workerNo} received shutdown message from primary`);
           worker.teardown();

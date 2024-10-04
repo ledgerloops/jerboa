@@ -15,10 +15,11 @@ export class SingleThread {
     }
   }
   async runAllWorkers(): Promise<number> {
+    await Promise.all(this.workers.map(async (worker) => worker.readTransfersFromCsv(this.filename)));
+    await Promise.all(this.workers.map(async (worker) => worker.runTasks()));
     let cumm = 0;
     await Promise.all(this.workers.map(async (worker) => {
-      // console.log('running worker', worker.workerNo);
-      const doneThisWorker = await worker.run(this.filename);
+      const doneThisWorker = await worker.runWorm();
       cumm += doneThisWorker;
     }));
     return cumm;
