@@ -16,8 +16,8 @@ export class Worker {
       totalAmount: number;
     }
   } = {};
-  private workerNo: number;
-  private numWorkers: number;
+  workerNo: number;
+  numWorkers: number;
   private sendMessage: (from: string, to: string, message: Message) => void;
   constructor(shard: number, noShards: number, sendMessage: (from: string, to: string, message: Message) => void) {
     this.workerNo = shard;
@@ -210,9 +210,9 @@ export class Worker {
     });
     console.log(`[WORKER ${this.workerNo}] ${numTrans} primary transfers with value of ${totalTransAmount} done, now inviting bilateral netting`);
     this.runTasks();
-    console.log(`WORKER ${this.workerNo}] bilateral netting done, now inviting probes`);
+    console.log(`[WORKER ${this.workerNo}] bilateral netting done, now inviting probes`);
     const maxProbeId = this.runWorm();
-    console.log(`WORKER ${this.workerNo}] done`);
+    console.log(`[WORKER ${this.workerNo}] done`);
     return maxProbeId;
   }
 }
