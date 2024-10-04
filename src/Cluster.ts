@@ -48,11 +48,11 @@ export class Cluster {
       const timer = setInterval(() => {
         const silence = (Date.now() - this.lastMessageSeen);
         console.log(`Checking silence ${silence}`);
-        if (silence > 100) {
+        if (silence > 3) {
           clearInterval(timer);
           resolve(true);
         }
-      }, 10);
+      }, 1);
     });
     let probeId = 0;
     while(Object.keys(probing).length > 0) {
