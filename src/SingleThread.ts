@@ -20,7 +20,7 @@ export class SingleThread {
     await Promise.all(this.workers.map(async (worker) => worker.runTasks()));
     let cumm = 0;
     await Promise.all(this.workers.map(async (worker) => {
-      cumm += worker.runWorm();
+      cumm += worker.runWormsUntilDone();
     }));
     return cumm;
   }

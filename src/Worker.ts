@@ -169,30 +169,33 @@ export class Worker {
   getOurNodes(): Jerboa[] {
     return Object.values(this.ourNodes);
   }
-  runWorm(): number {
+  runOneWorm(probeId: number): boolean {
+    let newStep: string;
+    // console.log('starting probe', probeId);
+    try {
+      newStep = this.getOurFirstNode(true);
+      // console.log('picked first new step!', newStep, this.graph.getNode(newStep).getOutgoingLinks());
+    } catch (e) {
+      if ((e.message === 'Graph is empty') || (e.message == 'no nodes have outgoing links')) {
+        return true;
+      } else {;
+        throw e;
+      }
+    }
+    // console.log('calling startProbe', newStep, probeId);
+    this.getNode(newStep).startProbe(probeId.toString());
+    // console.log('result of probe from', newStep, result);
+    this.runTasks();
+    return false;
+  }
+  runWormsUntilDone(): number {
     let done = false;
     let probeId = 0;
     do {
-      let newStep: string;
-      // console.log('starting probe', probeId);
-      try {
-        newStep = this.getOurFirstNode(true);
-        // console.log('picked first new step!', newStep, this.graph.getNode(newStep).getOutgoingLinks());
-      } catch (e) {
-        if ((e.message === 'Graph is empty') || (e.message == 'no nodes have outgoing links')) {
-          done = true;
-          return probeId;
-        } else {;
-          throw e;
-        }
-      }
-      // console.log('calling startProbe', newStep, probeId);
-      this.getNode(newStep).startProbe(probeId.toString());
-      // console.log('result of probe from', newStep, result);
-      this.runTasks();
+      done = this.runOneWorm(probeId);
       probeId++;
     } while (!done);
-    return probeId;
+    return probeId; // num probes run
   }
   async readTransfersFromCsv(filename: string): Promise<void> {
     // this.sendMessage('123', '456', { command: 'test', probeId: '1', incarnation: 0, debugInfo: {} } as Message);
