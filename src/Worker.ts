@@ -1,5 +1,5 @@
-import { Jerboa } from './Jerboa.js';
-import { Message } from "./Jerboa.js";
+import { Jerboa, Message } from "./Jerboa.js";
+import { readCsv } from './readCsv.js';
 
 export class Worker {
   messagesSent: number = 0;
@@ -16,12 +16,14 @@ export class Worker {
       totalAmount: number;
     }
   } = {};
-  private shard: number;
-  private noShards: number;
+  private workerNo: number;
+  private numWorkers: number;
+  private filename: string;
   private sendMessage: (from: string, to: string, message: Message) => void;
-  constructor(shard: number, noShards: number, sendMessage: (from: string, to: string, message: Message) => void) {
-    this.shard = shard;
-    this.noShards = noShards;
+  constructor(shard: number, noShards: number, filename: string, sendMessage: (from: string, to: string, message: Message) => void) {
+    this.workerNo = shard;
+    this.numWorkers = noShards;
+    this.filename = filename;
     this.sendMessage = sendMessage;
   }
   public queueMessageForLocalDelivery(from: string, to: string, message: Message): void {
@@ -56,7 +58,7 @@ export class Worker {
     if (isNaN(nodeNo)) {
       throw new Error('node name is not a number ' + name);
     }
-    return (nodeNo % this.noShards === this.shard);    
+    return (nodeNo % this.numWorkers === this.workerNo);    
   }
   private ensureNode(name: string): void {
     if (!this.nodeIsOurs(name)) {
@@ -192,5 +194,22 @@ export class Worker {
       probeId++;
     } while (!done);
     return probeId;
+  }
+  async run(): Promise<number> {
+    let numTrans = 0;
+    let totalTransAmount = 0;
+    await readCsv(this.filename, (from: string, to: string, amount: number) => {
+      if (parseInt(from) % this.numWorkers === this.workerNo) {
+        this.addWeight(from, to, amount);
+        numTrans++;
+        totalTransAmount += amount;
+      }
+    });
+    console.log(`[WORKER ${this.workerNo}] ${numTrans} primary transfers with value of ${totalTransAmount} done, now inviting bilateral netting`);
+    this.runTasks();
+    console.log(`WORKER ${this.workerNo}] bilateral netting done, now inviting probes`);
+    const maxProbeId = this.runWorm();
+    console.log(`WORKER ${this.workerNo}] done`);
+    return maxProbeId;
   }
 }
