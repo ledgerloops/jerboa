@@ -1,6 +1,4 @@
 import { randomBytes, createHash } from "node:crypto";
-
-import { Graph } from "./Graph.js";
 import { Balances } from "./Balances.js";
 const MIN_LOOP_WEIGHT = 0.00000001;
 // const MAX_LOOP_WEIGHT = 1000000000;
@@ -20,6 +18,13 @@ function randomStringFromArray(arr: string[]): string {
     return arr[0];
   }
 }
+export type Message = 
+ | TransferMessage
+ | ProbeMessage
+ | NackMessage
+ | ScoutMessage
+ | ProposeMessage
+ | CommitMessage;
 
 export type TransferMessage = {
   amount: number,
@@ -73,7 +78,6 @@ export type CommitMessage = {
 
 export class Jerboa {
   private balances: Balances = new Balances();
-  private graph: Graph;
   private name: string;
   private outgoingLinks: {
     [friend: string]: boolean
@@ -97,10 +101,13 @@ export class Jerboa {
       hash?: string,
     }
   } = {};
+  private sendMessage: (to: string, message: Message) => void;
+  private deregister: () => void;
   private loopsTried: string[] = [];
-  constructor(name: string, graph: Graph) {
+  constructor(name: string, sendMessage: (to: string, message: Message) => void, deregister: () => void) {
     this.name = name;
-    this.graph = graph;
+    this.sendMessage = sendMessage;
+    this.deregister = deregister;
   }
   private pickIncarnation(probeId: string, maxIncarnation: number): string {
     const numOptions = Object.keys(this.probes[probeId].in).length;
@@ -196,11 +203,11 @@ export class Jerboa {
     }
     this.loopsTried.push(loop.join(' '));
     // console.log(`${this.name} scouting loop`);
-    for (let k = 0; k < loop.length - 1; k++) {
-      if (Math.abs(this.graph.getNode(loop[k]).getBalance(loop[k+1]) + this.graph.getNode(loop[k+1]).getBalance(loop[k])) > MIN_LOOP_WEIGHT) {
-        console.log('(temporary?) balance dispute', loop, `hop ${loop[k]}->${loop[k+1]}`, this.graph.getNode(loop[k]).getBalance(loop[k+1]), this.graph.getNode(loop[k+1]).getBalance(loop[k]));
-      }
-    }
+    // for (let k = 0; k < loop.length - 1; k++) {
+    //   if (Math.abs(this.graph.getNode(loop[k]).getBalance(loop[k+1]) + this.graph.getNode(loop[k+1]).getBalance(loop[k])) > MIN_LOOP_WEIGHT) {
+    //     console.log('(temporary?) balance dispute', loop, `hop ${loop[k]}->${loop[k+1]}`, this.graph.getNode(loop[k]).getBalance(loop[k+1]), this.graph.getNode(loop[k+1]).getBalance(loop[k]));
+    //   }
+    // }
     if (loop.length < 3) {
       throw new Error('loop too short');
     }
@@ -220,10 +227,6 @@ export class Jerboa {
       // console.log('calling sendScoutMessage');
       this.sendScoutMessage(incomingNeighbour, { command: 'scout', probeId, maxIncarnation: incarnation,  amount: -incomingBalance, debugInfo: { loop } });
     }
-  }
-  sendMessage(to: string, msg: TransferMessage | ProbeMessage | NackMessage | ScoutMessage | ProposeMessage | CommitMessage): void {
-    // console.log('sending message', this.name, to, msg);
-    this.graph.messaging.sendMessage(this.name, to, msg);
   }
   receiveTransfer(sender: string, msg: TransferMessage): void {
     // console.log(`${sender}->${this.name}: ${amount}`);
@@ -251,7 +254,7 @@ export class Jerboa {
     }
   }
   receiveCommit(sender: string, msg: CommitMessage): void {
-    const { probeId, amount, preimage, debugInfo } = msg;
+    const { probeId, amount, preimage } = msg;
     if (typeof this.probes[probeId] === 'undefined') {
       throw new Error('commit message for unknown probe!');
     }
@@ -266,12 +269,12 @@ export class Jerboa {
     this.checkFriendCache(sender);
     if (typeof this.probes[probeId].loops[hash].proposeFrom === 'undefined') {
       // console.log('loop clearing completed');
-      const loop = debugInfo.loop;
-      for (let k = 0; k < loop.length - 1; k++) {
-        if (Math.abs(this.graph.getNode(loop[k]).getBalance(loop[k+1]) + this.graph.getNode(loop[k+1]).getBalance(loop[k])) > MIN_LOOP_WEIGHT) {
-          console.log('(temporary?) balance dispute', loop, `hop ${loop[k]}->${loop[k+1]}`, this.graph.getNode(loop[k]).getBalance(loop[k+1]), this.graph.getNode(loop[k+1]).getBalance(loop[k]));
-        }
-      }      
+      // const loop = debugInfo.loop;
+      // for (let k = 0; k < loop.length - 1; k++) {
+      //   if (Math.abs(this.graph.getNode(loop[k]).getBalance(loop[k+1]) + this.graph.getNode(loop[k+1]).getBalance(loop[k])) > MIN_LOOP_WEIGHT) {
+      //     console.log('(temporary?) balance dispute', loop, `hop ${loop[k]}->${loop[k+1]}`, this.graph.getNode(loop[k]).getBalance(loop[k+1]), this.graph.getNode(loop[k+1]).getBalance(loop[k]));
+      //   }
+      // }      
     } else {
       this.probes[probeId].loops[hash].commitTo = this.probes[probeId].loops[hash].proposeFrom;
       this.balances.adjustReceived(this.probes[probeId].loops[hash].commitTo, amount);
@@ -417,7 +420,7 @@ export class Jerboa {
     // console.log(`forwarding from ${this.name} to ${newStep} (balance ${this.balances.getBalance(newStep)})`);
     this.sendProbeMessage(newStep, { command: 'probe', probeId, incarnation, debugInfo: { path: debugInfo.path, backtracked: [] } });
   };
-  receiveMessage(from: string, msg: TransferMessage | ProbeMessage | NackMessage | ScoutMessage | ProposeMessage | CommitMessage ): void {
+  receiveMessage(from: string, msg: Message ): void {
     // console.log('receiveMessage', from, this.name, msg);
     switch((msg as { command: string }).command) {
       case 'probe': {
@@ -450,7 +453,8 @@ export class Jerboa {
     } else {
       delete this.outgoingLinks[friend];
       if (Object.keys(this.outgoingLinks).length === 0) {
-        this.graph.deregister(this.name);
+        // console.log('calling deregister');
+        this.deregister();
       }
     }
   }
@@ -494,7 +498,9 @@ export class Jerboa {
   startProbe(probeId: string): boolean {
     // console.log(`Node ${this.name} starting probe ${probeId}`);
     const nodes = this.getOutgoingLinks();
+    // console.log('got outgoing links', nodes);
     if (nodes.length === 0) {
+      // console.log('returning false on startProbe');
       return false;
     }
     this.sendProbeMessage(nodes[0], { command: 'probe', probeId, incarnation: 0, debugInfo: { path: [], backtracked: [] } });

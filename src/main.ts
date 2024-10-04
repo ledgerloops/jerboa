@@ -1,41 +1,48 @@
-import { createInterface } from 'readline';
-import { createReadStream } from 'fs';
-import { DLD } from './DLD.js';
+import cluster from 'node:cluster';
+import process from 'node:process';
+import { availableParallelism } from 'node:os';
+
+import { Cluster } from "./Cluster.js";
+import { SingleThread } from "./SingleThread.js";
 
 // const SARAFU_CSV = '../Sarafu2021_UKdb_submission/sarafu_xDAI/sarafu_txns_20200125-20210615.csv';
 const SARAFU_CSV = process.argv[2] || './__tests__/fixture-3k.csv';
-console.log('Opening', SARAFU_CSV);
 
-const lineReader = createInterface({
-  input: createReadStream(SARAFU_CSV),
-});
-const nodes: {
-  [origId: string]: string
-} = {};
-let counter = 0;
-let totalTransAmount = 0;
-let numTrans = 0;
-const dld = new DLD();
-lineReader.on('line', function (line) {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [ _id,_timeset, transfer_subtype,source,target,weight,_token_name,_token_address ] = line.split(',');
-  if (typeof nodes[source] === 'undefined') {
-    nodes[source] = (counter++).toString();
-  }
-  if (typeof nodes[target] === 'undefined') {
-    nodes[target] = (counter++).toString();
-  }
-  if (transfer_subtype === 'STANDARD') {
-    dld.graph.addWeight(nodes[source], nodes[target], parseFloat(weight));
-    numTrans++;
-    totalTransAmount += parseFloat(weight);
-  }
-});
+const NUM_WORKERS: number = parseInt(process.env.NUM_WORKERS) || (process.env.CLUSTER ? availableParallelism() : 1);
 
-lineReader.on('close', function () {
-  console.log(`${numTrans} primary transfers with value of ${totalTransAmount} done, now inviting bilateral netting`);
-  dld.graph.messaging.runTasks();
-  console.log('bilateral netting done, now inviting probes');
-  dld.runWorm();
-  console.log('done');
-});
+async function runCluster(numWorkers: number): Promise<number> {
+  console.log(`Running cluster with ${numWorkers} workers`);
+  const workerNo = parseInt(process.env.WORKER);
+  const workerCluster = new Cluster(SARAFU_CSV, numWorkers);
+  if (cluster.isPrimary) {
+    const promise = workerCluster.runPrimary();
+    console.log(`runPrimary promise pending in pid ${process.pid}`);
+    await promise;
+    console.log(`runPrimary promise resolved in pid ${process.pid}`);
+    return 42;
+  } else {
+    const promise = workerCluster.runWorker(workerNo);
+    console.log(`runWorker promise pending for worker ${workerNo} pid ${process.pid}`);
+    await promise;
+    console.log(`runWorker promise resolved for worker ${workerNo} pid ${process.pid}`);
+    // process.send({ foo: `Worker ${WORKER} is alive` });
+    return 42; // This will never be returned to the main thread, will it?
+  }
+}
+
+async function runSingleThread(numWorkers: number): Promise<void> {
+  console.log(`Running single thread with ${numWorkers} workers`);
+  if (numWorkers > 1) {
+    throw new Error('Sorry, multiple workers in a single thread is currently not working, see https://github.com/ledgerloops/jerboa/issues/21');
+  }
+  const threadRunner = new SingleThread(SARAFU_CSV, numWorkers);
+  const numProbes = await threadRunner.runAllWorkers();
+  console.log(`Finished ${numProbes} probes using ${numWorkers} workers in a single thread`);
+}
+
+// ...
+if (process.env.CLUSTER) {
+  runCluster(NUM_WORKERS); // this will fork NUM_WORKERS additional processes
+} else {
+  runSingleThread(NUM_WORKERS); // this will fork NUM_WORKERS additional processes
+}
