@@ -56,6 +56,7 @@ export class Worker {
     if (isNaN(nodeNo)) {
       throw new Error('node name is not a number ' + name);
     }
+    // console.log(`comparing`, nodeNo, this.numWorkers, nodeNo % this.numWorkers, this.workerNo);
     return (nodeNo % this.numWorkers === this.workerNo);    
   }
   private ensureNode(name: string): void {
@@ -194,6 +195,10 @@ export class Worker {
     return probeId;
   }
   async run(filename: string): Promise<number> {
+    // this.sendMessage('123', '456', { command: 'test', probeId: '1', incarnation: 0, debugInfo: {} } as Message);
+    // console.log('worker waiting 10s before finishing run', filename);
+    // await new Promise(resolve => setTimeout(resolve, 10000));
+    // return 42;
     let numTrans = 0;
     let totalTransAmount = 0;
     await readCsv(filename, (from: string, to: string, amount: number) => {
