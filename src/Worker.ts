@@ -208,11 +208,18 @@ export class Worker {
         // totalTransAmount += amount;
       }
     });
+    console.log(`done reading csv`);
+    return 42;
     // console.log(`[WORKER ${this.workerNo}] ${numTrans} primary transfers with value of ${totalTransAmount} done, now inviting bilateral netting`);
-    this.runTasks();
+    // this.runTasks();
     // console.log(`[WORKER ${this.workerNo}] bilateral netting done, now inviting probes`);
-    const maxProbeId = this.runWorm();
+    // const maxProbeId = this.runWorm();
     // console.log(`[WORKER ${this.workerNo}] done`);
-    return maxProbeId;
+    // return maxProbeId;
+  }
+  teardown(): void {
+    Object.keys(this.ourNodes).forEach(name => {
+      delete this.ourNodes[name];
+    });
   }
 }
