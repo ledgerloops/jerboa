@@ -39,14 +39,16 @@ export class Worker {
     // console.log('delivering message', from, to, message, this.messages.length);
     return this.getNode(to).receiveMessage(from, message);
   }
-  runTasks(): boolean {
+  async runTasks(): Promise<boolean> {
     let hadWorkToDo = false;
-    // console.log('running tasks', this.messages.length);
+    console.log('running tasks', this.messages.length);
     while (this.messages.length > 0) {
       const { from, to, message } = this.messages.pop();
-      // console.log('popped', from, to, message);
+      console.log('popped', from, to, message);
       hadWorkToDo = true;
       this.deliverMessageToNodeInThisWorker(from, to, message);
+      // wait in case new messages were looped back into the queue
+      await new Promise(resolve => setTimeout(resolve, 10));
     }
     return hadWorkToDo;
   }
@@ -189,8 +191,8 @@ export class Worker {
       console.log('calling startProbe', newStep, probeId);
       this.getNode(newStep).startProbe(probeId.toString());
       console.log('done starting probe from', newStep);
-      this.runTasks();
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await this.runTasks();
+      await new Promise(resolve => setTimeout(resolve, 30));
       probeId++;
     } while (!done);
     return probeId;
@@ -210,10 +212,12 @@ export class Worker {
       }
     });
     console.log(`[WORKER ${this.workerNo}] ${numTrans} primary transfers with value of ${totalTransAmount} done, now inviting bilateral netting`);
-    this.runTasks();
-    console.log(`WORKER ${this.workerNo}] bilateral netting done, now inviting probes`);
+    await this.runTasks();
+    console.log(`[WORKER ${this.workerNo}] bilateral netting done, now inviting probes`);
     const maxProbeId = await this.runWorm();
-    console.log(`WORKER ${this.workerNo}] done`);
+    console.log(`[WORKER ${this.workerNo}] done, waiting for another 20 seconds`);
+    await new Promise(resolve => setTimeout(resolve, 20000));
+    console.log(`[WORKER ${this.workerNo}] done waiting`);
     return maxProbeId;
   }
 }

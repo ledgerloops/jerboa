@@ -2,13 +2,13 @@ import { Worker } from '../src/Worker.js';
 import { Message } from '../src/Jerboa.js';
 
 describe('addWeight', () => {
-  it('adds a link', () => {
+  it('adds a link', async () => {
     const sendMessage = (from: string, to: string, message: Message): void => {
       worker.deliverMessageToNodeInThisWorker(from, to, message);
     };
     const worker = new Worker(0, 1, sendMessage);
     worker.addWeight('0', '1', 3);
-    worker.runTasks();
+    await worker.runTasks();
     expect(worker.getOurBalances()).toEqual({
       '0': {
         '1': 3,
@@ -18,22 +18,22 @@ describe('addWeight', () => {
       },
     });
   });
-  it('refuses zero weight', () => {
+  it('refuses zero weight', async () => {
     const sendMessage = (from: string, to: string, message: Message): void => {
       worker.deliverMessageToNodeInThisWorker(from, to, message);
     };
     const worker = new Worker(0, 1, sendMessage);
     expect(() => { worker.addWeight('0', '1', 0)}).toThrow();
   });
-  it('adds another link', () => {
+  it('adds another link', async () => {
     const sendMessage = (from: string, to: string, message: Message): void => {
       worker.deliverMessageToNodeInThisWorker(from, to, message);
     };
     const worker = new Worker(0, 1, sendMessage);
     worker.addWeight('0', '1', 3);
-    worker.runTasks();
+    await worker.runTasks();
     worker.addWeight('0', '2', 5);
-    worker.runTasks();
+    await worker.runTasks();
     expect(worker.getOurBalances()).toEqual({
       '0': {
         '1': 3,
@@ -47,15 +47,15 @@ describe('addWeight', () => {
       },
     });
   });
-  it('prepends a link to a path', () => {
+  it('prepends a link to a path', async () => {
     const sendMessage = (from: string, to: string, message: Message): void => {
       worker.deliverMessageToNodeInThisWorker(from, to, message);
     };
     const worker = new Worker(0, 1, sendMessage);
     worker.addWeight('0', '1', 3);
-    worker.runTasks();
+    await worker.runTasks();
     worker.addWeight('2', '0', 5);
-    worker.runTasks();
+    await worker.runTasks();
     expect(worker.getOurBalances()).toEqual({
       '0': {
         '1': 3,
@@ -69,15 +69,15 @@ describe('addWeight', () => {
       }
     });
   });
-  it('nets a higher amount', () => {
+  it('nets a higher amount', async () => {
     const sendMessage = (from: string, to: string, message: Message): void => {
       worker.deliverMessageToNodeInThisWorker(from, to, message);
     };
     const worker = new Worker(0, 1, sendMessage);
     worker.addWeight('0', '1', 3);
-    worker.runTasks();
+    await worker.runTasks();
     worker.addWeight('1', '0', 7);
-    worker.runTasks();
+    await worker.runTasks();
     expect(worker.getOurBalances()).toEqual({
       '0': {
         '1': -4
@@ -87,15 +87,15 @@ describe('addWeight', () => {
       }
     });
   });
-  it('nets a lower amount', () => {
+  it('nets a lower amount', async () => {
     const sendMessage = (from: string, to: string, message: Message): void => {
       worker.deliverMessageToNodeInThisWorker(from, to, message);
     };
     const worker = new Worker(0, 1, sendMessage);
     worker.addWeight('0', '1', 3);
-    worker.runTasks();
+    await worker.runTasks();
     worker.addWeight('1', '0', 2);
-    worker.runTasks();
+    await worker.runTasks();
     expect(worker.getOurBalances()).toEqual({
       '0': {
         '1': 1
@@ -105,15 +105,15 @@ describe('addWeight', () => {
       }
     });
   });
-  it('nets an equal amount', () => {
+  it('nets an equal amount', async () => {
     const sendMessage = (from: string, to: string, message: Message): void => {
       worker.deliverMessageToNodeInThisWorker(from, to, message);
     };
     const worker = new Worker(0, 1, sendMessage);
     worker.addWeight('0', '1', 3);
-    worker.runTasks();
+    await worker.runTasks();
     worker.addWeight('1', '0', 3);
-    worker.runTasks();
+    await worker.runTasks();
     expect(worker.getOurBalances()).toEqual({
       '0': {
       },
@@ -124,43 +124,43 @@ describe('addWeight', () => {
 });
 
 describe('getFirstNode', () => {
-  it('works when passing no after argument', () => {
+  it('works when passing no after argument', async () => {
     const sendMessage = (from: string, to: string, message: Message): void => {
       worker.deliverMessageToNodeInThisWorker(from, to, message);
     };
     const worker = new Worker(0, 1, sendMessage);
     worker.addWeight('0', '1', 3);
-    worker.runTasks();
+    await worker.runTasks();
     expect(worker.getOurFirstNode(false)).toEqual('0');
   });
-  it('works when passing an after argument', () => {
+  it('works when passing an after argument', async () => {
     const sendMessage = (from: string, to: string, message: Message): void => {
       worker.deliverMessageToNodeInThisWorker(from, to, message);
     };
     const worker = new Worker(0, 1, sendMessage);
    worker.addWeight('0', '1', 3);
-    worker.runTasks();
+    await worker.runTasks();
     expect(worker.getOurFirstNode(false, '0')).toEqual('1');
   });
 });
 
 describe('hasOutgoingLinks', () => {
-  it('works in the positive case', () => {
+  it('works in the positive case', async () => {
     const sendMessage = (from: string, to: string, message: Message): void => {
       worker.deliverMessageToNodeInThisWorker(from, to, message);
     };
     const worker = new Worker(0, 1, sendMessage);
     worker.addWeight('0', '1', 3);
-    worker.runTasks();
+    await worker.runTasks();
     expect(worker.hasOutgoingLinks('0')).toEqual(true);
   });
-  it('works in the negative case', () => {
+  it('works in the negative case', async () => {
     const sendMessage = (from: string, to: string, message: Message): void => {
       worker.deliverMessageToNodeInThisWorker(from, to, message);
     };
     const worker = new Worker(0, 1, sendMessage);
     worker.addWeight('0', '1', 3);
-    worker.runTasks();
+    await worker.runTasks();
     expect(worker.hasOutgoingLinks('1')).toEqual(false);
     expect(worker.hasOutgoingLinks('2')).toEqual(false);
   });
