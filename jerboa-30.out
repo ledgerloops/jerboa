@@ -1,4 +1,15 @@
-Opening __tests__/fixture-30.csv
-22 primary transfers with value of 560.5 done, now inviting bilateral netting
-bilateral netting done, now inviting probes
-done
+Running single thread with 1 workers
+backtracked (0:0) [ '5', '6' ] [ '8' ]
+found loop (0:1) [] [ '5', '6', '9', '5' ]
+backtrack21 (1:0) [ '5' ] [ '6' ]
+finished   (1:1) [] [ '5', '8' ]
+backtrack21 (2:0) [ '9' ] [ '5' ]
+finished   (2:1) [] [ '9', '8' ]
+backtrack21 (3:0) [ '10' ] [ '5' ]
+finished   (3:1) [] [ '10', '11' ]
+finished   (4:0) [] [ '12', '13' ]
+finished   (5:0) [] [ '14', '5' ]
+finished   (6:0) [] [ '15', '16' ]
+finished   (7:0) [] [ '17', '11' ]
+finished   (8:0) [] [ '18', '16' ]
+Finished 9 probes using 1 workers in a single thread
