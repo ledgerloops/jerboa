@@ -20,10 +20,10 @@ export class Cluster {
       timeout = setTimeout(resolve, 10000);
       forwardMessage = (messageObj: { from: string, to: string, message: object }): void => {
         const recipientWorker = parseInt(messageObj.to) % this.numWorkers;
-        console.log('primary forwards', messageObj, `to worker ${recipientWorker}`);
+        // console.log('primary forwards', messageObj, `to worker ${recipientWorker}`);
         clearTimeout(timeout);
         timeout = setTimeout(resolve, 1000);
-        console.log('primary will finish in 1000ms from now');
+        // console.log('primary will finish in 1000ms from now');
         workers[recipientWorker].send(messageObj);
       };
     });
@@ -37,9 +37,9 @@ export class Cluster {
         });
       });
     }
-    console.log('Primary takes a 1000ms break');
+    // console.log('Primary takes a 1000ms break');
     await new Promise(resolve => setTimeout(resolve, 1000));
-    console.log('sending greetings from primary');
+    // console.log('sending greetings from primary');
     for (let i = 0; i < this.numWorkers; i++) {
       workers[i].send(`start`);
     }
@@ -64,12 +64,12 @@ export class Cluster {
   }
   async runWorker(workerNo: number): Promise<number> {
     const worker = new Worker(workerNo, this.numWorkers, (from: string, to: string, message: Message): void => {
-      console.log(`Worker ${workerNo} sends message to primary`, { from, to, message });
+      // console.log(`Worker ${workerNo} sends message to primary`, { from, to, message });
       process.send({ from, to, message });
     });
     return new Promise((resolve) => {
       process.on('message', async (msg) => {
-        console.log(`Worker ${workerNo} received message from primary`, msg);
+        // console.log(`Worker ${workerNo} received message from primary`, msg);
         if (msg === `start`) {
           worker.run(this.filename);
         } else if (msg === `shutdown`) {
