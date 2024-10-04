@@ -8,7 +8,7 @@ import { SingleThread } from "./SingleThread.js";
 // const SARAFU_CSV = '../Sarafu2021_UKdb_submission/sarafu_xDAI/sarafu_txns_20200125-20210615.csv';
 const SARAFU_CSV = process.argv[2] || './__tests__/fixture-3k.csv';
 
-const NUM_WORKERS = 10; // availableParallelism();
+const NUM_WORKERS = 1; // availableParallelism();
 
 async function runCluster(numWorkers: number): Promise<number> {
   const workerNo = parseInt(process.env.WORKER);

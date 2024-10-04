@@ -18,7 +18,7 @@ export class Cluster {
       workers[i] = cluster.fork({ WORKER: i });
       workers[i].on('message', (messageObj) => {
         const recipientWorker = parseInt(messageObj.to) % this.numWorkers;
-        console.log('primary forwards', messageObj, `to worker ${recipientWorker}`);
+        // console.log('primary forwards', messageObj, `to worker ${recipientWorker}`);
         workers[recipientWorker].send(messageObj);
       });
       await new Promise(resolve => {

@@ -169,7 +169,7 @@ export class Worker {
   getOurNodes(): Jerboa[] {
     return Object.values(this.ourNodes);
   }
-  runWorm(): number {
+  private async runWorm(): Promise<number> {
     let done = false;
     let probeId = 0;
     do {
@@ -177,7 +177,7 @@ export class Worker {
       // console.log('starting probe', probeId);
       try {
         newStep = this.getOurFirstNode(true);
-        // console.log('picked first new step!', newStep, this.graph.getNode(newStep).getOutgoingLinks());
+        console.log('picked first new step!', newStep, this.getNode(newStep).getOutgoingLinks());
       } catch (e) {
         if ((e.message === 'Graph is empty') || (e.message == 'no nodes have outgoing links')) {
           done = true;
@@ -186,10 +186,11 @@ export class Worker {
           throw e;
         }
       }
-      // console.log('calling startProbe', newStep, probeId);
+      console.log('calling startProbe', newStep, probeId);
       this.getNode(newStep).startProbe(probeId.toString());
-      // console.log('result of probe from', newStep, result);
+      console.log('done starting probe from', newStep);
       this.runTasks();
+      await new Promise(resolve => setTimeout(resolve, 1000));
       probeId++;
     } while (!done);
     return probeId;
@@ -211,7 +212,7 @@ export class Worker {
     console.log(`[WORKER ${this.workerNo}] ${numTrans} primary transfers with value of ${totalTransAmount} done, now inviting bilateral netting`);
     this.runTasks();
     console.log(`WORKER ${this.workerNo}] bilateral netting done, now inviting probes`);
-    const maxProbeId = this.runWorm();
+    const maxProbeId = await this.runWorm();
     console.log(`WORKER ${this.workerNo}] done`);
     return maxProbeId;
   }
