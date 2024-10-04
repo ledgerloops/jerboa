@@ -199,20 +199,20 @@ export class Worker {
     // console.log('worker waiting 10s before finishing run', filename);
     // await new Promise(resolve => setTimeout(resolve, 10000));
     // return 42;
-    let numTrans = 0;
-    let totalTransAmount = 0;
+    // let numTrans = 0;
+    // let totalTransAmount = 0;
     await readCsv(filename, (from: string, to: string, amount: number) => {
       if (parseInt(from) % this.numWorkers === this.workerNo) {
         this.addWeight(from, to, amount);
-        numTrans++;
-        totalTransAmount += amount;
+        // numTrans++;
+        // totalTransAmount += amount;
       }
     });
-    console.log(`[WORKER ${this.workerNo}] ${numTrans} primary transfers with value of ${totalTransAmount} done, now inviting bilateral netting`);
+    // console.log(`[WORKER ${this.workerNo}] ${numTrans} primary transfers with value of ${totalTransAmount} done, now inviting bilateral netting`);
     this.runTasks();
-    console.log(`[WORKER ${this.workerNo}] bilateral netting done, now inviting probes`);
+    // console.log(`[WORKER ${this.workerNo}] bilateral netting done, now inviting probes`);
     const maxProbeId = this.runWorm();
-    console.log(`[WORKER ${this.workerNo}] done`);
+    // console.log(`[WORKER ${this.workerNo}] done`);
     return maxProbeId;
   }
 }
