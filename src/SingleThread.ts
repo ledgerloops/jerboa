@@ -1,7 +1,7 @@
 import { Worker } from './Worker.js';
 import { Message } from './Jerboa.js';
 
-export class DLD {
+export class SingleThread {
   private workers: Worker[] = [];
   private filename: string;
   constructor(filename: string, numWorkers: number) {

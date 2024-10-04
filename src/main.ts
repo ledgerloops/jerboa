@@ -3,7 +3,7 @@ import process from 'node:process';
 
 // import { availableParallelism } from 'node:os';
 import { Cluster } from "./Cluster.js";
-import { DLD } from "./DLD.js";
+import { SingleThread } from "./SingleThread.js";
 
 // const SARAFU_CSV = '../Sarafu2021_UKdb_submission/sarafu_xDAI/sarafu_txns_20200125-20210615.csv';
 const SARAFU_CSV = process.argv[2] || './__tests__/fixture-3k.csv';
@@ -26,8 +26,8 @@ async function runCluster(numWorkers: number): Promise<number> {
 }
 
 async function runSingleThread(numWorkers: number): Promise<void> {
-  const dld = new DLD(SARAFU_CSV, numWorkers);
-  const numProbes = await dld.runAllWorkers();
+  const threadRunner = new SingleThread(SARAFU_CSV, numWorkers);
+  const numProbes = await threadRunner.runAllWorkers();
   console.log(`Finished ${numProbes} probes using ${numWorkers} workers in a single thread`);
 }
 
