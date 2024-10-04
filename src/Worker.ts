@@ -36,7 +36,7 @@ export class Worker {
   }
   deliverMessageToNodeInThisWorker(from: string, to: string, message: Message): void {
     this.messagesSent++;
-    // console.log('delivering message', from, to, message, this.messages.length);
+    console.log(`Worker ${this.workerNo} delivering message to node ${to}`, from, to, message, this.messages.length);
     return this.getNode(to).receiveMessage(from, message);
   }
   runTasks(): boolean {

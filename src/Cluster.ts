@@ -15,15 +15,22 @@ export class Cluster {
     console.log(`Primary ${process.pid} is running, forking ${this.numWorkers} threads`);
     // Fork workers.
     const workers = {};
-    const forwardMessage = (messageObj: { from: string, to: string, message: object }): void => {
-      const recipientWorker = parseInt(messageObj.to) % this.numWorkers;
-      console.log('primary forwards', messageObj, `to worker ${recipientWorker}`);
-      this.lastMessageSeen = Date.now();
-      workers[recipientWorker].send(messageObj);
-    };
+    const probing = {};
     for (let i = 0; i <this. numWorkers; i++) {
+      probing[i] = true;
       workers[i] = cluster.fork({ WORKER: i });
-      workers[i].on('message', forwardMessage);
+      workers[i].on('message', (messageObj: { from: string, to: string, message: object } | string): void => {
+        const sender = i;
+        if (messageObj as string === 'done') {
+          console.log(sender, 'DONE WITH PROBES');
+          delete probing[sender];
+        } else {
+          const recipientWorker = parseInt((messageObj as { from: string, to: string, message: object }).to) % this.numWorkers;
+          console.log('primary forwards', messageObj, `to worker ${recipientWorker}`);
+          this.lastMessageSeen = Date.now();
+          workers[recipientWorker].send(messageObj);
+        }
+      });
       await new Promise(resolve => {
         workers[i].on('online', () => {
           console.log(`Worker ${i} is online`);
@@ -41,26 +48,28 @@ export class Cluster {
       const timer = setInterval(() => {
         const silence = (Date.now() - this.lastMessageSeen);
         console.log(`Checking silence ${silence}`);
-        if (silence > 1000) {
+        if (silence > 100) {
           clearInterval(timer);
           resolve(true);
         }
-      }, 100);
+      }, 10);
     });
-    for (let probeId = 0; probeId < 2; probeId++) {
+    let probeId = 0;
+    while(Object.keys(probing).length > 0) {
       console.log(`Primary sends signal to ${probeId % this.numWorkers} to start probe ${probeId}`);
-      workers[probeId % this.numWorkers].send(`startProbe ${probeId}`);
+      workers[Object.keys(probing)[0]].send(`startProbe ${probeId}`);
       console.log('probe started, waiting for silence again');
       await new Promise(resolve => {
         const timer = setInterval(() => {
           const silence = (Date.now() - this.lastMessageSeen);
           console.log(`Checking silence ${silence}`);
-          if (silence > 1000) {
+          if (silence > 100) {
             clearInterval(timer);
             resolve(true);
           }
-        }, 100);
+        }, 10);
       });
+      probeId++;
     }
     cluster.on('exit', (worker, code, signal) => {
       if (signal) {
@@ -103,7 +112,11 @@ export class Cluster {
             }
             case `startProbe`: {
               console.log(`Worker ${workerNo} starts worm ${parts[1]}`);
-              worker.runOneWorm(parseInt(parts[1]));
+              const done = worker.runOneWorm(parseInt(parts[1]));
+              if (done) {
+                console.log(`Worker ${workerNo} tells primary DONE`);
+                process.send(`done`);
+              }
               break;
             }
             default: {
@@ -113,7 +126,7 @@ export class Cluster {
         } else {
           console.log(`Worker ${workerNo} received message of non-string type`, msg);
           const { from, to, message } = msg as { from: string, to: string, message: Message };
-          worker.queueMessageForLocalDelivery(from, to, message);
+          worker.deliverMessageToNodeInThisWorker(from, to, message);
         }
       });
     });
