@@ -36,7 +36,7 @@ export class Worker {
   }
   deliverMessageToNodeInThisWorker(from: string, to: string, message: Message): void {
     this.messagesSent++;
-    // console.log('delivering message', from, to, message, this.messages.length);
+    // console.log(`Worker ${this.workerNo} delivering message to node ${to}`, from, to, message, this.messages.length);
     return this.getNode(to).receiveMessage(from, message);
   }
   runTasks(): boolean {
@@ -99,7 +99,7 @@ export class Worker {
     if ((typeof after !== 'string') && (typeof after !== 'undefined')) {
       throw new Error(`after param ${JSON.stringify(after)} is neither a string nor undefined in call to getFirstNode`);
     }
-
+    // console.log(`[Worker ${this.workerNo}] getOurFirstNode`, withOutgoingLinks, after);
     let nodes: string[];
     if (typeof after === 'string') {
       if (!this.nodeIsOurs(after)) {
@@ -112,6 +112,7 @@ export class Worker {
       nodes = nodesObj.getOutgoingLinks();
     } else {
       nodes = Object.keys(this.ourNodesToStartFrom);
+      // console.log(nodes);
       if (nodes.length === 0) {
         throw new Error('Graph is empty');
       }
@@ -169,32 +170,36 @@ export class Worker {
   getOurNodes(): Jerboa[] {
     return Object.values(this.ourNodes);
   }
-  runWorm(): number {
+  runOneWorm(probeId: number): boolean {
+    let newStep: string;
+    // console.log('starting probe', probeId);
+    try {
+      newStep = this.getOurFirstNode(true);
+      // console.log('picked first new step!', newStep, this.getNode(newStep).getOutgoingLinks());
+    } catch (e) {
+      if ((e.message === 'Graph is empty') || (e.message == 'no nodes have outgoing links')) {
+        // console.log('no nodes found, returning true');
+        return true;
+      } else {;
+        throw e;
+      }
+    }
+    // console.log('calling startProbe', newStep, probeId);
+    this.getNode(newStep).startProbe(probeId.toString());
+    // console.log('done starting probe from', newStep);
+    return false;
+  }
+  runWormsUntilDone(): number {
     let done = false;
     let probeId = 0;
     do {
-      let newStep: string;
-      // console.log('starting probe', probeId);
-      try {
-        newStep = this.getOurFirstNode(true);
-        // console.log('picked first new step!', newStep, this.graph.getNode(newStep).getOutgoingLinks());
-      } catch (e) {
-        if ((e.message === 'Graph is empty') || (e.message == 'no nodes have outgoing links')) {
-          done = true;
-          return probeId;
-        } else {;
-          throw e;
-        }
-      }
-      // console.log('calling startProbe', newStep, probeId);
-      this.getNode(newStep).startProbe(probeId.toString());
-      // console.log('result of probe from', newStep, result);
       this.runTasks();
+      done = this.runOneWorm(probeId);
       probeId++;
     } while (!done);
-    return probeId;
+    return probeId; // num probes run
   }
-  async run(filename: string): Promise<number> {
+  async readTransfersFromCsv(filename: string): Promise<void> {
     // this.sendMessage('123', '456', { command: 'test', probeId: '1', incarnation: 0, debugInfo: {} } as Message);
     // console.log('worker waiting 10s before finishing run', filename);
     // await new Promise(resolve => setTimeout(resolve, 10000));
@@ -208,11 +213,11 @@ export class Worker {
         // totalTransAmount += amount;
       }
     });
-    // console.log(`[WORKER ${this.workerNo}] ${numTrans} primary transfers with value of ${totalTransAmount} done, now inviting bilateral netting`);
-    this.runTasks();
-    // console.log(`[WORKER ${this.workerNo}] bilateral netting done, now inviting probes`);
-    const maxProbeId = this.runWorm();
-    // console.log(`[WORKER ${this.workerNo}] done`);
-    return maxProbeId;
+    // console.log(`done reading csv`);
+  }
+  teardown(): void {
+    Object.keys(this.ourNodes).forEach(name => {
+      delete this.ourNodes[name];
+    });
   }
 }

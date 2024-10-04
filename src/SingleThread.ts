@@ -15,11 +15,12 @@ export class SingleThread {
     }
   }
   async runAllWorkers(): Promise<number> {
+    await Promise.all(this.workers.map(async (worker) => worker.readTransfersFromCsv(this.filename)));
+    // Running all tasks and then all worms doesn't work, see https://github.com/ledgerloops/jerboa/issues/21
+    await Promise.all(this.workers.map(async (worker) => worker.runTasks()));
     let cumm = 0;
     await Promise.all(this.workers.map(async (worker) => {
-      // console.log('running worker', worker.workerNo);
-      const doneThisWorker = await worker.run(this.filename);
-      cumm += doneThisWorker;
+      cumm += worker.runWormsUntilDone();
     }));
     return cumm;
   }
