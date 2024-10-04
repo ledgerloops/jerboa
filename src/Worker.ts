@@ -2,8 +2,6 @@ import { Jerboa, Message } from "./Jerboa.js";
 import { readCsv } from './readCsv.js';
 
 export class Worker {
-  messagesSent: number = 0;
-  messages: { from: string, to: string, message: Message }[] = [];
   private ourNodes: {
     [from: string]: Jerboa
   } = {};
@@ -24,35 +22,14 @@ export class Worker {
     this.numWorkers = noShards;
     this.sendMessage = sendMessage;
   }
-  public queueMessageForLocalDelivery(from: string, to: string, message: Message): void {
+  deliverMessageToNodeInThisWorker(from: string, to: string, message: Message): void {
     if (this.nodeIsOurs(to)) {
-      // instead of delivering immediately, queue it up until runTasks is called on this worker:
-      // this.getNode(to).receiveMessage(from, message);
-      // console.log('pushing onto message queue of length', this.messages.length);
-      this.messages.push({from, to, message });
+      // console.log('delivering message', from, to, message, this.messages.length);
+      return this.getNode(to).receiveMessage(from, message);
     } else {
       throw Error('to node is not ours');
     }
   }
-  deliverMessageToNodeInThisWorker(from: string, to: string, message: Message): void {
-    this.messagesSent++;
-    // console.log('delivering message', from, to, message, this.messages.length);
-    return this.getNode(to).receiveMessage(from, message);
-  }
-  async runTasks(): Promise<boolean> {
-    let hadWorkToDo = false;
-    console.log('running tasks', this.messages.length);
-    while (this.messages.length > 0) {
-      const { from, to, message } = this.messages.pop();
-      console.log('popped', from, to, message);
-      hadWorkToDo = true;
-      this.deliverMessageToNodeInThisWorker(from, to, message);
-      // wait in case new messages were looped back into the queue
-      await new Promise(resolve => setTimeout(resolve, 10));
-    }
-    return hadWorkToDo;
-  }
-
   private nodeIsOurs(name: string) : boolean {
     const nodeNo = parseInt(name);
     if (isNaN(nodeNo)) {
@@ -191,7 +168,6 @@ export class Worker {
       console.log('calling startProbe', newStep, probeId);
       this.getNode(newStep).startProbe(probeId.toString());
       console.log('done starting probe from', newStep);
-      await this.runTasks();
       await new Promise(resolve => setTimeout(resolve, 30));
       probeId++;
     } while (!done);
@@ -211,9 +187,7 @@ export class Worker {
         totalTransAmount += amount;
       }
     });
-    console.log(`[WORKER ${this.workerNo}] ${numTrans} primary transfers with value of ${totalTransAmount} done, now inviting bilateral netting`);
-    await this.runTasks();
-    console.log(`[WORKER ${this.workerNo}] bilateral netting done, now inviting probes`);
+    console.log(`[WORKER ${this.workerNo}] ${numTrans} primary transfers with value of ${totalTransAmount} done, now inviting probes`);
     const maxProbeId = await this.runWorm();
     console.log(`[WORKER ${this.workerNo}] done, waiting for another 20 seconds`);
     await new Promise(resolve => setTimeout(resolve, 20000));
