@@ -421,7 +421,7 @@ export class Jerboa {
     this.sendProbeMessage(newStep, { command: 'probe', probeId, incarnation, debugInfo: { path: debugInfo.path, backtracked: [] } });
   };
   receiveMessage(from: string, msg: Message ): void {
-    console.log('Jerboa receiveMessage', from, this.name, msg);
+    // console.log('Jerboa receiveMessage', from, this.name, msg);
     switch((msg as { command: string }).command) {
       case 'probe': {
         return this.receiveProbe(from, msg as ProbeMessage);

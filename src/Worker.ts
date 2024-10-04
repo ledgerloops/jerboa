@@ -36,7 +36,7 @@ export class Worker {
   }
   deliverMessageToNodeInThisWorker(from: string, to: string, message: Message): void {
     this.messagesSent++;
-    console.log(`Worker ${this.workerNo} delivering message to node ${to}`, from, to, message, this.messages.length);
+    // console.log(`Worker ${this.workerNo} delivering message to node ${to}`, from, to, message, this.messages.length);
     return this.getNode(to).receiveMessage(from, message);
   }
   runTasks(): boolean {
@@ -99,7 +99,7 @@ export class Worker {
     if ((typeof after !== 'string') && (typeof after !== 'undefined')) {
       throw new Error(`after param ${JSON.stringify(after)} is neither a string nor undefined in call to getFirstNode`);
     }
-    console.log(`[Worker ${this.workerNo}] getOurFirstNode`, withOutgoingLinks, after);
+    // console.log(`[Worker ${this.workerNo}] getOurFirstNode`, withOutgoingLinks, after);
     let nodes: string[];
     if (typeof after === 'string') {
       if (!this.nodeIsOurs(after)) {
@@ -112,7 +112,7 @@ export class Worker {
       nodes = nodesObj.getOutgoingLinks();
     } else {
       nodes = Object.keys(this.ourNodesToStartFrom);
-      console.log(nodes);
+      // console.log(nodes);
       if (nodes.length === 0) {
         throw new Error('Graph is empty');
       }
@@ -172,21 +172,21 @@ export class Worker {
   }
   runOneWorm(probeId: number): boolean {
     let newStep: string;
-    console.log('starting probe', probeId);
+    // console.log('starting probe', probeId);
     try {
       newStep = this.getOurFirstNode(true);
-      console.log('picked first new step!', newStep, this.getNode(newStep).getOutgoingLinks());
+      // console.log('picked first new step!', newStep, this.getNode(newStep).getOutgoingLinks());
     } catch (e) {
       if ((e.message === 'Graph is empty') || (e.message == 'no nodes have outgoing links')) {
-        console.log('no nodes found, returning true');
+        // console.log('no nodes found, returning true');
         return true;
       } else {;
         throw e;
       }
     }
-    console.log('calling startProbe', newStep, probeId);
+    // console.log('calling startProbe', newStep, probeId);
     this.getNode(newStep).startProbe(probeId.toString());
-    console.log('done starting probe from', newStep);
+    // console.log('done starting probe from', newStep);
     return false;
   }
   runWormsUntilDone(): number {
@@ -213,7 +213,7 @@ export class Worker {
         // totalTransAmount += amount;
       }
     });
-    console.log(`done reading csv`);
+    // console.log(`done reading csv`);
   }
   teardown(): void {
     Object.keys(this.ourNodes).forEach(name => {

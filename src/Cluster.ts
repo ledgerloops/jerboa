@@ -26,7 +26,7 @@ export class Cluster {
           delete probing[sender];
         } else {
           const recipientWorker = parseInt((messageObj as { from: string, to: string, message: object }).to) % this.numWorkers;
-          console.log('primary forwards', messageObj, `to worker ${recipientWorker}`);
+          // console.log('primary forwards', messageObj, `to worker ${recipientWorker}`);
           this.lastMessageSeen = Date.now();
           workers[recipientWorker].send(messageObj);
         }
@@ -47,7 +47,7 @@ export class Cluster {
     await new Promise(resolve => {
       const timer = setInterval(() => {
         const silence = (Date.now() - this.lastMessageSeen);
-        console.log(`Checking silence ${silence}`);
+        // console.log(`Checking silence ${silence}`);
         if (silence > 3) {
           clearInterval(timer);
           resolve(true);
@@ -58,11 +58,11 @@ export class Cluster {
     while(Object.keys(probing).length > 0) {
       console.log(`Primary sends signal to ${probeId % this.numWorkers} to start probe ${probeId}`);
       workers[Object.keys(probing)[0]].send(`startProbe ${probeId}`);
-      console.log('probe started, waiting for silence again');
+      // console.log('probe started, waiting for silence again');
       await new Promise(resolve => {
         const timer = setInterval(() => {
           const silence = (Date.now() - this.lastMessageSeen);
-          console.log(`Checking silence ${silence}`);
+          // console.log(`Checking silence ${silence}`);
           if (silence > 100) {
             clearInterval(timer);
             resolve(true);
@@ -97,7 +97,7 @@ export class Cluster {
     return new Promise((resolve) => {
       process.on('message', async (msg) => {
         if (typeof msg === 'string') {
-          console.log(`Worker ${workerNo} received message of string type`, msg);
+          // console.log(`Worker ${workerNo} received message of string type`, msg);
           const parts = msg.split(' ');
           switch(parts[0]) {
             case `start`: {
@@ -105,16 +105,16 @@ export class Cluster {
               break;
             }
             case `shutdown`: {
-              console.log(`Worker ${workerNo} received shutdown message from primary`);
+              // console.log(`Worker ${workerNo} received shutdown message from primary`);
               worker.teardown();
               resolve(42);
               break;
             }
             case `startProbe`: {
-              console.log(`Worker ${workerNo} starts worm ${parts[1]}`);
+              // console.log(`Worker ${workerNo} starts worm ${parts[1]}`);
               const done = worker.runOneWorm(parseInt(parts[1]));
               if (done) {
-                console.log(`Worker ${workerNo} tells primary DONE`);
+                // console.log(`Worker ${workerNo} tells primary DONE`);
                 process.send(`done`);
               }
               break;
@@ -124,7 +124,7 @@ export class Cluster {
             }
           }
         } else {
-          console.log(`Worker ${workerNo} received message of non-string type`, msg);
+          // console.log(`Worker ${workerNo} received message of non-string type`, msg);
           const { from, to, message } = msg as { from: string, to: string, message: Message };
           worker.deliverMessageToNodeInThisWorker(from, to, message);
         }
