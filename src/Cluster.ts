@@ -35,14 +35,14 @@ export class Cluster {
     return 0;
   }
   async runWorker(workerNo: number): Promise<number> {
-    const worker = new Worker(workerNo, this.numWorkers, this.filename, (from: string, to: string, message: Message): void => {
+    const worker = new Worker(workerNo, this.numWorkers, (from: string, to: string, message: Message): void => {
       process.send({ from, to, message });
     });
     return new Promise((resolve) => {
       process.on('message', async (msg) => {
         console.log(`Worker ${workerNo} received message`, msg);
         if (msg === `start`) {
-          resolve(worker.run());
+          resolve(worker.run(this.filename));
         } else {
           // process.send(msg);
           const { from, to, message } = msg as { from: string, to: string, message: Message };

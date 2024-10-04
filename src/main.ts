@@ -3,18 +3,20 @@ import process from 'node:process';
 
 // import { availableParallelism } from 'node:os';
 import { Cluster } from "./Cluster.js";
+import { DLD } from "./DLD.js";
 
 // const SARAFU_CSV = '../Sarafu2021_UKdb_submission/sarafu_xDAI/sarafu_txns_20200125-20210615.csv';
 const SARAFU_CSV = process.argv[2] || './__tests__/fixture-3k.csv';
 
 const NUM_WORKERS = 1; // availableParallelism();
 
-async function run(workerNo: number): Promise<number> {
-  const dld = new Cluster(SARAFU_CSV, NUM_WORKERS);
+async function runCluster(numWorkers: number): Promise<number> {
+  const workerNo = parseInt(process.env.WORKER);
+  const workerCluster = new Cluster(SARAFU_CSV, numWorkers);
   if (cluster.isPrimary) {
-    return dld.runPrimary();
+    return workerCluster.runPrimary();
   } else {
-    const promise = dld.runWorker(workerNo);
+    const promise = workerCluster.runWorker(workerNo);
     console.log(`Worker ${workerNo} started with pid  ${process.pid}`);
     await promise;
     console.log(`runWorker ${workerNo} done`);
@@ -23,5 +25,15 @@ async function run(workerNo: number): Promise<number> {
   }
 }
 
+async function runSingleThread(numWorkers: number): Promise<void> {
+  const dld = new DLD(SARAFU_CSV, numWorkers);
+  const numProbes = await dld.runAllWorkers();
+  console.log(`Finished ${numProbes} probes using ${numWorkers} workers in a single thread`);
+}
+
 // ...
-run(parseInt(process.env.WORKER)); // this will fork NUM_WORKERS additional processes
+if (process.env.CLUSTER) {
+  runCluster(NUM_WORKERS); // this will fork NUM_WORKERS additional processes
+} else {
+  runSingleThread(NUM_WORKERS); // this will fork NUM_WORKERS additional processes
+}

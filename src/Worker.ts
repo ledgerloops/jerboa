@@ -18,12 +18,10 @@ export class Worker {
   } = {};
   private workerNo: number;
   private numWorkers: number;
-  private filename: string;
   private sendMessage: (from: string, to: string, message: Message) => void;
-  constructor(shard: number, noShards: number, filename: string, sendMessage: (from: string, to: string, message: Message) => void) {
+  constructor(shard: number, noShards: number, sendMessage: (from: string, to: string, message: Message) => void) {
     this.workerNo = shard;
     this.numWorkers = noShards;
-    this.filename = filename;
     this.sendMessage = sendMessage;
   }
   public queueMessageForLocalDelivery(from: string, to: string, message: Message): void {
@@ -195,10 +193,10 @@ export class Worker {
     } while (!done);
     return probeId;
   }
-  async run(): Promise<number> {
+  async run(filename: string): Promise<number> {
     let numTrans = 0;
     let totalTransAmount = 0;
-    await readCsv(this.filename, (from: string, to: string, amount: number) => {
+    await readCsv(filename, (from: string, to: string, amount: number) => {
       if (parseInt(from) % this.numWorkers === this.workerNo) {
         this.addWeight(from, to, amount);
         numTrans++;
