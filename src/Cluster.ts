@@ -1,12 +1,11 @@
 import cluster from 'node:cluster';
-
+import { createServer } from 'http';
 import { Worker } from './Worker.js';
 import { Message } from './Jerboa.js';
 
 export class Cluster {
   private filename: string;
   private numWorkers: number;
-  private lastMessageSeen: number;
   constructor(filename: string, numWorkers: number) {
     this.filename = filename;
     this.numWorkers = numWorkers;
@@ -26,9 +25,9 @@ export class Cluster {
           delete probing[sender];
         } else {
           const recipientWorker = parseInt((messageObj as { from: string, to: string, message: object }).to) % this.numWorkers;
-          // console.log('primary forwards', messageObj, `to worker ${recipientWorker}`);
-          this.lastMessageSeen = Date.now();
-          workers[recipientWorker].send(messageObj);
+          console.log('should primary forwards this', messageObj, `to worker ${recipientWorker}?`);
+          // this.lastMessageSeen = Date.now();
+          // workers[recipientWorker].send(messageObj);
         }
       });
       await new Promise(resolve => {
@@ -38,37 +37,18 @@ export class Cluster {
         });
       });
     }
-    // console.log('Primary takes a 1000ms break');
+    console.log('Primary takes a 1000ms break');
     await new Promise(resolve => setTimeout(resolve, 1000));
-    // console.log('sending greetings from primary');
+    console.log('sending greetings from primary');
     for (let i = 0; i < this.numWorkers; i++) {
       workers[i].send(`start`);
     }
-    await new Promise(resolve => {
-      const timer = setInterval(() => {
-        const silence = (Date.now() - this.lastMessageSeen);
-        // console.log(`Checking silence ${silence}`);
-        if (silence > 3) {
-          clearInterval(timer);
-          resolve(true);
-        }
-      }, 1);
-    });
     let probeId = 0;
     while(Object.keys(probing).length > 0) {
-      console.log(`Primary sends signal to ${probeId % this.numWorkers} to start probe ${probeId}`);
+      // console.log(`Primary sends signal to ${probeId % this.numWorkers} to start probe ${probeId}`);
       workers[Object.keys(probing)[0]].send(`startProbe ${probeId}`);
-      // console.log('probe started, waiting for silence again');
-      await new Promise(resolve => {
-        const timer = setInterval(() => {
-          const silence = (Date.now() - this.lastMessageSeen);
-          // console.log(`Checking silence ${silence}`);
-          if (silence > 100) {
-            clearInterval(timer);
-            resolve(true);
-          }
-        }, 10);
-      });
+      // console.log('probe started, waiting 10ms');
+      await new Promise(r => setTimeout(r, 10));
       probeId++;
     }
     cluster.on('exit', (worker, code, signal) => {
@@ -90,10 +70,36 @@ export class Cluster {
     return 0;
   }
   async runWorker(workerNo: number): Promise<number> {
-    const worker = new Worker(workerNo, this.numWorkers, (from: string, to: string, message: Message): void => {
+    const worker = new Worker(workerNo, this.numWorkers, async (from: string, to: string, message: Message): Promise<void> => {
       // console.log(`Worker ${workerNo} sends message to primary`, { from, to, message });
-      process.send({ from, to, message });
+      const toWorker = parseInt(to) % this.numWorkers;
+      const toPort = 9000 + toWorker;
+      // console.log(`Worker ${workerNo} sends message to worker ${toWorker} on port ${toPort}`);
+      /* const result = */ await fetch(`http://localhost:${toPort}`, {
+        method: 'POST',
+        body: JSON.stringify({ from, to, message })
+      });
+      // console.log(`Worker ${workerNo} sent message to worker ${toWorker} on port ${toPort}`, result.status);
     });
+    const server = createServer((req, res) => {
+      let body = '';
+      req.on('data', chunk => {
+        body += chunk;
+      });
+      req.on('end', async () => {
+        const msg = JSON.parse(body);
+        // console.log(msg);
+        const { from, to, message } = msg as { from: string, to: string, message: Message };
+        // console.log(`Worker ${workerNo} received message`, from, to, message);
+        worker.deliverMessageToNodeInThisWorker(from, to, message);
+        res.writeHead(200);
+        res.end();
+      });
+    });
+    const port = 9000 + workerNo;
+    server.listen(port);
+    console.log(`Worker ${workerNo} listening for http POSTs on port ${port}`);
+ 
     return new Promise((resolve) => {
       process.on('message', async (msg) => {
         if (typeof msg === 'string') {
@@ -124,9 +130,7 @@ export class Cluster {
             }
           }
         } else {
-          // console.log(`Worker ${workerNo} received message of non-string type`, msg);
-          const { from, to, message } = msg as { from: string, to: string, message: Message };
-          worker.deliverMessageToNodeInThisWorker(from, to, message);
+          console.log(`Worker ${workerNo} received message of non-string type`, msg);
         }
       });
     });
