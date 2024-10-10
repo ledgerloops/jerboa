@@ -82,6 +82,9 @@ export class Jerboa {
   private outgoingLinks: {
     [friend: string]: boolean // busy or not
   } = {};
+  private incomingLinks: {
+    [friend: string]: boolean // false or undefined
+  } = {};
   private probes: {
     [probeId: string]: {
       in: { [from: string]: number },
@@ -452,16 +455,28 @@ export class Jerboa {
       throw new Error('unknown task');
     }
   }
+
   checkFriendCache(friend: string): void {
     const newBalance = this.balances.getBalance(friend);
     if (newBalance > MIN_LOOP_WEIGHT) {
       this.outgoingLinks[friend] = false;
-    } else {
+      delete this.incomingLinks[friend];
+    } else if (newBalance < -MIN_LOOP_WEIGHT) {
+      this.incomingLinks[friend] = false;
       delete this.outgoingLinks[friend];
-      if (Object.keys(this.outgoingLinks).length === 0) {
-        // console.log('calling deregister');
-        this.deregister();
-      }
+    } else {
+      delete this.incomingLinks[friend];
+      delete this.outgoingLinks[friend];
+    }
+    if ((Object.keys(this.outgoingLinks).length === 0) || (Object.keys(this.incomingLinks).length === 0)) {
+      console.log('calling deregister');
+      this.deregister();
+    }
+    const haveOutgoingLinks = Object.keys(this.outgoingLinks).length > 0;
+    const haveIncomingLinks = Object.keys(this.incomingLinks).length > 0;
+    const haveBusyOutgoingLink = Object.keys(this.outgoingLinks).filter(friend => this.outgoingLinks[friend]).length > 0;
+    if (haveOutgoingLinks && haveIncomingLinks && !haveBusyOutgoingLink) {
+      console.log(`Node ${this.name} is ready to go`, this.incomingLinks, this.outgoingLinks);
     }
   }
   addWeight(to: string, weight: number): void {
@@ -506,6 +521,10 @@ export class Jerboa {
     this.sendMessage(to, msg);
   }
   startProbe(probeId: string): boolean {
+    if (Object.keys(this.incomingLinks).length === 0) {
+      console.log(`Not starting probe from leaf ${this.name}`);
+      return false;
+    }
     // console.log(`Node ${this.name} starting probe ${probeId}`);
     const nodes = this.getOutgoingLinks({ avoidBusy: true });
     // console.log('got outgoing links', nodes);

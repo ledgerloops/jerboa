@@ -11,7 +11,7 @@ export class Cluster {
     this.numWorkers = numWorkers;
   }
   async runPrimary(): Promise<number> {
-    console.log(`Primary ${process.pid} is running, forking ${this.numWorkers} threads`);
+    // console.log(`Primary ${process.pid} is running, forking ${this.numWorkers} threads`);
     // Fork workers.
     const workers = {};
     const probing = {};
@@ -21,7 +21,7 @@ export class Cluster {
       workers[i].on('message', (messageObj: { from: string, to: string, message: object } | string): void => {
         const sender = i;
         if (messageObj as string === 'done') {
-          console.log(sender, 'DONE WITH PROBES');
+          // console.log(sender, 'DONE WITH PROBES');
           delete probing[sender];
         } else {
           const recipientWorker = parseInt((messageObj as { from: string, to: string, message: object }).to) % this.numWorkers;
@@ -32,14 +32,14 @@ export class Cluster {
       });
       await new Promise(resolve => {
         workers[i].on('online', () => {
-          console.log(`Worker ${i} is online`);
+          // console.log(`Worker ${i} is online`);
           resolve(true);
         });
       });
     }
-    console.log('Primary takes a 1000ms break');
+    // console.log('Primary takes a 1000ms break');
     await new Promise(resolve => setTimeout(resolve, 1000));
-    console.log('sending greetings from primary');
+    // console.log('sending greetings from primary');
     for (let i = 0; i < this.numWorkers; i++) {
       workers[i].send(`start`);
     }
@@ -57,7 +57,7 @@ export class Cluster {
       } else if (code !== 0) {
         console.log(`worker ${worker.id} exited with error code: ${code}`);
       } else {
-        console.log(`worker ${worker.id} success!`);
+        // console.log(`worker ${worker.id} success!`);
       }
     });
     for (let i = 0; i <this. numWorkers; i++) {
@@ -98,7 +98,7 @@ export class Cluster {
     });
     const port = 9000 + workerNo;
     server.listen(port);
-    console.log(`Worker ${workerNo} listening for http POSTs on port ${port}`);
+    // console.log(`Worker ${workerNo} listening for http POSTs on port ${port}`);
  
     return new Promise((resolve) => {
       process.on('message', async (msg) => {
