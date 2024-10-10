@@ -80,7 +80,7 @@ export class Jerboa {
   private balances: Balances = new Balances();
   private name: string;
   private outgoingLinks: {
-    [friend: string]: boolean
+    [friend: string]: boolean // busy or not
   } = {};
   private probes: {
     [probeId: string]: {
@@ -359,6 +359,12 @@ export class Jerboa {
     //   console.log(`${this.name} recorded ${direction}going probe incarnation (${probeId}:${incarnation}) to ${other}`, this.probes[probeId]);
     // }
   }
+  markBusy(other: string, value: boolean) {
+    if (typeof this.outgoingLinks[other] === 'undefined') {
+      throw new Error('not currently an outgoing link!');
+    }
+    this.outgoingLinks[other] = value;
+  }
   probeAlreadySent(probeId: string, to: string): boolean {
     if (typeof this.probes[probeId] === 'undefined') {
       console.log(`unknown probe ${probeId} was not sent to anyone yet`);
@@ -449,7 +455,7 @@ export class Jerboa {
   checkFriendCache(friend: string): void {
     const newBalance = this.balances.getBalance(friend);
     if (newBalance > MIN_LOOP_WEIGHT) {
-      this.outgoingLinks[friend] = true;
+      this.outgoingLinks[friend] = false;
     } else {
       delete this.outgoingLinks[friend];
       if (Object.keys(this.outgoingLinks).length === 0) {
@@ -463,7 +469,10 @@ export class Jerboa {
     this.checkFriendCache(to);
     this.sendTransferMessage(to, weight);
   }
-  getOutgoingLinks(): string[] {
+  getOutgoingLinks(options?: { avoidBusy?: boolean }): string[] {
+    if (options?.avoidBusy === true) {
+      return Object.keys(this.outgoingLinks).filter((friend: string): boolean => (this.outgoingLinks[friend] === false));
+    }
     return Object.keys(this.outgoingLinks);
   }
   getBalance(to: string): number {
@@ -478,6 +487,7 @@ export class Jerboa {
   sendProbeMessage(to: string, msg: ProbeMessage): void {
     // console.log(`${this.name} recording probe traffic out sendProbeMessage to ${to}`, msg.debugInfo);
     this.recordProbeTraffic(to, 'out', msg.probeId, msg.incarnation);
+    this.markBusy(to, true);
     this.sendMessage(to, msg);
   }
   sendNackMessage(to: string, probeId: string, incarnation: number, debugInfo: { path: string[], backtracked: string[] }): void {
@@ -497,7 +507,7 @@ export class Jerboa {
   }
   startProbe(probeId: string): boolean {
     // console.log(`Node ${this.name} starting probe ${probeId}`);
-    const nodes = this.getOutgoingLinks();
+    const nodes = this.getOutgoingLinks({ avoidBusy: true });
     // console.log('got outgoing links', nodes);
     if (nodes.length === 0) {
       // console.log('returning false on startProbe');

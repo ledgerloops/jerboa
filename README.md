@@ -13,7 +13,7 @@ We're now working on making that same algorithm run with peer-to-peer `probe` me
 npm install
 npm test
 npm run build
-time node build/src/birdsEyeAnalysis.js __tests__/fixture-300000.csv
+time node build/src/birdsEyeAnalysis.js __tests__/fixture-300k.csv > birdseye-300k.out
 [...]
 Graph has 0 nodes and 0 links left
 After 422721 transactions with a total amount of 297 million
