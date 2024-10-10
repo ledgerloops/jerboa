@@ -359,7 +359,7 @@ export class Jerboa {
     //   console.log(`${this.name} recorded ${direction}going probe incarnation (${probeId}:${incarnation}) to ${other}`, this.probes[probeId]);
     // }
   }
-  markBusy(other: string, value: boolean) {
+  markBusy(other: string, value: boolean): void {
     if (typeof this.outgoingLinks[other] === 'undefined') {
       throw new Error('not currently an outgoing link!');
     }
