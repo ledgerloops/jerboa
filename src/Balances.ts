@@ -15,6 +15,27 @@ export class Balances {
         this.received[to] = 0;
       }
     }
+    haveIncomingAndOutgoingLinks(): boolean {
+      let haveIncoming = false;
+      let haveOutgoing = false;
+
+      const friends = [... new Set(Object.keys(this.sent).concat(Object.keys(this.received)))];
+      for (let i = 0; i < friends.length; i++) {
+        const sent = this.sent[friends[i]] || 0;
+        const received = this.received[friends[i]] || 0;
+        // console.log('considering friend', friends[i], sent, received);
+        if ((sent - received) > 0) {
+          haveOutgoing = true;
+        }
+        if ((sent - received) < 0) {
+          haveIncoming = true;
+        }
+        if (haveIncoming && haveOutgoing) {
+          return true;
+        }
+      }
+      return false;
+    }
     adjustSent(to: string, amount: number): void {
       if (typeof to !== 'string') {
         throw new Error('adjustBalance argument to is not a string');

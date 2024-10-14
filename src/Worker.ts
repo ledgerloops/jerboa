@@ -40,16 +40,25 @@ export class Worker {
     // console.log(`Worker ${this.workerNo} delivering message to node ${to}`, from, to, message, this.messages.length);
     return this.getNode(to).receiveMessage(from, message);
   }
-  runTasks(): boolean {
-    let hadWorkToDo = false;
+  runTasks(): number {
+    // let hadWorkToDo = false;
     // console.log('running tasks', this.messages.length);
     while (this.messages.length > 0) {
       const { from, to, message } = this.messages.pop();
       // console.log('popped', from, to, message);
-      hadWorkToDo = true;
+      // hadWorkToDo = true;
       this.deliverMessageToNodeInThisWorker(from, to, message);
     }
-    return hadWorkToDo;
+    // return hadWorkToDo;
+    return this.getNumProbes();
+  }
+  getNumProbes(): number {
+    const nodeNames = Object.keys(this.ourNodes);
+    let cumm = 0;
+    for (let i = 0; i < nodeNames.length; i++) {
+      cumm += this.ourNodes[nodeNames[i]].getNumProbesMinted();
+    }
+    return cumm;
   }
 
   private nodeIsOurs(name: string) : boolean {
@@ -171,7 +180,7 @@ export class Worker {
   getOurNodes(): Jerboa[] {
     return Object.values(this.ourNodes);
   }
-  runOneWorm(probeId: number): boolean {
+  runOneWorm(): boolean {
     let newStep: string;
     // console.log('starting probe', probeId);
     try {
@@ -186,7 +195,7 @@ export class Worker {
       }
     }
     // console.log('calling startProbe', newStep, probeId);
-    this.getNode(newStep).startProbe(probeId.toString());
+    this.getNode(newStep).maybeRunProbe();
     // console.log('done starting probe from', newStep);
     return false;
   }
@@ -195,7 +204,7 @@ export class Worker {
     let probeId = 0;
     do {
       this.runTasks();
-      done = this.runOneWorm(probeId);
+      done = this.runOneWorm();
       probeId++;
     } while (!done);
     return probeId; // num probes run

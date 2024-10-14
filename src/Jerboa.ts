@@ -64,6 +64,7 @@ export class Jerboa {
       backtracked: string[];
     }
   } | undefined;
+  private probeMinter: number = 0;
   private sendMessage: (to: string, message: Message) => void;
   private deregister: () => void;
   private loopsTried: string[] = [];
@@ -71,6 +72,9 @@ export class Jerboa {
     this.name = name;
     this.sendMessage = sendMessage;
     this.deregister = deregister;
+  }
+  public getNumProbesMinted(): number {
+    return this.probeMinter;
   }
   private pickIncarnation(probeId: string, maxIncarnation: number): string {
     const numOptions = Object.keys(this.probes[probeId].in).length;
@@ -162,7 +166,7 @@ export class Jerboa {
   // assumes all loop hops exist
   scoutLoop(probeId: string, incarnation: number, loop: string[]): void {
     if (this.loopsTried.indexOf(loop.join(' ')) !== -1) {
-      console.log('loop already tried');
+      // console.log('loop already tried');
     }
     this.loopsTried.push(loop.join(' '));
     // console.log(`${this.name} scouting loop`);
@@ -184,7 +188,7 @@ export class Jerboa {
     const incomingBalance = this.balances.getBalance(incomingNeighbour);
     // console.log('scoutLoop considering incoming balance', this.name, incomingNeighbour, incomingBalance);
     if (incomingBalance > -MIN_LOOP_WEIGHT) {
-      console.log(this.name, incomingNeighbour, incomingBalance, 'incoming balance not negative enough');
+      // console.log(this.name, incomingNeighbour, incomingBalance, 'incoming balance not negative enough');
       return;
     } else {
       // console.log('calling sendScoutMessage');
@@ -195,6 +199,9 @@ export class Jerboa {
     // console.log(`${sender}->${this.name}: ${amount}`);
     this.balances.adjustReceived(sender, msg.amount);
     this.checkFriendCache(sender);
+    // if (this.balances.haveIncomingAndOutgoingLinks()) {
+    //   this.startProbe(`${this.name}-${this.probeMinter++}`);
+    // }
     // if (this.graph.getNode(this.name).getBalance(sender) + this.graph.getNode(sender).getBalance(this.name) !== 0) {
     //   console.log('Probably some transfer message is still in flight?', this.name, sender, this.graph.getNode(this.name).getBalance(sender), this.graph.getNode(sender).getBalance(this.name));
     // }
@@ -445,6 +452,9 @@ export class Jerboa {
     this.balances.adjustSent(to, weight);
     this.checkFriendCache(to);
     this.sendTransferMessage(to, weight);
+    // if (this.balances.haveIncomingAndOutgoingLinks()) {
+      this.startProbe(`${this.name}-${this.probeMinter++}`);
+    // }
   }
   getOutgoingLinks(): string[] {
     return Object.keys(this.outgoingLinks);
