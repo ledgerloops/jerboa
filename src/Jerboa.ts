@@ -399,7 +399,7 @@ export class Jerboa {
       return false;
     } else if (debugInfo.backtracked.length > 0) {
       if (process.env.PROBING_REPORT) {
-        console.log(`backtracked (${probeId}:${incarnation})`, debugInfo.path.concat([sender, this.name]), debugInfo.backtracked);
+        console.log(`backtracked (${probeId}:${incarnation}) [ ${debugInfo.path.concat([sender, this.name]).join(', ')} ] [ ${debugInfo.backtracked.join(', ')} ]`);
       }
       incarnation++;
     }
