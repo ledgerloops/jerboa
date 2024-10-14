@@ -93,7 +93,7 @@ export class BirdsEyeWorm {
       // we now now that either newStep has outgoing links, or path is empty
       if (path.length === 0) {
         if (backtracked.length > 0) {
-          printLine('finished  ', path, backtracked.reverse());
+          printLine('finished   ', path, backtracked.reverse());
         }
         // no paths left, start with a new worm
         path = [];
@@ -123,7 +123,7 @@ export class BirdsEyeWorm {
       if (pos !== -1) {
         const loop = path.splice(pos).concat(newStep);
         this.netLoop(loop);
-        printLine(`found loop`, path, loop);
+        printLine(`found loop `, path, loop);
 
         newStep = this.graph.getFirstNode(path[path.length - 1]);
         // console.log(`Continuing with`, path, newStep);
