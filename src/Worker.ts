@@ -41,6 +41,7 @@ export class Worker {
     return this.getNode(to).receiveMessage(from, message);
   }
   getNode(name: string): Jerboa {
+    this.ensureNode(name);
     return this.ourNodes[name];
   }
   public async work(): Promise<void> {

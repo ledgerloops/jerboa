@@ -86,11 +86,11 @@ export class Jerboa {
     this.sendMessage = sendMessage;
   }
   receiveTransfer(sender: string, msg: TransferMessage): void {
-    console.log(`received ${sender}->${this.name}: ${msg.amount}`);
+    // console.log(`received ${sender}->${this.name}: ${msg.amount}`);
     this.balances.adjustReceived(sender, msg.amount);
   }
   addWeight(to: string, amount: number): void {
-    console.log(`sending ${this.name}->${to}: ${amount}`);
+    // console.log(`sending ${this.name}->${to}: ${amount}`);
     this.sendMessage(to, { command: 'transfer', amount } as TransferMessage);
   }
   receiveMessage(from: string, msg: Message ): void {

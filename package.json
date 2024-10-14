@@ -22,7 +22,7 @@
     "typescript": "~5.4"
   },
   "scripts": {
-    "start": "time CLUSTER=1 node build/src/main.js __tests__/fixture-30.csv",
+    "start": "time node build/src/main.js __tests__/fixture-300k.csv",
     "clean": "rimraf coverage build tmp",
     "prebuild": "npm run lint",
     "build": "tsc -p tsconfig.json",
