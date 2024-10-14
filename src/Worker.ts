@@ -37,18 +37,6 @@ export class Worker {
     // console.log(`Worker ${this.workerNo} delivering message to node ${to}`, from, to, message, this.messages.length);
     return this.getNode(to).receiveMessage(from, message);
   }
-  runTasks(): number {
-    // let hadWorkToDo = false;
-    // console.log('running tasks', this.messages.length);
-    while (this.messages.length > 0) {
-      const { from, to, message } = this.messages.pop();
-      // console.log('popped', from, to, message);
-      // hadWorkToDo = true;
-      this.deliverMessageToNodeInThisWorker(from, to, message);
-    }
-    // return hadWorkToDo;
-    return this.getNumProbes();
-  }
   getNumProbes(): number {
     const nodeNames = Object.keys(this.ourNodes);
     let cumm = 0;
@@ -135,9 +123,6 @@ export class Worker {
     this.ensureNode(name);
     return this.ourNodes[name];
   }
-  getOurNodes(): Jerboa[] {
-    return Object.values(this.ourNodes);
-  }
   async readTransfersFromCsv(filename: string): Promise<void> {
     // this.sendMessage('123', '456', { command: 'test', probeId: '1', incarnation: 0, debugInfo: {} } as Message);
     // console.log('worker waiting 10s before finishing run', filename);
@@ -153,10 +138,5 @@ export class Worker {
       }
     });
     // console.log(`done reading csv`);
-  }
-  teardown(): void {
-    Object.keys(this.ourNodes).forEach(name => {
-      delete this.ourNodes[name];
-    });
   }
 }
