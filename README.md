@@ -43,9 +43,9 @@ time node build/src/birdsEyeAnalysis.js __tests__/fixture-3k.csv > birdseye-3k.o
 time node build/src/birdsEyeAnalysis.js __tests__/fixture-30k.csv > birdseye-30k.out
 time node build/src/birdsEyeAnalysis.js __tests__/fixture-300k.csv > birdseye-300k.out
 
-PROBING_REPORT=1 time node build/src/main.js __tests__/fixture-30.csv > jerboa-30.out
-PROBING_REPORT=1 time node build/src/main.js __tests__/fixture-300.csv > jerboa-300.out
-PROBING_REPORT=1 time node build/src/main.js __tests__/fixture-3k.csv > jerboa-3k.out
-PROBING_REPORT=1 time node build/src/main.js __tests__/fixture-30k.csv > jerboa-30k.out
-PROBING_REPORT=1 time node --max-old-space-size=64000 build/src/main.js __tests__/fixture-300k.csv > jerboa-300k.out
+time NUM_WORKERS=15 PROBING_REPORT=1 node build/src/main.js __tests__/fixture-30.csv > jerboa-30.out
+time NUM_WORKERS=15 PROBING_REPORT=1 node build/src/main.js __tests__/fixture-300.csv > jerboa-300.out
+time NUM_WORKERS=15 PROBING_REPORT=1 node build/src/main.js __tests__/fixture-3k.csv > jerboa-3k.out
+time NUM_WORKERS=15 PROBING_REPORT=1 node build/src/main.js __tests__/fixture-30k.csv > jerboa-30k.out
+time NUM_WORKERS=15 PROBING_REPORT=1 node --max-old-space-size=64000 build/src/main.js __tests__/fixture-300k.csv > jerboa-300k.out
 ```

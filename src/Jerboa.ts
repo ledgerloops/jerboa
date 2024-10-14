@@ -1,6 +1,8 @@
 import { randomBytes, createHash } from "node:crypto";
 import { Balances } from "./Balances.js";
 import { Message, TransferMessage, ProposeMessage, CommitMessage, ScoutMessage, ProbeMessage, NackMessage } from "./MessageTypes.js";
+import { printLine } from "./BirdsEyeWorm.js";
+
 const MIN_LOOP_WEIGHT = 0.00000001;
 // const MAX_LOOP_WEIGHT = 1000000000;
 const RANDOM_NEXT_STEP = false;
@@ -264,11 +266,11 @@ export class Jerboa {
       const nodes = this.getOutgoingLinks();
       if (nodes.length === 0) {
         if (process.env.PROBING_REPORT) {
-          console.log(`finished   (${probeId}:${incarnation}) [] [ ${[this.name, nackSender].concat(debugInfo.backtracked).map(x => `'${x}'`).join(', ')} ]`);
+          printLine(`finished   (${probeId}:${incarnation})`, [], [this.name, nackSender].concat(debugInfo.backtracked));
         }
       } else {
         if (process.env.PROBING_REPORT) {
-          console.log(`backtrack21 (${probeId}:${incarnation}) [ '${this.name}' ] [ ${[nackSender].concat(debugInfo.backtracked).map(x => `'${x}'`).join(', ')} ]`);
+          console.log(`backtrack21 (${probeId}:${incarnation})`, [ this.name ], [nackSender].concat(debugInfo.backtracked));
         }
         const newStep = randomStringFromArray(nodes);
         // console.log(`${this.name} sends probe message to ${newStep} for probeId ${probeId} after receiving nack from ${nackSender}`);
@@ -302,9 +304,7 @@ export class Jerboa {
       // }
       // console.log(`Found loop`, loop, ` pos ${pos}`);
       if (process.env.PROBING_REPORT) {
-        const pathStr = path.length > 0 ? `[ ${path.map(x => `'${x}'`).join(', ')} ]` : `[]`;
-        const loopStr = loop.length > 0 ? `[ ${loop.map(x => `'${x}'`).join(', ')} ]` : `[]`;
-        console.log(`found loop (${probeId}:${incarnation}) ${pathStr} ${loopStr}`);
+        printLine(`found loop (${probeId}:${incarnation}`, path, loop);
       }
       return true;
     }
@@ -399,7 +399,7 @@ export class Jerboa {
       return false;
     } else if (debugInfo.backtracked.length > 0) {
       if (process.env.PROBING_REPORT) {
-        console.log(`backtracked (${probeId}:${incarnation}) [ ${debugInfo.path.concat([sender, this.name]).join(', ')} ] [ ${debugInfo.backtracked.join(', ')} ]`);
+        printLine(`backtracked (${probeId}:${incarnation})`, debugInfo.path.concat([sender, this.name]), debugInfo.backtracked);
       }
       incarnation++;
     }

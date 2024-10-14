@@ -2,7 +2,7 @@ import { Graph } from './BirdsEyeGraph.js';
 
 const MAX_NUM_STEPS = 1000000;
 
-function printLine(preface: string, first: string[], second: string[]): void {
+export function printLine(preface: string, first: string[], second: string[]): void {
   const firstStr = first.length > 0 ? `[ ${first.map(x => `'${x}'`).join(', ')} ]` : `[]`;
   const secondStr = second.length > 0 ? `[ ${second.map(x => `'${x}'`).join(', ')} ]` : `[]`;
   console.log(`${preface} ${firstStr} ${secondStr}`);
