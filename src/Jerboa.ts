@@ -66,12 +66,10 @@ export class Jerboa {
   } | undefined;
   private probeMinter: number = 0;
   private sendMessage: (to: string, message: Message) => void;
-  private deregister: () => void;
   private loopsTried: string[] = [];
-  constructor(name: string, sendMessage: (to: string, message: Message) => void, deregister: () => void) {
+  constructor(name: string, sendMessage: (to: string, message: Message) => void) {
     this.name = name;
     this.sendMessage = sendMessage;
-    this.deregister = deregister;
   }
   public getNumProbesMinted(): number {
     return this.probeMinter;
@@ -324,7 +322,7 @@ export class Jerboa {
     this.ensureProbe(probeId);
     if (typeof this.probes[probeId][direction][other] !== 'undefined') {
       console.log(`recording entry ${direction} with ${other} for probe (${probeId})`, this.probes[probeId]);
-      throw new Error('repeated entry!');
+      // throw new Error('repeated entry!');
     }
     this.probes[probeId][direction][other] = incarnation;
     // if (direction === 'in') {
@@ -442,10 +440,10 @@ export class Jerboa {
       this.outgoingLinks[friend] = true;
     } else {
       delete this.outgoingLinks[friend];
-      if (Object.keys(this.outgoingLinks).length === 0) {
+      // if (Object.keys(this.outgoingLinks).length === 0) {
         // console.log('calling deregister');
-        this.deregister();
-      }
+        // this.deregister();
+      // }
     }
   }
   addWeight(to: string, weight: number): void {

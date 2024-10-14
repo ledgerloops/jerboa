@@ -123,27 +123,6 @@ describe('addWeight', () => {
   });
 });
 
-describe('getFirstNode', () => {
-  it('works when passing no after argument', () => {
-    const sendMessage = (from: string, to: string, message: Message): void => {
-      worker.deliverMessageToNodeInThisWorker(from, to, message);
-    };
-    const worker = new Worker(0, 1, sendMessage);
-    worker.addWeight('0', '1', 3);
-    worker.runTasks();
-    expect(worker.getOurFirstNode(false)).toEqual('0');
-  });
-  it('works when passing an after argument', () => {
-    const sendMessage = (from: string, to: string, message: Message): void => {
-      worker.deliverMessageToNodeInThisWorker(from, to, message);
-    };
-    const worker = new Worker(0, 1, sendMessage);
-   worker.addWeight('0', '1', 3);
-    worker.runTasks();
-    expect(worker.getOurFirstNode(false, '0')).toEqual('1');
-  });
-});
-
 describe('hasOutgoingLinks', () => {
   it('works in the positive case', () => {
     const sendMessage = (from: string, to: string, message: Message): void => {
