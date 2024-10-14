@@ -274,7 +274,13 @@ export class Jerboa {
       const popped = debugInfo.path.pop();
       // console.log(`                     combining nack sender, internal receiveProbe`, popped, this.name, path, [nackSender].concat(backtracked));
       // console.log(`${this.name} reconsiders probe ${probeId} from ${popped} after receiving nack from ${nackSender}`);
-      this.considerProbe(popped, probeId, incarnation, { path: debugInfo.path, backtracked: [nackSender].concat(debugInfo.backtracked) });
+      this.probeQueue.push({
+        sender: popped,
+        probeId,
+        incarnation,
+        debugInfo: { path: debugInfo.path, backtracked: [nackSender].concat(debugInfo.backtracked) }
+      });
+      this.maybeRunProbe();
     }
   }
   spliceLoop(sender: string, probeId: string, incarnation: number, path: string[]): boolean {
@@ -335,7 +341,13 @@ export class Jerboa {
     const { probeId, incarnation, debugInfo } = msg;
     // console.log(`${this.name} recording probe traffic in from receiveProbe "${probeId}"`, debugInfo.path.concat([sender, this.name]));
     this.recordProbeTraffic(sender, 'in', probeId, incarnation);
-    this.considerProbe(sender, probeId, incarnation, debugInfo);
+    this.probeQueue.push({
+      sender,
+      probeId,
+      incarnation,
+      debugInfo
+    });
+    this.maybeRunProbe();
   }
   changeToLooper(sender: string, probeId: string, incarnation: number): void {
     if (typeof this.probes[probeId] === 'undefined') {
@@ -356,7 +368,13 @@ export class Jerboa {
       if (debugInfo.path.length >= 1) {
         // console.log('                   continuing by popping old sender from', path);
         const oldSender = debugInfo.path.pop();
-        this.considerProbe(oldSender, probeId, incarnation + 1, { path: debugInfo.path, backtracked: [] });
+        this.probeQueue.push({
+          sender: oldSender,
+          probeId,
+          incarnation: incarnation + 1,
+          debugInfo: { path: debugInfo.path, backtracked: [] },
+        })
+        this.maybeRunProbe();
       }
       return;
     }
@@ -471,18 +489,24 @@ export class Jerboa {
     }
     return undefined;
   }
-  runCurrentProbe(): boolean {
+  runCurrentProbe(): boolean | undefined {
     if (this.currentProbe === undefined) {
       throw new Error('there is no current probe');
     }
-    // console.log(`Node ${this.name} starting probe ${probeId}`);
-    const nodes = this.getOutgoingLinks();
-    // console.log('got outgoing links', nodes);
-    if (nodes.length === 0) {
-      // console.log('returning false on startProbe');
-      return false;
+    if (this.currentProbe.sender === null) {
+
+      // console.log(`Node ${this.name} starting probe ${probeId}`);
+      const nodes = this.getOutgoingLinks();
+      // console.log('got outgoing links', nodes);
+      if (nodes.length === 0) {
+        // console.log('returning false on startProbe');
+        return false;
+      }
+      this.sendProbeMessage(nodes[0], { command: 'probe', probeId: this.currentProbe.probeId, incarnation: this.currentProbe.incarnation, debugInfo: this.currentProbe.debugInfo });
+      return true;
+    } else {
+      this.considerProbe(this.currentProbe.sender, this.currentProbe.probeId, this.currentProbe.incarnation, this.currentProbe.debugInfo);
+      return undefined;
     }
-    this.sendProbeMessage(nodes[0], { command: 'probe', probeId: this.currentProbe.probeId, incarnation: this.currentProbe.incarnation, debugInfo: this.currentProbe.debugInfo });
-    return true;
   }
 }
