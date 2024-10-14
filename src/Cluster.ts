@@ -43,15 +43,22 @@ export class Cluster {
     for (let i = 0; i < this.numWorkers; i++) {
       workers[i].send(`start`);
     }
+    let numWorkersDone = 0;
     cluster.on('exit', (worker, code, signal) => {
       if (signal) {
         console.log(`worker ${worker.id} was killed by signal: ${signal}`);
       } else if (code !== 0) {
         console.log(`worker ${worker.id} exited with error code: ${code}`);
       } else {
-        // console.log(`worker ${worker.id} success!`);
+        console.log(`worker ${worker.id} success!`);
       }
+      numWorkersDone++;
     });
+    do {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      console.log(`${numWorkersDone} of ${this.numWorkers} done`);
+    } while (numWorkersDone < this.numWorkers);
+    console.log(`Looks like all workers are done now`);
     for (let i = 0; i <this. numWorkers; i++) {
       workers[i].send('shutdown');
       workers[i].disconnect();
@@ -87,7 +94,6 @@ export class Cluster {
         worker.queueMessageForLocalDelivery(from, to, message);
         res.writeHead(200);
         res.end();
-        worker.maybeWork();
       });
     });
     const port = 9000 + workerNo;
@@ -101,11 +107,15 @@ export class Cluster {
           const parts = msg.split(' ');
           switch(parts[0]) {
             case `start`: {
+              console.log(`Worker ${workerNo} is starting`);
               worker.readTransfersFromCsv(this.filename);
+              console.log(`Worker ${workerNo} finished reading csv, starting work`);
+              await worker.work();
+              console.log(`Worker ${workerNo} finished work`);
               break;
             }
             case `shutdown`: {
-              // console.log(`Worker ${workerNo} received shutdown message from primary`);
+              console.log(`Worker ${workerNo} received shutdown message from primary`);
               worker.teardown();
               resolve(42);
               break;

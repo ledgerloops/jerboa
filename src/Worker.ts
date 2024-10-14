@@ -40,24 +40,17 @@ export class Worker {
     // console.log(`Worker ${this.workerNo} delivering message to node ${to}`, from, to, message, this.messages.length);
     return this.getNode(to).receiveMessage(from, message);
   }
-  maybeWork(): void {
-    if (this.running) {
-      return;
-    }
-    this.running = true;
-    this.runTasks();
-    this.running = false;
+  getNode(name: string): Jerboa {
+    return this.ourNodes[name];
   }
-  runTasks(): boolean {
-    let hadWorkToDo = false;
-    // console.log('running tasks', this.messages.length);
-    while (this.messages.length > 0) {
-      const { from, to, message } = this.messages.pop();
-      // console.log('popped', from, to, message);
-      hadWorkToDo = true;
-      this.deliverMessageToNodeInThisWorker(from, to, message);
-    }
-    return hadWorkToDo;
+  public async work(): Promise<void> {
+    do {
+      while(this.messages.length > 0) {
+        const nextMessage = this.messages.shift();
+        this.deliverMessageToNodeInThisWorker(nextMessage.from, nextMessage.to, nextMessage.message);
+      }
+      await new Promise(r => setTimeout(r, 1000));
+    } while(this.messages.length > 0);
   }
 
   private nodeIsOurs(name: string) : boolean {
@@ -76,14 +69,9 @@ export class Worker {
       this.ourNodes[name] = new Jerboa(name, (to: string, message: Message) => {
         // console.log('our node', name, to, message);
         this.sendMessage(name, to, message);
-      }, () => {
-        this.deregister(name);
       });
       this.ourNodesToStartFrom[name] = true;
     }
-  }
-  public deregister(name: string): void {
-    delete this.ourNodesToStartFrom[name];
   }
   public addWeight(from: string, to: string, weight: number): void {
     if (typeof from !== 'string') {
@@ -102,111 +90,6 @@ export class Worker {
     }
     this.ensureNode(from);
     this.ourNodes[from].addWeight(to, weight);
-  }
-
-  public getOurFirstNode(withOutgoingLinks: boolean, after?: string): string {
-    if ((typeof after !== 'string') && (typeof after !== 'undefined')) {
-      throw new Error(`after param ${JSON.stringify(after)} is neither a string nor undefined in call to getFirstNode`);
-    }
-    // console.log(`[Worker ${this.workerNo}] getOurFirstNode`, withOutgoingLinks, after);
-    let nodes: string[];
-    if (typeof after === 'string') {
-      if (!this.nodeIsOurs(after)) {
-        throw new Error(`After node ${after} is not ours in call to getFirstNode!`);
-      }
-      const nodesObj = this.ourNodes[after];
-      if (typeof nodesObj === 'undefined') {
-        throw new Error(`No outgoing links from node ${after}`);
-      }
-      nodes = nodesObj.getOutgoingLinks();
-    } else {
-      nodes = Object.keys(this.ourNodesToStartFrom);
-      // console.log(nodes);
-      if (nodes.length === 0) {
-        throw new Error('Graph is empty');
-      }
-    }
-    if (withOutgoingLinks) {
-      for (let i = 0; i < nodes.length; i++) {
-        if ((typeof this.ourNodes[nodes[i]] !== 'undefined') && (this.ourNodes[nodes[i]].getOutgoingLinks().length >= 1)) {
-          return nodes[i];
-        }
-      }
-    } else {
-      return nodes[0];
-    }
-    throw new Error('no nodes have outgoing links');
-  }
-  public hasOutgoingLinks(after: string): boolean {
-    if (typeof after !== 'string') {
-      throw new Error(`after param ${JSON.stringify(after)} is not a string in call to hasOutgoingLinks`);
-    }
-    if (!this.nodeIsOurs(after)) {
-      throw new Error(`After node ${after} is not ours in call to hasOutgoingLinks!`);
-    }
-    return ((typeof this.ourNodes[after] !== 'undefined') && (this.ourNodes[after].getOutgoingLinks().length >= 1));
-  }
-  public getWeight(from: string, to: string): number {
-    if (typeof from !== 'string') {
-      throw new Error(`from param ${JSON.stringify(from)} is not a string in call to getWeight`);
-    }
-    if (!this.nodeIsOurs(from)) {
-      throw new Error(`From node ${from} is not ours in call to getWeight!`);
-    }
-    if (typeof to !== 'string') {
-      throw new Error(`to param ${JSON.stringify(to)} is not a string in call to getWeight`);
-    }
-    if (typeof this.ourNodes[from] === 'undefined') {
-      return 0;
-    }
-    return this.ourNodes[from].getBalance(to);
-  }
-  public getOurBalances(): {
-    [from: string]: {
-      [to: string]: number;
-    }
-  } {
-    const links = {};
-    Object.keys(this.ourNodes).forEach(name => {
-      links[name] = this.ourNodes[name].getBalances();
-    });
-    return links;
-  }
-  getNode(name: string): Jerboa {
-    this.ensureNode(name);
-    return this.ourNodes[name];
-  }
-  getOurNodes(): Jerboa[] {
-    return Object.values(this.ourNodes);
-  }
-  runOneWorm(probeId: number): boolean {
-    let newStep: string;
-    console.log('starting probe', probeId);
-    try {
-      newStep = this.getOurFirstNode(true);
-      console.log('picked first new step!', newStep, this.getNode(newStep).getOutgoingLinks());
-    } catch (e) {
-      if ((e.message === 'Graph is empty') || (e.message == 'no nodes have outgoing links')) {
-        console.log('no nodes found, returning true');
-        return true;
-      } else {;
-        throw e;
-      }
-    }
-    console.log('calling startProbe', newStep, probeId);
-    this.getNode(newStep).startProbe(probeId.toString());
-    console.log('done starting probe from', newStep);
-    return false;
-  }
-  runWormsUntilDone(): number {
-    let done = false;
-    let probeId = 0;
-    do {
-      this.runTasks();
-      done = this.runOneWorm(probeId);
-      probeId++;
-    } while (!done);
-    return probeId; // num probes run
   }
   async readTransfersFromCsv(filename: string): Promise<void> {
     // this.sendMessage('123', '456', { command: 'test', probeId: '1', incarnation: 0, debugInfo: {} } as Message);
