@@ -157,7 +157,7 @@ export class Jerboa {
         amountOut = inBalance;
       }
       if (amountOut <= MIN_LOOP_WEIGHT) {
-        console.log('scout amount too small');
+        // console.log('scout amount too small');
       } else {
         this.sendScoutMessage(forwardTo, { command: 'scout', probeId, maxIncarnation: incarnation, amount: amountOut, debugInfo });
       }
@@ -452,9 +452,11 @@ export class Jerboa {
     this.balances.adjustSent(to, weight);
     this.checkFriendCache(to);
     this.sendTransferMessage(to, weight);
-    // if (this.balances.haveIncomingAndOutgoingLinks()) {
-      this.startProbe(`${this.name}-${this.probeMinter++}`);
-    // }
+    setTimeout(() => {
+       if (this.balances.haveIncomingAndOutgoingLinks()) {
+        this.startProbe(`${this.name}-${this.probeMinter++}`);
+      }
+    }, 1000);
   }
   getOutgoingLinks(): string[] {
     return Object.keys(this.outgoingLinks);
