@@ -16,6 +16,7 @@ export class Worker {
       totalAmount: number;
     }
   } = {};
+  running: boolean = false;
   workerNo: number;
   numWorkers: number;
   private sendMessage: (from: string, to: string, message: Message) => void;
@@ -38,6 +39,14 @@ export class Worker {
     this.messagesSent++;
     // console.log(`Worker ${this.workerNo} delivering message to node ${to}`, from, to, message, this.messages.length);
     return this.getNode(to).receiveMessage(from, message);
+  }
+  maybeWork(): void {
+    if (this.running) {
+      return;
+    }
+    this.running = true;
+    this.runTasks();
+    this.running = false;
   }
   runTasks(): boolean {
     let hadWorkToDo = false;

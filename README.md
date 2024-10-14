@@ -14,16 +14,10 @@ npm install
 npm test
 npm run build
 time node build/src/birdsEyeAnalysis.js __tests__/fixture-300k.csv > birdseye-300k.out
-[...]
-Graph has 0 nodes and 0 links left
-After 422721 transactions with a total amount of 297 million
-189 million (64%) was immediately netted bilaterally
-And a further 65 million (22%) was netted in 26986 loops
-Leaving 43 million (14%) to be settled out of band
 
-real	0m22.982s
-user	0m20.739s
-sys	0m3.752s
+real	0m20.673s
+user	0m19.104s
+sys	0m3.507s
 ```
 
 ## Development

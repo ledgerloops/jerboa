@@ -43,14 +43,6 @@ export class Cluster {
     for (let i = 0; i < this.numWorkers; i++) {
       workers[i].send(`start`);
     }
-    let probeId = 0;
-    while(Object.keys(probing).length > 0) {
-      // console.log(`Primary sends signal to ${probeId % this.numWorkers} to start probe ${probeId}`);
-      workers[Object.keys(probing)[0]].send(`startProbe ${probeId}`);
-      // console.log('probe started, waiting 10ms');
-      await new Promise(r => setTimeout(r, 10));
-      probeId++;
-    }
     cluster.on('exit', (worker, code, signal) => {
       if (signal) {
         console.log(`worker ${worker.id} was killed by signal: ${signal}`);
@@ -91,9 +83,11 @@ export class Cluster {
         // console.log(msg);
         const { from, to, message } = msg as { from: string, to: string, message: Message };
         // console.log(`Worker ${workerNo} received message`, from, to, message);
-        worker.deliverMessageToNodeInThisWorker(from, to, message);
+        // worker.deliverMessageToNodeInThisWorker(from, to, message);
+        worker.queueMessageForLocalDelivery(from, to, message);
         res.writeHead(200);
         res.end();
+        worker.maybeWork();
       });
     });
     const port = 9000 + workerNo;
@@ -114,15 +108,6 @@ export class Cluster {
               // console.log(`Worker ${workerNo} received shutdown message from primary`);
               worker.teardown();
               resolve(42);
-              break;
-            }
-            case `startProbe`: {
-              // console.log(`Worker ${workerNo} starts worm ${parts[1]}`);
-              const done = worker.runOneWorm(parseInt(parts[1]));
-              if (done) {
-                // console.log(`Worker ${workerNo} tells primary DONE`);
-                process.send(`done`);
-              }
               break;
             }
             default: {

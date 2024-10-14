@@ -23,6 +23,7 @@ loops in directed graphs using a node-to-node messaging protocol.
 It differs from some other cycle finding algorithms in that it does not require
 a central coordinator, or a bird's-eye view of the graph.
 
+This is a first version of this Internet Draft, and it is still expected to evolve significantly from here.
 --- middle
 
 # Terms
@@ -60,6 +61,7 @@ The Decentralized Loop Removal (DLR) algorithm is essentially a depth-first sear
 
 # Loop Removal
 
+The goal of this algorithm is to adjust the Weights of Links along the Balance Graph loop, such that the sum of outgoing weights minus the sum of incoming weights stays equal.
 An Apex Node can send a Scout Message to the Node that sent the second Probe Message, including:
 
 * the Probe ID,
@@ -77,4 +79,44 @@ When it does, the Apex Node responds with a Commit Message, including the Probe 
 
 Each Node along the loop can then check that the Challenge from the Propose Message equals the SHA256 hash of the Secret from the Commit Message.
 
+# Example
+
+Consider the following graph:
+
+```
+A -3-> B <-3- E -2-> F
+       |      ^
+       2      |
+       |      8
+       v      |
+       C -5-> D
+```
+The following messages might be sent (here using an arbitrary space-delimited serialisation):
+
+* A -> B  "type=probe probeID=rei6Ac8i"
+* B -> C  "type=probe probeID=rei6Ac8i"
+* C -> D  "type=probe probeID=rei6Ac8i"
+* D -> E  "type=probe probeID=rei6Ac8i"
+* E -> F  "type=probe probeID=rei6Ac8i"
+* F -> E  "type=nack probeID=rei6Ac8i"
+* E -> B  "type=probe probeID=rei6Ac8i"
+* B -> E  "type=scout probeID=rei6Ac8i scoutID=aeBoi8xu weight=3"
+* E -> D  "type=scout probeID=rei6Ac8i scoutID=aeBoi8xu weight=3"
+* D -> C  "type=scout probeID=rei6Ac8i scoutID=aeBoi8xu weight=3"
+* C -> B  "type=scout probeID=rei6Ac8i scoutID=aeBoi8xu weight=2"
+* B -> C  "type=propose probeID=rei6Ac8i challenge=16e89343fd298cdf28a8619ceb9477bbeee7a42c10ccaf27062a5d8d6469ed55 weight=2"
+* C -> D  "type=propose probeID=rei6Ac8i challenge=16e89343fd298cdf28a8619ceb9477bbeee7a42c10ccaf27062a5d8d6469ed55 weight=2"
+* D -> E  "type=propose probeID=rei6Ac8i challenge=16e89343fd298cdf28a8619ceb9477bbeee7a42c10ccaf27062a5d8d6469ed55 weight=2"
+* E -> B  "type=propose probeID=rei6Ac8i challenge=16e89343fd298cdf28a8619ceb9477bbeee7a42c10ccaf27062a5d8d6469ed55 weight=2"
+* B -> E  "type=commit probeID=rei6Ac8i solution=Ohkae6lu weight=2"
+* E -> D  "type=commit probeID=rei6Ac8i solution=Ohkae6lu weight=2"
+* D -> C  "type=commit probeID=rei6Ac8i solution=Ohkae6lu weight=2"
+* C -> B  "type=commit probeID=rei6Ac8i solution=Ohkae6lu weight=2"
+
+# Security Considerations
+The Apex Node cannot conclude that a communication loop has been found based just on the repeated occurrance of the Probe ID, because it has no knowledge of how the Probe ID was generated.
+It can however conclude that a communication loop exists if the Scout ID is looped back to it intact.
+A malicious or malfunctioning node could fail to forward messages, thus preventing the completion of the algorithm.
+A malicious or malfunctioning node could collude with another node along the path to send fake Scout and Propose messages along a Probe path, thus convincing the intermediate nodes to reserve
+some weight inexpectation of a commit message, and preventing those nodes from participating in other
 --- back

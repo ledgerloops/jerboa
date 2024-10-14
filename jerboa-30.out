@@ -1,15 +1,48 @@
 Running single thread with 1 workers
-backtracked (0:0) [ '5', '6' ] [ '8' ]
-found loop (0:1) [] [ '5', '6', '9', '5' ]
-backtrack21 (1:0) [ '5' ] [ '6' ]
-finished   (1:1) [] [ '5', '8' ]
-backtrack21 (2:0) [ '9' ] [ '5' ]
-finished   (2:1) [] [ '9', '8' ]
-backtrack21 (3:0) [ '10' ] [ '5' ]
-finished   (3:1) [] [ '10', '11' ]
-finished   (4:0) [] [ '12', '13' ]
-finished   (5:0) [] [ '14', '5' ]
-finished   (6:0) [] [ '15', '16' ]
-finished   (7:0) [] [ '17', '11' ]
-finished   (8:0) [] [ '18', '16' ]
-Finished 10 probes using 1 workers in a single thread
+calling deregister
+calling deregister
+calling deregister
+calling deregister
+calling deregister
+calling deregister
+calling deregister
+calling deregister
+calling deregister
+calling deregister
+calling deregister
+calling deregister
+calling deregister
+calling deregister
+calling deregister
+calling deregister
+calling deregister
+calling deregister
+calling deregister
+calling deregister
+calling deregister
+calling deregister
+calling deregister
+calling deregister
+calling deregister
+calling deregister
+Node 5 is ready to go { '14': false } { '6': false, '8': false }
+calling deregister
+Node 5 is ready to go { '10': false, '14': false } { '6': false, '8': false }
+Node 6 is ready to go { '5': false } { '8': false, '9': false }
+calling deregister
+Node 6 is ready to go { '5': false } { '8': false, '9': false }
+Node 5 is ready to go { '10': false, '14': false } { '6': false, '8': false }
+Node 8 is ready to go { '6': false } { '5': false }
+Node 8 is ready to go { '6': false, '9': false } { '5': false }
+Node 9 is ready to go { '6': false } { '5': false, '8': false }
+Node 5 is ready to go { '9': false, '10': false, '14': false } { '6': false, '8': false }
+calling deregister
+calling deregister
+Node 5 is ready to go { '9': false, '10': false, '14': false } { '6': false, '8': false }
+calling deregister
+calling deregister
+calling deregister
+Node 6 is ready to go { '5': false } { '8': false, '9': false }
+starting probe 0
+no nodes found, returning true
+Finished 1 probes using 1 workers in a single thread
