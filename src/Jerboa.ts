@@ -47,7 +47,12 @@ export class Jerboa {
       throw new Error('unknown command');
     }
   }
-  async work(): Promise<void> {
+  ensureProbing(randomPosFriend: string): void {
+    if (Object.keys(this.probes).length === 0) {
+      this.sendMessage(randomPosFriend, { command: 'probe', probeId: `probe-from-${this.name}` } as ProbeMessage );
+    }
+  }
+  work(): void {
     const balances = this.balances.getBalances();
     let havePos = false;
     let haveNeg = false;
@@ -62,8 +67,7 @@ export class Jerboa {
       }
     })
     if (havePos && haveNeg) {
-      console.log(this.name, balances);
-      this.sendMessage(randomPosFriend, { command: 'probe', probeId: `probe-from-${this.name}` } as ProbeMessage );
+      this.ensureProbing(randomPosFriend);
     }
   }
   getBalanceStats(): void {
