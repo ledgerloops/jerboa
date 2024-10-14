@@ -46,13 +46,33 @@ export class Jerboa {
       hash?: string,
     }
   } = {};
+  probeQueue: {
+    sender: string;
+    probeId: string;
+    incarnation: number;
+    debugInfo: {
+      path: string[];
+      backtracked: string[];
+    }
+  }[] = [];
+  currentProbe: {
+    sender: string;
+    probeId: string;
+    incarnation: number;
+    debugInfo: {
+      path: string[];
+      backtracked: string[];
+    }
+  } | undefined;
+  private probeMinter: number = 0;
   private sendMessage: (to: string, message: Message) => void;
-  private deregister: () => void;
   private loopsTried: string[] = [];
-  constructor(name: string, sendMessage: (to: string, message: Message) => void, deregister: () => void) {
+  constructor(name: string, sendMessage: (to: string, message: Message) => void) {
     this.name = name;
     this.sendMessage = sendMessage;
-    this.deregister = deregister;
+  }
+  public getNumProbesMinted(): number {
+    return this.probeMinter;
   }
   private pickIncarnation(probeId: string, maxIncarnation: number): string {
     const numOptions = Object.keys(this.probes[probeId].in).length;
@@ -135,7 +155,7 @@ export class Jerboa {
         amountOut = inBalance;
       }
       if (amountOut <= MIN_LOOP_WEIGHT) {
-        console.log('scout amount too small');
+        // console.log('scout amount too small');
       } else {
         this.sendScoutMessage(forwardTo, { command: 'scout', probeId, maxIncarnation: incarnation, amount: amountOut, debugInfo });
       }
@@ -144,7 +164,7 @@ export class Jerboa {
   // assumes all loop hops exist
   scoutLoop(probeId: string, incarnation: number, loop: string[]): void {
     if (this.loopsTried.indexOf(loop.join(' ')) !== -1) {
-      console.log('loop already tried');
+      // console.log('loop already tried');
     }
     this.loopsTried.push(loop.join(' '));
     // console.log(`${this.name} scouting loop`);
@@ -166,7 +186,7 @@ export class Jerboa {
     const incomingBalance = this.balances.getBalance(incomingNeighbour);
     // console.log('scoutLoop considering incoming balance', this.name, incomingNeighbour, incomingBalance);
     if (incomingBalance > -MIN_LOOP_WEIGHT) {
-      console.log(this.name, incomingNeighbour, incomingBalance, 'incoming balance not negative enough');
+      // console.log(this.name, incomingNeighbour, incomingBalance, 'incoming balance not negative enough');
       return;
     } else {
       // console.log('calling sendScoutMessage');
@@ -177,6 +197,9 @@ export class Jerboa {
     // console.log(`${sender}->${this.name}: ${amount}`);
     this.balances.adjustReceived(sender, msg.amount);
     this.checkFriendCache(sender);
+    // if (this.balances.haveIncomingAndOutgoingLinks()) {
+    //   this.startProbe(`${this.name}-${this.probeMinter++}`);
+    // }
     // if (this.graph.getNode(this.name).getBalance(sender) + this.graph.getNode(sender).getBalance(this.name) !== 0) {
     //   console.log('Probably some transfer message is still in flight?', this.name, sender, this.graph.getNode(this.name).getBalance(sender), this.graph.getNode(sender).getBalance(this.name));
     // }
@@ -256,7 +279,13 @@ export class Jerboa {
       const popped = debugInfo.path.pop();
       // console.log(`                     combining nack sender, internal receiveProbe`, popped, this.name, path, [nackSender].concat(backtracked));
       // console.log(`${this.name} reconsiders probe ${probeId} from ${popped} after receiving nack from ${nackSender}`);
-      this.considerProbe(popped, probeId, incarnation, { path: debugInfo.path, backtracked: [nackSender].concat(debugInfo.backtracked) });
+      this.probeQueue.push({
+        sender: popped,
+        probeId,
+        incarnation,
+        debugInfo: { path: debugInfo.path, backtracked: [nackSender].concat(debugInfo.backtracked) }
+      });
+      this.maybeRunProbe();
     }
   }
   spliceLoop(sender: string, probeId: string, incarnation: number, path: string[]): boolean {
@@ -293,7 +322,7 @@ export class Jerboa {
     this.ensureProbe(probeId);
     if (typeof this.probes[probeId][direction][other] !== 'undefined') {
       console.log(`recording entry ${direction} with ${other} for probe (${probeId})`, this.probes[probeId]);
-      throw new Error('repeated entry!');
+      // throw new Error('repeated entry!');
     }
     this.probes[probeId][direction][other] = incarnation;
     // if (direction === 'in') {
@@ -317,7 +346,13 @@ export class Jerboa {
     const { probeId, incarnation, debugInfo } = msg;
     // console.log(`${this.name} recording probe traffic in from receiveProbe "${probeId}"`, debugInfo.path.concat([sender, this.name]));
     this.recordProbeTraffic(sender, 'in', probeId, incarnation);
-    this.considerProbe(sender, probeId, incarnation, debugInfo);
+    this.probeQueue.push({
+      sender,
+      probeId,
+      incarnation,
+      debugInfo
+    });
+    this.maybeRunProbe();
   }
   changeToLooper(sender: string, probeId: string, incarnation: number): void {
     if (typeof this.probes[probeId] === 'undefined') {
@@ -332,15 +367,22 @@ export class Jerboa {
     this.probes[probeId].looper[sender] = this.probes[probeId].in[sender];
     delete this.probes[probeId].in[sender];
   }
-  considerProbe(sender: string, probeId: string, incarnation: number, debugInfo: { path: string[], backtracked: string[] }): void {
+  considerProbe(sender: string, probeId: string, incarnation: number, debugInfo: { path: string[], backtracked: string[] }): boolean {
     const loopFound = this.spliceLoop(sender, probeId, incarnation, debugInfo.path);
     if (loopFound) {
       if (debugInfo.path.length >= 1) {
         // console.log('                   continuing by popping old sender from', path);
         const oldSender = debugInfo.path.pop();
-        this.considerProbe(oldSender, probeId, incarnation + 1, { path: debugInfo.path, backtracked: [] });
+        this.probeQueue.push({
+          sender: oldSender,
+          probeId,
+          incarnation: incarnation + 1,
+          debugInfo: { path: debugInfo.path, backtracked: [] },
+        });
+        this.currentProbe = undefined;
+        this.maybeRunProbe();
       }
-      return;
+      return true;
     }
     // console.log('path after splicing', path);
     const nodes = this.getOutgoingLinks().filter(x => {
@@ -352,7 +394,7 @@ export class Jerboa {
     if (nodes.length === 0) {
       // console.log(`                     combining self, sending nack ${this.name}->${sender}`, path, backtracked);
       this.sendNackMessage(sender, probeId, incarnation, debugInfo);
-      return;
+      return false;
     } else if (debugInfo.backtracked.length > 0) {
       if (process.env.PROBING_REPORT) {
         console.log(`backtracked (${probeId}:${incarnation})`, debugInfo.path.concat([sender, this.name]), debugInfo.backtracked);
@@ -364,6 +406,7 @@ export class Jerboa {
     const newStep = randomStringFromArray(nodes);
     // console.log(`forwarding from ${this.name} to ${newStep} (balance ${this.balances.getBalance(newStep)})`);
     this.sendProbeMessage(newStep, { command: 'probe', probeId, incarnation, debugInfo: { path: debugInfo.path, backtracked: [] } });
+    return true;
   };
   receiveMessage(from: string, msg: Message ): void {
     // console.log('Jerboa receiveMessage', from, this.name, msg);
@@ -397,16 +440,21 @@ export class Jerboa {
       this.outgoingLinks[friend] = true;
     } else {
       delete this.outgoingLinks[friend];
-      if (Object.keys(this.outgoingLinks).length === 0) {
+      // if (Object.keys(this.outgoingLinks).length === 0) {
         // console.log('calling deregister');
-        this.deregister();
-      }
+        // this.deregister();
+      // }
     }
   }
   addWeight(to: string, weight: number): void {
     this.balances.adjustSent(to, weight);
     this.checkFriendCache(to);
     this.sendTransferMessage(to, weight);
+    setTimeout(() => {
+       if (this.balances.haveIncomingAndOutgoingLinks()) {
+        this.startProbe(`${this.name}-${this.probeMinter++}`);
+      }
+    }, 1000);
   }
   getOutgoingLinks(): string[] {
     return Object.keys(this.outgoingLinks);
@@ -441,14 +489,35 @@ export class Jerboa {
     this.sendMessage(to, msg);
   }
   startProbe(probeId: string): boolean {
-    // console.log(`Node ${this.name} starting probe ${probeId}`);
-    const nodes = this.getOutgoingLinks();
-    // console.log('got outgoing links', nodes);
-    if (nodes.length === 0) {
-      // console.log('returning false on startProbe');
-      return false;
+    this.probeQueue.push({ sender: null, probeId, incarnation: 0, debugInfo: { path: [], backtracked: [] } });
+    return this.maybeRunProbe();
+  }
+  maybeRunProbe(): boolean {
+    if ((this.currentProbe === undefined) && (this.probeQueue.length > 0)) {
+      this.currentProbe = this.probeQueue.shift();
+      const result = this.runCurrentProbe();
+      this.currentProbe = undefined;
+      return result;
     }
-    this.sendProbeMessage(nodes[0], { command: 'probe', probeId, incarnation: 0, debugInfo: { path: [], backtracked: [] } });
-    return true;
+    return false;
+  }
+  runCurrentProbe(): boolean {
+    if (this.currentProbe === undefined) {
+      throw new Error('there is no current probe');
+    }
+    if (this.currentProbe.sender === null) {
+
+      // console.log(`Node ${this.name} starting probe ${probeId}`);
+      const nodes = this.getOutgoingLinks();
+      // console.log('got outgoing links', nodes);
+      if (nodes.length === 0) {
+        // console.log('returning false on startProbe');
+        return false;
+      }
+      this.sendProbeMessage(nodes[0], { command: 'probe', probeId: this.currentProbe.probeId, incarnation: this.currentProbe.incarnation, debugInfo: this.currentProbe.debugInfo });
+      return true;
+    } else {
+      return this.considerProbe(this.currentProbe.sender, this.currentProbe.probeId, this.currentProbe.incarnation, this.currentProbe.debugInfo);
+    }
   }
 }
