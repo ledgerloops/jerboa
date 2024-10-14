@@ -1,4 +1,5 @@
-import { Jerboa, Message } from "./Jerboa.js";
+import { Jerboa } from "./Jerboa.js";
+import { Message } from "./MessageTypes.js";
 import { readCsv } from './readCsv.js';
 
 export class Worker {
@@ -6,15 +7,6 @@ export class Worker {
   messages: { from: string, to: string, message: Message }[] = [];
   private ourNodes: {
     [from: string]: Jerboa
-  } = {};
-  private ourNodesToStartFrom: {
-    [from: string]: boolean
-  } = {};
-  stats: {
-    [loopLength: number]: {
-      numFound: number;
-      totalAmount: number;
-    }
   } = {};
   running: boolean = false;
   workerNo: number;
@@ -67,11 +59,11 @@ export class Worker {
       throw new Error('node is not ours!');
     }
     if (typeof this.ourNodes[name] === 'undefined') {
+      // console.log(`constructing node ${name}`);
       this.ourNodes[name] = new Jerboa(name, (to: string, message: Message) => {
         // console.log('our node', name, to, message);
         this.sendMessage(name, to, message);
       });
-      this.ourNodesToStartFrom[name] = true;
     }
   }
   public addWeight(from: string, to: string, weight: number): void {
@@ -108,9 +100,15 @@ export class Worker {
     });
     // console.log(`done reading csv`);
   }
-  teardown(): void {
+  getStats(): void {
+    console.log(`Printing stats for ${Object.keys(this.ourNodes).length} Jerboa nodes`);
     Object.keys(this.ourNodes).forEach(name => {
-      delete this.ourNodes[name];
+      this.ourNodes[name].getBalanceStats();
     });
   }
+  // teardown(): void {
+  //   Object.keys(this.ourNodes).forEach(name => {
+  //     delete this.ourNodes[name];
+  //   });
+  // }
 }

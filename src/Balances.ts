@@ -15,6 +15,12 @@ export class Balances {
         this.received[to] = 0;
       }
     }
+    haveSent(): boolean {
+      return Object.keys(this.sent).length > 0;
+    }
+    haveReceived(): boolean {
+      return Object.keys(this.received).length > 0;
+    }
     adjustSent(to: string, amount: number): void {
       if (typeof to !== 'string') {
         throw new Error('adjustBalance argument to is not a string');
