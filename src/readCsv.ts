@@ -24,7 +24,7 @@ export async function readCsv(filename: string, callback: (from: string, to: str
             callback(nodes[source], nodes[target], parseFloat(weight));
           }
         });
-        
+       
         lineReader.on('close', function () {
           resolve();
         });
@@ -33,4 +33,4 @@ export async function readCsv(filename: string, callback: (from: string, to: str
       }
     });
   }
-  
+ 

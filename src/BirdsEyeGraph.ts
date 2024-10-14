@@ -15,7 +15,7 @@ export class Graph {
   // assumes that graph[from][to] exists
   // @returns number amount removed
   private zeroOut(from: string, to: string): number {
-    const amount = this.links[from][to]; 
+    const amount = this.links[from][to];
     delete this.links[from][to];
     if (Object.keys(this.links[from]).length === 0) {
       delete this.links[from];
@@ -56,7 +56,7 @@ export class Graph {
     if (typeof weight !== 'number') {
       throw new Error(`weight param ${JSON.stringify(weight)} is not a number in call to addWeight`);
     }
-  
+ 
     if (weight <= 0) {
       throw new Error('weight should be greater than zero');
     }

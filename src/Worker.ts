@@ -52,7 +52,7 @@ export class Worker {
       throw new Error('node name is not a number ' + name);
     }
     // console.log(`comparing`, nodeNo, this.numWorkers, nodeNo % this.numWorkers, this.workerNo);
-    return (nodeNo % this.numWorkers === this.workerNo);    
+    return (nodeNo % this.numWorkers === this.workerNo);   
   }
   private ensureNode(name: string): void {
     if (!this.nodeIsOurs(name)) {
@@ -75,7 +75,7 @@ export class Worker {
     if (typeof weight !== 'number') {
       throw new Error(`weight param ${JSON.stringify(weight)} is not a number in call to addWeight`);
     }
-  
+ 
     // negative weights are currently used Jerboa#netLoop
     if (weight === 0) {
       throw new Error('weight should be greater than zero');

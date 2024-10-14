@@ -242,7 +242,7 @@ export class Jerboa {
       //   if (Math.abs(this.graph.getNode(loop[k]).getBalance(loop[k+1]) + this.graph.getNode(loop[k+1]).getBalance(loop[k])) > MIN_LOOP_WEIGHT) {
       //     console.log('(temporary?) balance dispute', loop, `hop ${loop[k]}->${loop[k+1]}`, this.graph.getNode(loop[k]).getBalance(loop[k+1]), this.graph.getNode(loop[k+1]).getBalance(loop[k]));
       //   }
-      // }      
+      // }     
     } else {
       this.probes[probeId].loops[hash].commitTo = this.probes[probeId].loops[hash].proposeFrom;
       this.balances.adjustReceived(this.probes[probeId].loops[hash].commitTo, amount);
@@ -297,11 +297,11 @@ export class Jerboa {
       this.scoutLoop(probeId, incarnation, loop);
       // if ((smallestWeight < MIN_LOOP_WEIGHT) || (smallestWeight > MAX_LOOP_WEIGHT)) {
       //   // console.log('ignoring loop with this amount', smallestWeight);
-      // } else { 
+      // } else {
       //   this.netLoop(smallestWeight, loop);
       // }
       // console.log(`Found loop`, loop, ` pos ${pos}`);
-      if (process.env.PROBING_REPORT) {  
+      if (process.env.PROBING_REPORT) {
         const pathStr = path.length > 0 ? `[ ${path.map(x => `'${x}'`).join(', ')} ]` : `[]`;
         const loopStr = loop.length > 0 ? `[ ${loop.map(x => `'${x}'`).join(', ')} ]` : `[]`;
         console.log(`found loop (${probeId}:${incarnation}) ${pathStr} ${loopStr}`);

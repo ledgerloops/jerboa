@@ -2,6 +2,12 @@ import { Graph } from './BirdsEyeGraph.js';
 
 const MAX_NUM_STEPS = 1000000;
 
+function printLine(preface: string, first: string[], second: string[]): void {
+  const firstStr = first.length > 0 ? `[ ${first.map(x => `'${x}'`).join(', ')} ]` : `[]`;
+  const secondStr = second.length > 0 ? `[ ${second.map(x => `'${x}'`).join(', ')} ]` : `[]`;
+  console.log(`${preface} ${firstStr} ${secondStr}`);
+}
+
 export class BirdsEyeWorm {
   graph: Graph = new Graph();
   stats: {
@@ -87,7 +93,7 @@ export class BirdsEyeWorm {
       // we now now that either newStep has outgoing links, or path is empty
       if (path.length === 0) {
         if (backtracked.length > 0) {
-          console.log('finished   ', path, backtracked.reverse());
+          printLine('finished  ', path, backtracked.reverse());
         }
         // no paths left, start with a new worm
         path = [];
@@ -104,20 +110,21 @@ export class BirdsEyeWorm {
         }
       } else {
         if (backtracked.length > 0) {
-          console.log('backtracked', path, backtracked.reverse());
+          printLine('backtracked', path, backtracked.reverse());
           newStep = path[path.length - 1];
           // console.log('continuing from', path, newStep);
         }
 
         newStep = this.graph.getFirstNode(newStep);
-        // console.log('considering', path, newStep);  
+        // console.log('considering', path, newStep); 
       }
       // check for loops in path
       const pos = path.indexOf(newStep);
       if (pos !== -1) {
         const loop = path.splice(pos).concat(newStep);
         this.netLoop(loop);
-        console.log(`found loop `, path, loop);
+        printLine(`found loop`, path, loop);
+
         newStep = this.graph.getFirstNode(path[path.length - 1]);
         // console.log(`Continuing with`, path, newStep);
       }
