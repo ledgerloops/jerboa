@@ -46,6 +46,24 @@ export class Jerboa {
       hash?: string,
     }
   } = {};
+  probeQueue: {
+    sender: string;
+    probeId: string;
+    incarnation: number;
+    debugInfo: {
+      path: string[];
+      backtracked: string[];
+    }
+  }[] = [];
+  currentProbe: {
+    sender: string;
+    probeId: string;
+    incarnation: number;
+    debugInfo: {
+      path: string[];
+      backtracked: string[];
+    }
+  } | undefined;
   private sendMessage: (to: string, message: Message) => void;
   private deregister: () => void;
   private loopsTried: string[] = [];
@@ -440,7 +458,23 @@ export class Jerboa {
   sendCommitMessage(to: string, msg: CommitMessage): void {
     this.sendMessage(to, msg);
   }
-  startProbe(probeId: string): boolean {
+  startProbe(probeId: string): boolean  | undefined {
+    this.probeQueue.push({ sender: null, probeId, incarnation: 0, debugInfo: { path: [], backtracked: [] } });
+    return this.maybeRunProbe();
+  }
+  maybeRunProbe(): boolean | undefined {
+    if ((this.currentProbe === undefined) && (this.probeQueue.length > 0)) {
+      this.currentProbe = this.probeQueue.shift();
+      const result = this.runCurrentProbe();
+      this.currentProbe = undefined;
+      return result;
+    }
+    return undefined;
+  }
+  runCurrentProbe(): boolean {
+    if (this.currentProbe === undefined) {
+      throw new Error('there is no current probe');
+    }
     // console.log(`Node ${this.name} starting probe ${probeId}`);
     const nodes = this.getOutgoingLinks();
     // console.log('got outgoing links', nodes);
@@ -448,7 +482,7 @@ export class Jerboa {
       // console.log('returning false on startProbe');
       return false;
     }
-    this.sendProbeMessage(nodes[0], { command: 'probe', probeId, incarnation: 0, debugInfo: { path: [], backtracked: [] } });
+    this.sendProbeMessage(nodes[0], { command: 'probe', probeId: this.currentProbe.probeId, incarnation: this.currentProbe.incarnation, debugInfo: this.currentProbe.debugInfo });
     return true;
   }
 }
