@@ -1,7 +1,7 @@
 import cluster from 'node:cluster';
 import { createServer } from 'http';
 import { Worker } from './Worker.js';
-import { Message } from './Jerboa.js';
+import { Message } from './MessageTypes.js';
 
 export class Cluster {
   private filename: string;

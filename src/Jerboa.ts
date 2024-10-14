@@ -1,5 +1,6 @@
 import { randomBytes, createHash } from "node:crypto";
 import { Balances } from "./Balances.js";
+import { Message, TransferMessage, ProposeMessage, CommitMessage, ScoutMessage, ProbeMessage, NackMessage } from "./MessageTypes.js";
 const MIN_LOOP_WEIGHT = 0.00000001;
 // const MAX_LOOP_WEIGHT = 1000000000;
 const RANDOM_NEXT_STEP = false;
@@ -18,63 +19,7 @@ function randomStringFromArray(arr: string[]): string {
     return arr[0];
   }
 }
-export type Message = 
- | TransferMessage
- | ProbeMessage
- | NackMessage
- | ScoutMessage
- | ProposeMessage
- | CommitMessage;
 
-export type TransferMessage = {
-  amount: number,
-};
-export type ProbeMessage = {
-  command: string,
-  probeId: string,
-  incarnation: number,
-  debugInfo: {
-    path: string[],
-    backtracked: string[],
-  },
-};
-export type NackMessage = {
-  command: string,
-  probeId: string,
-  incarnation: number,
-  debugInfo: {
-    path: string[],
-    backtracked: string[],
-  },
-};
-export type ScoutMessage = {
-  command: string,
-  probeId: string,
-  maxIncarnation: number,
-  amount: number,
-  debugInfo: {
-    loop: string[],
-  },
-};
-export type ProposeMessage = {
-  command: string,
-  probeId: string,
-  maxIncarnation: number,
-  amount: number,
-  hash: string,
-  debugInfo: {
-    loop: string[],
-  },
-};
-export type CommitMessage = {
-  command: string,
-  probeId: string,
-  amount: number,
-  preimage: string,
-  debugInfo: {
-    loop: string[],
-  },
-};
 
 export class Jerboa {
   private balances: Balances = new Balances();

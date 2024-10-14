@@ -1,5 +1,5 @@
 import { Worker } from './Worker.js';
-import { Message } from './Jerboa.js';
+import { Message } from './MessageTypes.js';
 
 export class SingleThread {
   private workers: Worker[] = [];

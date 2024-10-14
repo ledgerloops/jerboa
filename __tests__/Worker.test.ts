@@ -1,5 +1,5 @@
 import { Worker } from '../src/Worker.js';
-import { Message } from '../src/Jerboa.js';
+import { Message } from '../src/MessageTypes.js';
 
 describe('addWeight', () => {
   it('adds a link', () => {

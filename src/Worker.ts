@@ -1,4 +1,5 @@
-import { Jerboa, Message } from "./Jerboa.js";
+import { Jerboa } from "./Jerboa.js";
+import { Message } from "./MessageTypes.js";
 import { readCsv } from './readCsv.js';
 
 export class Worker {
