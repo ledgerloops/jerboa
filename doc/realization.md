@@ -80,11 +80,11 @@ In these 90 seconds, 5 million messages were processed, so this is equivalent to
 We think this is also a very reasonable Processor Time requirement.
 
 ## Conclusion
-### Output
-
 ### Observations
+The current algorithm is a first versions, and we expect that over time it will get even better. However, the current performance is very impressive both in terms of low cost and in terms of high benefits.
+
 ### Tech Preview
 Our implementation of the LedgerLoops algorithm is now available for use in technology pilot projects. Please contact michiel@unhosted.org to book a free demonstration.
 
 ### Algorithm Open Standard
-We invite other implementers to implement software compatible with ours, by following the internet draft (TODO: insert hyperlink).
+We invite other implementers to implement software compatible with ours, by following the IETF internet draft which will be published soon.

@@ -24,7 +24,9 @@ export async function readLoops(filename: string, callback: (loop: string[]) => 
 // ...
 const stats: {
   [len: number]: number;
-} = {};
+} = {
+  0: 0,
+};
 readLoops('./loops.txt', (loop: string[]) => {
   // const orig = JSON.stringify(loop);
   let smallestEntry = 0;
@@ -40,6 +42,7 @@ readLoops('./loops.txt', (loop: string[]) => {
   if (typeof stats[loop.length] === 'undefined') {
     stats[loop.length] = 0;
   }
+  stats[0]++;
   stats[loop.length]++;
   const lastPart = loop.splice(smallestEntry);
   console.log(JSON.stringify(lastPart.concat(loop).concat(lastPart[0])));
