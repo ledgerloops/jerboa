@@ -246,12 +246,6 @@ export class Jerboa {
     this.checkFriendCache(sender);
     if (typeof this.probes[probeId].loops[hash].proposeFrom === 'undefined') {
       // console.log('loop clearing completed');
-      // const loop = debugInfo.loop;
-      // for (let k = 0; k < loop.length - 1; k++) {
-      //   if (Math.abs(this.graph.getNode(loop[k]).getBalance(loop[k+1]) + this.graph.getNode(loop[k+1]).getBalance(loop[k])) > MIN_LOOP_WEIGHT) {
-      //     console.log('(temporary?) balance dispute', loop, `hop ${loop[k]}->${loop[k+1]}`, this.graph.getNode(loop[k]).getBalance(loop[k+1]), this.graph.getNode(loop[k+1]).getBalance(loop[k]));
-      //   }
-      // }     
     } else {
       this.probes[probeId].loops[hash].commitTo = this.probes[probeId].loops[hash].proposeFrom;
       this.adjustReceived(this.probes[probeId].loops[hash].commitTo, amount);
