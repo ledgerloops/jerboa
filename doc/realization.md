@@ -70,10 +70,10 @@ In the simulation, our algorithm triggered an average of 13 messages per transac
 
 We think this is a very reasonable requirement on modern internet-connected systems.
 
-### Processor Time
-Reading all 440,000 `STANDARD` transactions from the `sarafu_txns_20200125-20210615.csv` file, keeping track of the balances of each of the 40,000 participants, and detecting 27,000 loops using a benchmark bird's eye view algorithm in a single thread took 21 seconds.
+### Processor Time using a benchmark bird's eye view algorithm in a single thread took 21 seconds.
 
-The simulation, achieving the same using our peer-to-peer LedgerLoops algorithm, but with all 40,000 LedgerLoops nodes also running in a single thread, took 90 seconds.
+The simulation, reading all 440,000 `STANDARD` transactions from the `sarafu_txns_20200125-20210615.csv` file,
+keeping track of the balances of each of the 40,000 participants, and detecting 7,000 loops in a single thread, took 90 seconds.
 
 In these 90 seconds, 5 million messages were processed, so this is equivalent to 60,000 messages processed per second, in a single-thread, on a laptop from 2019.
 
