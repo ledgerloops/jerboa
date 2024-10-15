@@ -60,7 +60,7 @@ describe('addWeight', () => {
         '0': -3,
       },
       '2': {
-        '0': 5
+        '0': 5,
       }
     });
   });
@@ -73,10 +73,10 @@ describe('addWeight', () => {
     worker.addWeight('1', '0', 7);
     expect(worker.getOurBalances()).toEqual({
       '0': {
-        '1': -4
+        '1': -4,
       },
       '1': {
-        '0': 4
+        '0': 4,
       }
     });
   });
@@ -89,10 +89,10 @@ describe('addWeight', () => {
     worker.addWeight('1', '0', 2);
     expect(worker.getOurBalances()).toEqual({
       '0': {
-        '1': 1
+        '1': 1,
       },
       '1': {
-        '0': -1
+        '0': -1,
       }
     });
   });

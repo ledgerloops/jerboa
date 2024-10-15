@@ -3,9 +3,8 @@ import { Balances } from "./Balances.js";
 import { Message, TransferMessage, ProposeMessage, CommitMessage, ScoutMessage, ProbeMessage, NackMessage } from "./MessageTypes.js";
 import { printLine } from "./BirdsEyeWorm.js";
 
-const MIN_LOOP_WEIGHT = 0.00000001;
-// const MAX_LOOP_WEIGHT = 1000000000;
 const RANDOM_NEXT_STEP = false;
+const LEDGER_SCALE = 1000000;
 
 function randomStringFromArray(arr: string[]): string {
   if (!Array.isArray(arr)) {
@@ -146,7 +145,7 @@ export class Jerboa {
       //   throw new Error(`${this.name} received a scout message from ${sender} for probeId ${probeId} but have multiple out messages for that probe ${JSON.stringify(this.probes[probeId])}`);
       // }
       const outBalance = this.balances.getBalance(sender);
-      let amountOut = amount;
+      let amountOut = BigInt(Math.round(amount * LEDGER_SCALE));
       if (amountOut > outBalance) {
         // console.log(`${this.name} adjust the scout amount from ${amount} to ${outBalance} based on out balance to ${sender}`);
         amountOut = outBalance;
@@ -156,10 +155,10 @@ export class Jerboa {
         // console.log(`${this.name} adjust the scout amount from ${amount} to ${inBalance} based on in balance from ${forwardTo}`);
         amountOut = inBalance;
       }
-      if (amountOut <= MIN_LOOP_WEIGHT) {
+      if (amountOut === 0n) {
         // console.log('scout amount too small');
       } else {
-        this.sendScoutMessage(forwardTo, { command: 'scout', probeId, maxIncarnation: incarnation, amount: amountOut, debugInfo });
+        this.sendScoutMessage(forwardTo, { command: 'scout', probeId, maxIncarnation: incarnation, amount: Number(amountOut) / LEDGER_SCALE, debugInfo });
       }
     }
   }
@@ -187,17 +186,17 @@ export class Jerboa {
     const incomingNeighbour = loop[loop.length - 2];
     const incomingBalance = this.balances.getBalance(incomingNeighbour);
     // console.log('scoutLoop considering incoming balance', this.name, incomingNeighbour, incomingBalance);
-    if (incomingBalance > -MIN_LOOP_WEIGHT) {
+    if (incomingBalance === 0n) {
       // console.log(this.name, incomingNeighbour, incomingBalance, 'incoming balance not negative enough');
       return;
     } else {
       // console.log('calling sendScoutMessage');
-      this.sendScoutMessage(incomingNeighbour, { command: 'scout', probeId, maxIncarnation: incarnation,  amount: -incomingBalance, debugInfo: { loop } });
+      this.sendScoutMessage(incomingNeighbour, { command: 'scout', probeId, maxIncarnation: incarnation,  amount: Number(-incomingBalance) / LEDGER_SCALE, debugInfo: { loop } });
     }
   }
   receiveTransfer(sender: string, msg: TransferMessage): void {
     // console.log(`${sender}->${this.name}: ${amount}`);
-    this.balances.adjustReceived(sender, msg.amount);
+    this.adjustReceived(sender, msg.amount);
     this.checkFriendCache(sender);
     // if (this.balances.haveIncomingAndOutgoingLinks()) {
     //   this.startProbe(`${this.name}-${this.probeMinter++}`);
@@ -218,10 +217,18 @@ export class Jerboa {
     } else {
       // console.log('our hashlock', hash, this.probes[probeId], amount);
       this.probes[probeId].loops[hash].commitTo = sender;
-      this.balances.adjustReceived(this.probes[probeId].loops[hash].commitTo, amount);
+      this.adjustReceived(this.probes[probeId].loops[hash].commitTo, amount);
       this.checkFriendCache(this.probes[probeId].loops[hash].commitTo);
       this.sendCommitMessage(this.probes[probeId].loops[hash].commitTo, { command: 'commit', probeId, amount, preimage: this.probes[probeId].loops[hash].preimage, debugInfo });
     }
+  }
+  adjustSent(sender: string, amount: number): void {
+    const bigIntAmount = BigInt(Math.round(amount * LEDGER_SCALE));
+    this.balances.adjustSent(sender, bigIntAmount);
+  }
+  adjustReceived(sender: string, amount: number): void {
+    const bigIntAmount = BigInt(Math.round(amount * LEDGER_SCALE));
+    this.balances.adjustReceived(sender, bigIntAmount);
   }
   receiveCommit(sender: string, msg: CommitMessage): void {
     const { probeId, amount, preimage } = msg;
@@ -235,7 +242,7 @@ export class Jerboa {
     }
     this.probes[probeId].loops[hash].preimage = preimage;
     this.probes[probeId].loops[hash].commitFrom = sender;
-    this.balances.adjustSent(sender, amount);
+    this.adjustSent(sender, amount);
     this.checkFriendCache(sender);
     if (typeof this.probes[probeId].loops[hash].proposeFrom === 'undefined') {
       // console.log('loop clearing completed');
@@ -247,7 +254,7 @@ export class Jerboa {
       // }     
     } else {
       this.probes[probeId].loops[hash].commitTo = this.probes[probeId].loops[hash].proposeFrom;
-      this.balances.adjustReceived(this.probes[probeId].loops[hash].commitTo, amount);
+      this.adjustReceived(this.probes[probeId].loops[hash].commitTo, amount);
       this.checkFriendCache(this.probes[probeId].loops[hash].commitTo);
       this.sendCommitMessage(this.probes[probeId].loops[hash].commitTo, msg);
     }
@@ -438,7 +445,7 @@ export class Jerboa {
   }
   checkFriendCache(friend: string): void {
     const newBalance = this.balances.getBalance(friend);
-    if (newBalance > MIN_LOOP_WEIGHT) {
+    if (newBalance > 0n) {
       this.outgoingLinks[friend] = true;
     } else {
       delete this.outgoingLinks[friend];
@@ -449,7 +456,7 @@ export class Jerboa {
     }
   }
   addWeight(to: string, weight: number): void {
-    this.balances.adjustSent(to, weight);
+    this.adjustSent(to, weight);
     this.checkFriendCache(to);
     this.sendTransferMessage(to, weight);
     setTimeout(() => {
@@ -462,13 +469,23 @@ export class Jerboa {
     return Object.keys(this.outgoingLinks);
   }
   getBalance(to: string): number {
-    return this.balances.getBalance(to);
+    return Number(this.balances.getBalance(to)) / LEDGER_SCALE;
   }
   getBalances(): { [to: string]: number } {
-    return this.balances.getBalances();
+    const bigIntBalances = this.balances.getBalances();
+    const ret = {};
+    Object.keys(bigIntBalances).forEach(key => {
+      ret[key] = Number(bigIntBalances[key]) / LEDGER_SCALE;
+    });
+    return ret;
   }
   getArchiveWeights(): { [to: string]: number } {
-    return this.balances.getArchiveWeights(this.name);
+    const bigIntBalances = this.balances.getArchiveWeights(this.name);
+    const ret = {};
+    Object.keys(bigIntBalances).forEach(key => {
+      ret[key] = Number(bigIntBalances[key]) / LEDGER_SCALE;
+    });
+    return ret;
   }
   sendProbeMessage(to: string, msg: ProbeMessage): void {
     // console.log(`${this.name} recording probe traffic out sendProbeMessage to ${to}`, msg.debugInfo);
@@ -497,6 +514,7 @@ export class Jerboa {
   maybeRunProbe(): boolean {
     if ((this.currentProbe === undefined) && (this.probeQueue.length > 0)) {
       this.currentProbe = this.probeQueue.shift();
+      // console.log('running probe', this.currentProbe);
       const result = this.runCurrentProbe();
       this.currentProbe = undefined;
       return result;
@@ -508,8 +526,7 @@ export class Jerboa {
       throw new Error('there is no current probe');
     }
     if (this.currentProbe.sender === null) {
-
-      // console.log(`Node ${this.name} starting probe ${probeId}`);
+      // console.log(`Node ${this.name} starting probe ${this.currentProbe.probeId}`);
       const nodes = this.getOutgoingLinks();
       // console.log('got outgoing links', nodes);
       if (nodes.length === 0) {
@@ -517,6 +534,7 @@ export class Jerboa {
         return false;
       }
       this.sendProbeMessage(nodes[0], { command: 'probe', probeId: this.currentProbe.probeId, incarnation: this.currentProbe.incarnation, debugInfo: this.currentProbe.debugInfo });
+      // console.log('returning true on startProbe');
       return true;
     } else {
       return this.considerProbe(this.currentProbe.sender, this.currentProbe.probeId, this.currentProbe.incarnation, this.currentProbe.debugInfo);

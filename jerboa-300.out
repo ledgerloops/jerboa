@@ -29,7 +29,7 @@ backtrack21 (175-0:0) [ '175' ] [ '164' ]
 backtracked (83-0:0) [ '83', '40' ] [ '206' ]
 finished   (40-0:0) [] [ '40', '208' ]
 finished   (83-0:1) [] [ '83', '40', '207' ]
-finished   (1-6:0) [] [ '1', '11', '5' ]
 finished   (102-0:0) [] [ '102', '103' ]
 finished   (175-0:1) [] [ '175', '192', '164' ]
+finished   (1-6:0) [] [ '1', '11', '5' ]
 Finished 51 probes using 15 workers in a single thread

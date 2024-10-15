@@ -15,6 +15,7 @@ describe('Jerboa', () => {
     const cb = jest.fn();
     const a = makeJerboa(cb, '0');
     a.addWeight('1', 9);
+    // console.log(cb.mock);
     expect(cb).toHaveBeenCalledWith('1', {"amount": 9, "command": "transfer"});
     const result = a.startProbe('probe-id');
     expect(result).toEqual(true);
