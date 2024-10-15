@@ -10,10 +10,10 @@ describe('addWeight', () => {
     worker.addWeight('0', '1', 3);
     expect(worker.getOurBalances()).toEqual({
       '0': {
-        '1': 3n,
+        '1': 3,
       },
       '1': {
-        '0': -3n,
+        '0': -3,
       },
     });
   });
@@ -33,14 +33,14 @@ describe('addWeight', () => {
     worker.addWeight('0', '2', 5);
     expect(worker.getOurBalances()).toEqual({
       '0': {
-        '1': 3n,
-        '2': 5n,
+        '1': 3,
+        '2': 5,
       },
       '1': {
-        '0': -3n,
+        '0': -3,
       },
       '2': {
-        '0': -5n,
+        '0': -5,
       },
     });
   });
@@ -53,14 +53,14 @@ describe('addWeight', () => {
     worker.addWeight('2', '0', 5);
     expect(worker.getOurBalances()).toEqual({
       '0': {
-        '1': 3n,
-        '2': -5n,
+        '1': 3,
+        '2': -5,
       },
       '1': {
-        '0': -3n,
+        '0': -3,
       },
       '2': {
-        '0': 5n
+        '0': 5,
       }
     });
   });
@@ -73,10 +73,10 @@ describe('addWeight', () => {
     worker.addWeight('1', '0', 7);
     expect(worker.getOurBalances()).toEqual({
       '0': {
-        '1': -4n
+        '1': -4,
       },
       '1': {
-        '0': 4n
+        '0': 4,
       }
     });
   });
@@ -89,10 +89,10 @@ describe('addWeight', () => {
     worker.addWeight('1', '0', 2);
     expect(worker.getOurBalances()).toEqual({
       '0': {
-        '1': 1n
+        '1': 1,
       },
       '1': {
-        '0': -1n
+        '0': -1,
       }
     });
   });
