@@ -25,4 +25,54 @@ export class SingleThread {
     }
     return cumm;
   }
+  public getStats(): {
+    messagesReceived: number;
+    messagesSent: number;
+    transfersReceived: number;
+    transfersSent: number;
+    transferAmount: number;
+    bilateralNum: number;
+    bilateralAmount: number;
+    multilateralNum: number;
+    multilateralAmount: number;
+    numNodes: number;
+  } {
+    const stats: {
+      messagesReceived: number;
+      messagesSent: number;
+      transfersReceived: number;
+      transfersSent: number;
+      transferAmount: number;
+      bilateralNum: number;
+      bilateralAmount: number;
+      multilateralNum: number;
+      multilateralAmount: number;
+      numNodes: number;
+    } = {
+      messagesReceived: 0,
+      messagesSent: 0,
+      transfersReceived: 0,
+      transfersSent: 0,
+      transferAmount: 0,
+      bilateralNum: 0,
+      bilateralAmount: 0,
+      multilateralNum: 0,
+      multilateralAmount: 0,
+      numNodes: 0,
+    };
+    this.workers.forEach(worker => {
+      const workerStats = worker.getOurStats();
+      stats.messagesReceived += workerStats.messagesReceived;
+      stats.messagesSent += workerStats.messagesSent;
+      stats.transfersReceived += workerStats.transfersReceived;
+      stats.transfersSent += workerStats.transfersSent;
+      stats.transferAmount += workerStats.transferAmount;
+      stats.bilateralNum += workerStats.bilateralNum;
+      stats.bilateralAmount += workerStats.bilateralAmount;
+      stats.multilateralNum += workerStats.multilateralNum;
+      stats.multilateralAmount += workerStats.multilateralAmount;
+      stats.numNodes += workerStats.numNodes;
+    });
+    return stats;
+  }
 }

@@ -119,6 +119,57 @@ export class Worker {
     });
     return links;
   }
+  public getOurStats(): {
+    messagesReceived: number;
+    messagesSent: number;
+    transfersReceived: number;
+    transfersSent: number;
+    transferAmount: number;
+    bilateralNum: number;
+    bilateralAmount: number;
+    multilateralNum: number;
+    multilateralAmount: number;
+    numNodes: number;
+  } {
+    const stats: {
+      messagesReceived: number;
+      messagesSent: number;
+      transfersReceived: number;
+      transfersSent: number;
+      transferAmount: number;
+      bilateralNum: number;
+      bilateralAmount: number;
+      multilateralNum: number;
+      multilateralAmount: number;
+      numNodes: number;
+    } = {
+      messagesReceived: 0,
+      messagesSent: 0,
+      transfersReceived: 0,
+      transfersSent: 0,
+      transferAmount: 0,
+      bilateralNum: 0,
+      bilateralAmount: 0,
+      multilateralNum: 0,
+      multilateralAmount: 0,
+      numNodes: 0,
+    };
+    Object.keys(this.ourNodes).forEach(name => {
+      stats.messagesReceived += this.ourNodes[name].messagesReceived;
+      stats.messagesSent += this.ourNodes[name].messagesSent;
+      stats.transfersReceived += this.ourNodes[name].transfersReceived;
+      stats.transfersSent += this.ourNodes[name].transfersSent;
+      stats.transferAmount += this.ourNodes[name].transfersReceivedAmount;
+      const { num, amount } = this.ourNodes[name].getBilateralStats();
+      stats.bilateralAmount += amount;
+      stats.bilateralNum += num;
+      stats.multilateralNum += this.ourNodes[name].multilateralNum;
+      stats.multilateralAmount += this.ourNodes[name].multilateralAmount;
+      stats.numNodes++;
+    });
+    console.log(`Worker ${this.workerNo} return stats`, stats);
+    return stats;
+  }
   getNode(name: string): Jerboa {
     this.ensureNode(name);
     return this.ourNodes[name];

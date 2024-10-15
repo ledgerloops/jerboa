@@ -66,11 +66,36 @@ export class Jerboa {
     }
   } | undefined;
   private probeMinter: number = 0;
-  private sendMessage: (to: string, message: Message) => void;
+  public transfersReceived: number = 0;
+  public messagesReceived: number = 0;
+  public transfersSent: number = 0;
+  public messagesSent: number = 0;
+  public transfersSentAmount: number = 0;
+  public transfersReceivedAmount: number = 0;
+  public multilateralNum: number = 0;
+  public multilateralAmount: number = 0;
+  public getBilateralStats(): {
+    num: number;
+    amount: number;
+  } {      
+    const balanceStats = this.balances.getBilateralStats();
+    return {
+      num: balanceStats.num,
+      amount: Number(balanceStats.amount) / LEDGER_SCALE,
+    };
+  }
+  // private netted: {
+  //   [loopLength: number]: number;
+  // } = {};
+  private sendMessageCb: (to: string, message: Message) => void;
   private loopsTried: string[] = [];
   constructor(name: string, sendMessage: (to: string, message: Message) => void) {
     this.name = name;
-    this.sendMessage = sendMessage;
+    this.sendMessageCb = sendMessage;
+  }
+  private sendMessage(to: string, message: Message): void {
+    this.messagesSent++;
+    this.sendMessageCb(to, message);
   }
   public getNumProbesMinted(): number {
     return this.probeMinter;
@@ -412,6 +437,7 @@ export class Jerboa {
     return true;
   };
   receiveMessage(from: string, msg: Message ): void {
+    this.messagesReceived++;
     // console.log('Jerboa receiveMessage', from, this.name, msg);
     switch((msg as { command: string }).command) {
       case 'probe': {
@@ -421,6 +447,8 @@ export class Jerboa {
       return this.receiveNack(from, msg as NackMessage);
     }
     case 'transfer': {
+      this.transfersReceived++;
+      this.transfersReceivedAmount += (msg as TransferMessage).amount;
       return this.receiveTransfer(from, msg as TransferMessage);
     }
     case 'scout': {
@@ -430,6 +458,8 @@ export class Jerboa {
       return this.receivePropose(from, msg as ProposeMessage);
     }
     case 'commit': {
+      this.multilateralNum ++;
+      this.multilateralAmount += (msg as CommitMessage).amount;
       return this.receiveCommit(from, msg as CommitMessage);
     }
     default:
@@ -473,14 +503,6 @@ export class Jerboa {
     });
     return ret;
   }
-  getArchiveWeights(): { [to: string]: number } {
-    const bigIntBalances = this.balances.getArchiveWeights(this.name);
-    const ret = {};
-    Object.keys(bigIntBalances).forEach(key => {
-      ret[key] = Number(bigIntBalances[key]) / LEDGER_SCALE;
-    });
-    return ret;
-  }
   sendProbeMessage(to: string, msg: ProbeMessage): void {
     // console.log(`${this.name} recording probe traffic out sendProbeMessage to ${to}`, msg.debugInfo);
     this.recordProbeTraffic(to, 'out', msg.probeId, msg.incarnation);
@@ -490,6 +512,8 @@ export class Jerboa {
     this.sendMessage(to, { command: 'nack', probeId, incarnation, debugInfo });
   }
   sendTransferMessage(to: string, amount: number): void {
+    this.transfersSent++;
+    this.transfersSentAmount += amount;
     this.sendMessage(to, { command: 'transfer', amount });
   }
   sendScoutMessage(to: string, msg: ScoutMessage): void {
