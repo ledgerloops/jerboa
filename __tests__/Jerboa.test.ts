@@ -45,9 +45,9 @@ describe('Jerboa', () => {
     f.receiveMessage('4', { command: 'transfer', amount: 9 });
     f.addWeight('3', 9);
     d.receiveMessage('5', { command: 'transfer', amount: 9 });
-    expect(d.getBalances()).toEqual({ 4: 9, 5: -9 });
-    expect(e.getBalances()).toEqual({ 5: 9, 3: -9 });
-    expect(f.getBalances()).toEqual({ 3: 9, 4: -9 });
+    expect(d.getBalances()).toEqual({ 4: 9n, 5: -9n });
+    expect(e.getBalances()).toEqual({ 5: 9n, 3: -9n });
+    expect(f.getBalances()).toEqual({ 3: 9n, 4: -9n });
     expect(cb3).toHaveBeenCalledWith('4', {"amount": 9, "command": "transfer"});
     d.receiveMessage('2', { command: 'probe', probeId: 'probe-id', incarnation: 0, debugInfo: { path: ['0', '1'], backtracked: [] } });
     expect(cb3).toHaveBeenCalledWith('4', { command: 'probe', probeId: 'probe-id', incarnation: 0, debugInfo: { path: ['0', '1', '2'], backtracked: [] } });
