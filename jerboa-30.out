@@ -5,3 +5,200 @@ backtrack21 (5-1:0) [ '5' ] [ '6' ]
 finished   (5-1:1) [] [ '5', '8' ]
 finished   (5-2:0) [] [ '5', '6' ]
 Finished 10 probes using 15 workers in a single thread
+Worker 0 return stats {
+  messagesReceived: 0,
+  messagesSent: 1,
+  transfersReceived: 0,
+  transfersSent: 1,
+  transferAmount: 0,
+  bilateralNum: 0,
+  bilateralAmount: 0,
+  multilateralNum: 0,
+  multilateralAmount: 0,
+  numNodes: 1
+}
+Worker 1 return stats {
+  messagesReceived: 2,
+  messagesSent: 0,
+  transfersReceived: 2,
+  transfersSent: 0,
+  transferAmount: 2,
+  bilateralNum: 0,
+  bilateralAmount: 0,
+  multilateralNum: 0,
+  multilateralAmount: 0,
+  numNodes: 1
+}
+Worker 2 return stats {
+  messagesReceived: 0,
+  messagesSent: 1,
+  transfersReceived: 0,
+  transfersSent: 1,
+  transferAmount: 0,
+  bilateralNum: 0,
+  bilateralAmount: 0,
+  multilateralNum: 0,
+  multilateralAmount: 0,
+  numNodes: 1
+}
+Worker 3 return stats {
+  messagesReceived: 0,
+  messagesSent: 1,
+  transfersReceived: 0,
+  transfersSent: 1,
+  transferAmount: 0,
+  bilateralNum: 0,
+  bilateralAmount: 0,
+  multilateralNum: 0,
+  multilateralAmount: 0,
+  numNodes: 1
+}
+Worker 4 return stats {
+  messagesReceived: 0,
+  messagesSent: 0,
+  transfersReceived: 0,
+  transfersSent: 0,
+  transferAmount: 0,
+  bilateralNum: 0,
+  bilateralAmount: 0,
+  multilateralNum: 0,
+  multilateralAmount: 0,
+  numNodes: 0
+}
+Worker 5 return stats {
+  messagesReceived: 12,
+  messagesSent: 11,
+  transfersReceived: 5,
+  transfersSent: 4,
+  transferAmount: 33,
+  bilateralNum: 3,
+  bilateralAmount: 32,
+  multilateralNum: 1,
+  multilateralAmount: 10,
+  numNodes: 1
+}
+Worker 6 return stats {
+  messagesReceived: 10,
+  messagesSent: 13,
+  transfersReceived: 3,
+  transfersSent: 6,
+  transferAmount: 20.5,
+  bilateralNum: 3,
+  bilateralAmount: 22.5,
+  multilateralNum: 1,
+  multilateralAmount: 10,
+  numNodes: 1
+}
+Worker 7 return stats {
+  messagesReceived: 0,
+  messagesSent: 0,
+  transfersReceived: 0,
+  transfersSent: 0,
+  transferAmount: 0,
+  bilateralNum: 0,
+  bilateralAmount: 0,
+  multilateralNum: 0,
+  multilateralAmount: 0,
+  numNodes: 0
+}
+Worker 8 return stats {
+  messagesReceived: 9,
+  messagesSent: 4,
+  transfersReceived: 7,
+  transfersSent: 2,
+  transferAmount: 455,
+  bilateralNum: 2,
+  bilateralAmount: 10.5,
+  multilateralNum: 0,
+  multilateralAmount: 0,
+  numNodes: 1
+}
+Worker 9 return stats {
+  messagesReceived: 5,
+  messagesSent: 6,
+  transfersReceived: 1,
+  transfersSent: 2,
+  transferAmount: 10,
+  bilateralNum: 2,
+  bilateralAmount: 20,
+  multilateralNum: 1,
+  multilateralAmount: 10,
+  numNodes: 1
+}
+Worker 10 return stats {
+  messagesReceived: 0,
+  messagesSent: 2,
+  transfersReceived: 0,
+  transfersSent: 2,
+  transferAmount: 0,
+  bilateralNum: 0,
+  bilateralAmount: 0,
+  multilateralNum: 0,
+  multilateralAmount: 0,
+  numNodes: 1
+}
+Worker 11 return stats {
+  messagesReceived: 2,
+  messagesSent: 0,
+  transfersReceived: 2,
+  transfersSent: 0,
+  transferAmount: 10,
+  bilateralNum: 0,
+  bilateralAmount: 0,
+  multilateralNum: 0,
+  multilateralAmount: 0,
+  numNodes: 1
+}
+Worker 12 return stats {
+  messagesReceived: 1,
+  messagesSent: 1,
+  transfersReceived: 1,
+  transfersSent: 1,
+  transferAmount: 10,
+  bilateralNum: 1,
+  bilateralAmount: 10,
+  multilateralNum: 0,
+  multilateralAmount: 0,
+  numNodes: 1
+}
+Worker 13 return stats {
+  messagesReceived: 1,
+  messagesSent: 1,
+  transfersReceived: 1,
+  transfersSent: 1,
+  transferAmount: 20,
+  bilateralNum: 1,
+  bilateralAmount: 10,
+  multilateralNum: 0,
+  multilateralAmount: 0,
+  numNodes: 1
+}
+Worker 14 return stats {
+  messagesReceived: 0,
+  messagesSent: 1,
+  transfersReceived: 0,
+  transfersSent: 1,
+  transferAmount: 0,
+  bilateralNum: 0,
+  bilateralAmount: 0,
+  multilateralNum: 0,
+  multilateralAmount: 0,
+  numNodes: 1
+}
+22 transfers between 13 participants triggered an average of 1.91 messages each
+Transfer amount 561
+19% netted bilaterally
+5% netted multilaterally
+76% not netted
+{
+  messagesReceived: 42,
+  messagesSent: 42,
+  transfersReceived: 22,
+  transfersSent: 22,
+  transferAmount: 560.5,
+  bilateralNum: 12,
+  bilateralAmount: 105,
+  multilateralNum: 3,
+  multilateralAmount: 30,
+  numNodes: 13
+}

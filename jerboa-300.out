@@ -11,13 +11,13 @@ backtrack21 (1-5:3) [ '1' ] [ '77' ]
 backtrack21 (76-0:0) [ '76' ] [ '75' ]
 finished   (76-0:1) [] [ '76', '189' ]
 finished   (1-5:4) [] [ '1', '201', '54' ]
+finished   (168-0:0) [] [ '168', '167' ]
+finished   (243-0:0) [] [ '243', '234' ]
 found loop (1-1:1 [] [ '1', '3', '2', '1' ]
 finished   (2-0:0) [] [ '2', '1' ]
 finished   (17-0:0) [] [ '17', '125' ]
 finished   (32-0:0) [] [ '32', '188' ]
 finished   (242-0:0) [] [ '242', '270' ]
-finished   (168-0:0) [] [ '168', '167' ]
-finished   (243-0:0) [] [ '243', '234' ]
 backtrack21 (4-0:0) [ '4' ] [ '2' ]
 finished   (1-7:0) [] [ '1', '11' ]
 finished   (49-0:0) [] [ '49', '56' ]
@@ -29,7 +29,204 @@ backtrack21 (175-0:0) [ '175' ] [ '164' ]
 backtracked (83-0:0) [ '83', '40' ] [ '206' ]
 finished   (40-0:0) [] [ '40', '208' ]
 finished   (83-0:1) [] [ '83', '40', '207' ]
+finished   (1-6:0) [] [ '1', '11', '5' ]
 finished   (102-0:0) [] [ '102', '103' ]
 finished   (175-0:1) [] [ '175', '192', '164' ]
-finished   (1-6:0) [] [ '1', '11', '5' ]
 Finished 51 probes using 15 workers in a single thread
+Worker 0 return stats {
+  messagesReceived: 27,
+  messagesSent: 27,
+  transfersReceived: 20,
+  transfersSent: 21,
+  transferAmount: 2604,
+  bilateralNum: 7,
+  bilateralAmount: 32.5,
+  multilateralNum: 0,
+  multilateralAmount: 0,
+  numNodes: 19
+}
+Worker 1 return stats {
+  messagesReceived: 49,
+  messagesSent: 60,
+  transfersReceived: 31,
+  transfersSent: 38,
+  transferAmount: 2007.5,
+  bilateralNum: 16,
+  bilateralAmount: 157.5,
+  multilateralNum: 1,
+  multilateralAmount: 12,
+  numNodes: 19
+}
+Worker 2 return stats {
+  messagesReceived: 42,
+  messagesSent: 41,
+  transfersReceived: 26,
+  transfersSent: 25,
+  transferAmount: 4076,
+  bilateralNum: 6,
+  bilateralAmount: 186,
+  multilateralNum: 1,
+  multilateralAmount: 12,
+  numNodes: 19
+}
+Worker 3 return stats {
+  messagesReceived: 23,
+  messagesSent: 33,
+  transfersReceived: 9,
+  transfersSent: 22,
+  transferAmount: 399,
+  bilateralNum: 3,
+  bilateralAmount: 24,
+  multilateralNum: 1,
+  multilateralAmount: 12,
+  numNodes: 19
+}
+Worker 4 return stats {
+  messagesReceived: 17,
+  messagesSent: 26,
+  transfersReceived: 12,
+  transfersSent: 20,
+  transferAmount: 3368,
+  bilateralNum: 0,
+  bilateralAmount: 0,
+  multilateralNum: 0,
+  multilateralAmount: 0,
+  numNodes: 19
+}
+Worker 5 return stats {
+  messagesReceived: 23,
+  messagesSent: 23,
+  transfersReceived: 18,
+  transfersSent: 18,
+  transferAmount: 1873,
+  bilateralNum: 1,
+  bilateralAmount: 5,
+  multilateralNum: 0,
+  multilateralAmount: 0,
+  numNodes: 19
+}
+Worker 6 return stats {
+  messagesReceived: 17,
+  messagesSent: 24,
+  transfersReceived: 13,
+  transfersSent: 20,
+  transferAmount: 1288,
+  bilateralNum: 3,
+  bilateralAmount: 17,
+  multilateralNum: 0,
+  multilateralAmount: 0,
+  numNodes: 18
+}
+Worker 7 return stats {
+  messagesReceived: 9,
+  messagesSent: 17,
+  transfersReceived: 8,
+  transfersSent: 16,
+  transferAmount: 837,
+  bilateralNum: 2,
+  bilateralAmount: 60,
+  multilateralNum: 0,
+  multilateralAmount: 0,
+  numNodes: 18
+}
+Worker 8 return stats {
+  messagesReceived: 20,
+  messagesSent: 17,
+  transfersReceived: 17,
+  transfersSent: 14,
+  transferAmount: 1841,
+  bilateralNum: 0,
+  bilateralAmount: 0,
+  multilateralNum: 0,
+  multilateralAmount: 0,
+  numNodes: 18
+}
+Worker 9 return stats {
+  messagesReceived: 15,
+  messagesSent: 23,
+  transfersReceived: 10,
+  transfersSent: 19,
+  transferAmount: 3069,
+  bilateralNum: 0,
+  bilateralAmount: 0,
+  multilateralNum: 0,
+  multilateralAmount: 0,
+  numNodes: 18
+}
+Worker 10 return stats {
+  messagesReceived: 75,
+  messagesSent: 22,
+  transfersReceived: 69,
+  transfersSent: 15,
+  transferAmount: 2470,
+  bilateralNum: 1,
+  bilateralAmount: 50,
+  multilateralNum: 0,
+  multilateralAmount: 0,
+  numNodes: 18
+}
+Worker 11 return stats {
+  messagesReceived: 30,
+  messagesSent: 28,
+  transfersReceived: 21,
+  transfersSent: 19,
+  transferAmount: 7277.5,
+  bilateralNum: 1,
+  bilateralAmount: 5,
+  multilateralNum: 0,
+  multilateralAmount: 0,
+  numNodes: 18
+}
+Worker 12 return stats {
+  messagesReceived: 13,
+  messagesSent: 25,
+  transfersReceived: 7,
+  transfersSent: 20,
+  transferAmount: 2198,
+  bilateralNum: 1,
+  bilateralAmount: 50,
+  multilateralNum: 0,
+  multilateralAmount: 0,
+  numNodes: 18
+}
+Worker 13 return stats {
+  messagesReceived: 22,
+  messagesSent: 19,
+  transfersReceived: 20,
+  transfersSent: 16,
+  transferAmount: 7019,
+  bilateralNum: 0,
+  bilateralAmount: 0,
+  multilateralNum: 0,
+  multilateralAmount: 0,
+  numNodes: 18
+}
+Worker 14 return stats {
+  messagesReceived: 24,
+  messagesSent: 21,
+  transfersReceived: 19,
+  transfersSent: 17,
+  transferAmount: 4899,
+  bilateralNum: 5,
+  bilateralAmount: 114,
+  multilateralNum: 0,
+  multilateralAmount: 0,
+  numNodes: 18
+}
+300 transfers between 276 participants triggered an average of 1.35 messages each
+Transfer amount 45226
+2% netted bilaterally
+0% netted multilaterally
+98% not netted
+{
+  messagesReceived: 406,
+  messagesSent: 406,
+  transfersReceived: 300,
+  transfersSent: 300,
+  transferAmount: 45226,
+  bilateralNum: 46,
+  bilateralAmount: 701,
+  multilateralNum: 3,
+  multilateralAmount: 36,
+  numNodes: 276
+}
