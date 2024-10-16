@@ -88,3 +88,4 @@ Our implementation of the LedgerLoops algorithm is now available for use in tech
 
 ### Algorithm Open Standard
 We invite other implementers to implement software compatible with ours, by following the IETF internet draft which will be published soon.
+ 
