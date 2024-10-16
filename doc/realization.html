@@ -1,0 +1,163 @@
+<html><head><style>body {
+   color: black;
+}
+</style></head><body><h1 id="ledgerloops-using-the-sarafu-dataset">LedgerLoops using the Sarafu dataset</h1>
+<p>In order to know whether our algorithm actually works and scales, we tested it on a rather large dataset: the Sarafu dataset.</p>
+<h2 id="the-sarafu-dataset">The Sarafu Dataset</h2>
+<p>The Sarafu Dataset is <a href="https://www.nature.com/articles/s41597-022-01539-4">openly available</a> and describes 440,000 transactions between
+roughly 55,000 accounts. We use it here to see if the LedgerLoops algorithm can efficiently find loops.</p>
+<h2 id="definition-of-loops">Definition of Loops</h2>
+<p>Consider the following small dataset:</p>
+<pre><code>Transaction <span class="hljs-number">1</span>: <span class="hljs-keyword">Node</span> <span class="hljs-title">1</span> sends <span class="hljs-keyword">node</span> <span class="hljs-title">2</span> a transfer of <span class="hljs-number">50</span> units
+Transaction <span class="hljs-number">2</span>: <span class="hljs-keyword">Node</span> <span class="hljs-title">2</span> sends <span class="hljs-keyword">node</span> <span class="hljs-title">3</span> a transfer of <span class="hljs-number">150</span> units
+Transaction <span class="hljs-number">3</span>: <span class="hljs-keyword">Node</span> <span class="hljs-title">3</span> sends <span class="hljs-keyword">node</span> <span class="hljs-title">2</span> a transfer of <span class="hljs-number">25</span> units
+Transaction <span class="hljs-number">4</span>: <span class="hljs-keyword">Node</span> <span class="hljs-title">3</span> sends <span class="hljs-keyword">node</span> <span class="hljs-title">1</span> a transfer of <span class="hljs-number">25</span> units
+</code></pre><p>If these transactions are administered on a single ledger, then the balances would evolve as follows:</p>
+<table>
+<thead>
+<tr>
+<th>After transaction</th>
+<th>Node 1 balance</th>
+<th>Node 2 balance</th>
+<th>Node 3 balance</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td>1</td>
+<td>0 - 50 = -50</td>
+<td>0 + 50 = 50</td>
+<td>0</td>
+</tr>
+<tr>
+<td>2</td>
+<td>-50</td>
+<td>50 - 150 = -100</td>
+<td>0 + 150 = 150</td>
+</tr>
+<tr>
+<td>3</td>
+<td>-50</td>
+<td>-100 + 25 = -75</td>
+<td>150 - 25 = 125</td>
+</tr>
+<tr>
+<td>4</td>
+<td>-50 + 25 = -25</td>
+<td>-75</td>
+<td>125 - 25 = 100</td>
+</tr>
+</tbody>
+</table>
+<p>Note that in this situation, each node has only a single balance against its environment, and netting
+happens explicitly as a part of each transaction. At each transaction, two of the balances on the central
+ledger are updated.</p>
+<p>It is, however, also possible to implement a payment network using just bilateral peer-to-peer trustlines.
+In that case, the balances would evolve as follows:</p>
+<table>
+<thead>
+<tr>
+<th>After transaction</th>
+<th>[1-&gt;2, 1-&gt;3] bilateral balances</th>
+<th>[2-&gt;1, 2-&gt;3] bilateral balances</th>
+<th>[3-&gt;1, 3-&gt;2] bilateral balances</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>[ 0, 0  ]</td>
+<td>[ 0, 0 ]</td>
+<td>[ 0, 0 ]</td>
+</tr>
+<tr>
+<td>1</td>
+<td>[-50, 0 ]</td>
+<td>[ 50 , 0 ]</td>
+<td>[ 0, 0 ]</td>
+</tr>
+<tr>
+<td>2</td>
+<td>[-50, 0 ]</td>
+<td>[ 50, -150 ]</td>
+<td>[ 0, 150 ]</td>
+</tr>
+<tr>
+<td>3</td>
+<td>[-50, 0 ]</td>
+<td>[ 50 , -125 ]</td>
+<td>[ 0, 125 ]</td>
+</tr>
+<tr>
+<td>4</td>
+<td>[-50, 25 ]</td>
+<td>[ 50 , -125 ]</td>
+<td>[ -25, 125 ]</td>
+</tr>
+</tbody>
+</table>
+<p>Note that in this case bilateral netting between nodes 2 and 3 is still immediate, and transactions 2 and 3 partially
+cancel each other out.</p>
+<p>However, whereas the central ledger ends up with a total deployed balance of 100 units,
+the system of bilateral ledgers ends up with total deployed balance of 50 + (150-25) + 25 = 200 units.</p>
+<p>In order to reduce the total deployed balance in a network of bilateral ledgers, loops can be used.
+They consist of a set of transactions, one per ledger, that reduce the total deployed balance in a way all participants can agree with.</p>
+<p>So in this case:</p>
+<pre><code>Transaction <span class="hljs-number">5</span>a: <span class="hljs-keyword">Node</span> <span class="hljs-title">2</span> sends <span class="hljs-keyword">node</span> <span class="hljs-title">1</span> a loop-transfer <span class="hljs-number">25</span> units.
+Transaction <span class="hljs-number">5</span>b: <span class="hljs-keyword">Node</span> <span class="hljs-title">3</span> sends <span class="hljs-keyword">node</span> <span class="hljs-title">2</span> a loop-transfer <span class="hljs-number">25</span> units.
+Transaction <span class="hljs-number">5</span>c: <span class="hljs-keyword">Node</span> <span class="hljs-title">1</span> sends <span class="hljs-keyword">node</span> <span class="hljs-title">3</span> a loop-transfer <span class="hljs-number">25</span> units.
+</code></pre><p>And the effect:</p>
+<table>
+<thead>
+<tr>
+<th>After transaction</th>
+<th>[1-&gt;2, 1-&gt;3] bilateral balances</th>
+<th>[2-&gt;1, 2-&gt;3] bilateral balances</th>
+<th>[3-&gt;1, 3-&gt;2] bilateral balances</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>5a</td>
+<td>[ -50 + 25 = -25, 25 ]</td>
+<td>[ 50 - 25 = 25, -125 ]</td>
+<td>[ -25, 125 ]</td>
+</tr>
+<tr>
+<td>5b</td>
+<td>[ -25, 25 ]</td>
+<td>[ 25, -125 + 25 = -100 ]</td>
+<td>[ -25, 125 - 25 = 100 ]</td>
+</tr>
+<tr>
+<td>5c</td>
+<td>[ -25, 25 - 25 = 0 ]</td>
+<td>[ 25, -100 ]</td>
+<td>[ -25 + 25 = 0, 100 ]</td>
+</tr>
+</tbody>
+</table>
+<p>The total deployed balance has now been reduced by 3 times 25 units, from 50 + (150-25) + 25 = 200 units to (50-25) + (150-25-25) + (25-25) = 125 units.</p>
+<h2 id="performance">Performance</h2>
+<h3 id="bandwidth">Bandwidth</h3>
+<p>In the simulation, our algorithm triggered an average of 13 messages per transaction. This includes the transfer message itself, plus all probe and nack messages used for loop detection, plus all scout, propose and commit used for loop removal. The messages were roughly 64 bytes each, so the total amount of bandwidth used for one transfer was roughly 1 Kb.</p>
+<p>We think this is a very reasonable requirement on modern internet-connected systems.</p>
+<h3 id="processor-time-using-a-benchmark-bird-s-eye-view-algorithm-in-a-single-thread-took-21-seconds-">Processor Time using a benchmark bird&#39;s eye view algorithm in a single thread took 21 seconds.</h3>
+<p>The simulation, reading all 440,000 <code>STANDARD</code> transactions from the <code>sarafu_txns_20200125-20210615.csv</code> file,
+keeping track of the balances of each of the 40,000 participants, and detecting 7,000 loops in a single thread, took 90 seconds.</p>
+<p>In these 90 seconds, 5 million messages were processed, so this is equivalent to 60,000 messages processed per second, in a single-thread, on a laptop from 2019.</p>
+<p>We think this is also a very reasonable Processor Time requirement.</p>
+<h2 id="conclusion">Conclusion</h2>
+<h3 id="observations">Observations</h3>
+<p>The current algorithm is a first versions, and we expect that over time it will get even better. However, the current performance is very impressive both in terms of low cost and in terms of high benefits.</p>
+<h3 id="tech-preview">Tech Preview</h3>
+<p>Our implementation of the LedgerLoops algorithm is now available for use in technology pilot projects. Please contact michiel@unhosted.org to book a free demonstration.</p>
+<h3 id="algorithm-open-standard">Algorithm Open Standard</h3>
+<p>We invite other implementers to implement software compatible with ours, by following the IETF internet draft which will be published soon.</p>
+</body></html>
