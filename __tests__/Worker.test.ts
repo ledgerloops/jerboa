@@ -6,7 +6,7 @@ describe('addWeight', () => {
     const sendMessage = (from: string, to: string, message: Message): void => {
       worker.deliverMessageToNodeInThisWorker(from, to, message);
     };
-    const worker = new Worker(0, 1, sendMessage);
+    const worker = new Worker(0, 1, undefined, sendMessage);
     worker.addWeight('0', '1', 3);
     expect(worker.getOurBalances()).toEqual({
       '0': {
@@ -21,14 +21,14 @@ describe('addWeight', () => {
     const sendMessage = (from: string, to: string, message: Message): void => {
       worker.deliverMessageToNodeInThisWorker(from, to, message);
     };
-    const worker = new Worker(0, 1, sendMessage);
+    const worker = new Worker(0, 1, undefined, sendMessage);
     expect(() => { worker.addWeight('0', '1', 0)}).toThrow();
   });
   it('adds another link', () => {
     const sendMessage = (from: string, to: string, message: Message): void => {
       worker.deliverMessageToNodeInThisWorker(from, to, message);
     };
-    const worker = new Worker(0, 1, sendMessage);
+    const worker = new Worker(0, 1, undefined, sendMessage);
     worker.addWeight('0', '1', 3);
     worker.addWeight('0', '2', 5);
     expect(worker.getOurBalances()).toEqual({
@@ -48,7 +48,7 @@ describe('addWeight', () => {
     const sendMessage = (from: string, to: string, message: Message): void => {
       worker.deliverMessageToNodeInThisWorker(from, to, message);
     };
-    const worker = new Worker(0, 1, sendMessage);
+    const worker = new Worker(0, 1, undefined, sendMessage);
     worker.addWeight('0', '1', 3);
     worker.addWeight('2', '0', 5);
     expect(worker.getOurBalances()).toEqual({
@@ -68,7 +68,7 @@ describe('addWeight', () => {
     const sendMessage = (from: string, to: string, message: Message): void => {
       worker.deliverMessageToNodeInThisWorker(from, to, message);
     };
-    const worker = new Worker(0, 1, sendMessage);
+    const worker = new Worker(0, 1, undefined, sendMessage);
     worker.addWeight('0', '1', 3);
     worker.addWeight('1', '0', 7);
     expect(worker.getOurBalances()).toEqual({
@@ -84,7 +84,7 @@ describe('addWeight', () => {
     const sendMessage = (from: string, to: string, message: Message): void => {
       worker.deliverMessageToNodeInThisWorker(from, to, message);
     };
-    const worker = new Worker(0, 1, sendMessage);
+    const worker = new Worker(0, 1, undefined, sendMessage);
     worker.addWeight('0', '1', 3);
     worker.addWeight('1', '0', 2);
     expect(worker.getOurBalances()).toEqual({
@@ -100,7 +100,7 @@ describe('addWeight', () => {
     const sendMessage = (from: string, to: string, message: Message): void => {
       worker.deliverMessageToNodeInThisWorker(from, to, message);
     };
-    const worker = new Worker(0, 1, sendMessage);
+    const worker = new Worker(0, 1, undefined, sendMessage);
     worker.addWeight('0', '1', 3);
     worker.addWeight('1', '0', 3);
     expect(worker.getOurBalances()).toEqual({
@@ -117,7 +117,7 @@ describe('hasOutgoingLinks', () => {
     const sendMessage = (from: string, to: string, message: Message): void => {
       worker.deliverMessageToNodeInThisWorker(from, to, message);
     };
-    const worker = new Worker(0, 1, sendMessage);
+    const worker = new Worker(0, 1, undefined, sendMessage);
     worker.addWeight('0', '1', 3);
     expect(worker.hasOutgoingLinks('0')).toEqual(true);
   });
@@ -125,7 +125,7 @@ describe('hasOutgoingLinks', () => {
     const sendMessage = (from: string, to: string, message: Message): void => {
       worker.deliverMessageToNodeInThisWorker(from, to, message);
     };
-    const worker = new Worker(0, 1, sendMessage);
+    const worker = new Worker(0, 1, undefined, sendMessage);
     worker.addWeight('0', '1', 3);
     expect(worker.hasOutgoingLinks('1')).toEqual(false);
     expect(worker.hasOutgoingLinks('2')).toEqual(false);

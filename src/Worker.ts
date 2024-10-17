@@ -1,6 +1,6 @@
 import { Jerboa } from "./Jerboa.js";
 import { Message } from "./MessageTypes.js";
-import { readCsv } from './readCsv.js';
+import { readSarafuCsv } from './readCsv.js';
 
 export class Worker {
   messagesSent: number = 0;
@@ -17,9 +17,11 @@ export class Worker {
   workerNo: number;
   numWorkers: number;
   private sendMessage: (from: string, to: string, message: Message) => void;
-  constructor(shard: number, noShards: number, sendMessage: (from: string, to: string, message: Message) => void) {
-    this.workerNo = shard;
-    this.numWorkers = noShards;
+  private solutionFile: string | undefined;
+  constructor(workerNo: number, noWorkers: number, solutionFile: string | undefined, sendMessage: (from: string, to: string, message: Message) => void) {
+    this.workerNo = workerNo;
+    this.numWorkers = noWorkers;
+    this.solutionFile = solutionFile;
     this.sendMessage = sendMessage;
   }
   public queueMessageForLocalDelivery(from: string, to: string, message: Message): void {
@@ -32,7 +34,7 @@ export class Worker {
       throw Error('to node is not ours');
     }
   }
-  deliverMessageToNodeInThisWorker(from: string, to: string, message: Message): void {
+  async deliverMessageToNodeInThisWorker(from: string, to: string, message: Message): Promise<void> {
     this.messagesSent++;
     // console.log(`Worker ${this.workerNo} delivering message to node ${to}`, from, to, message, this.messages.length);
     return this.getNode(to).receiveMessage(from, message);
@@ -59,7 +61,7 @@ export class Worker {
       throw new Error('node is not ours!');
     }
     if (typeof this.ourNodes[name] === 'undefined') {
-      this.ourNodes[name] = new Jerboa(name, (to: string, message: Message) => {
+      this.ourNodes[name] = new Jerboa(name, this.solutionFile, (to: string, message: Message) => {
         // console.log('our node', name, to, message);
         this.sendMessage(name, to, message);
       });
@@ -175,19 +177,13 @@ export class Worker {
     return this.ourNodes[name];
   }
   async readTransfersFromCsv(filename: string): Promise<void> {
-    // this.sendMessage('123', '456', { command: 'test', probeId: '1', incarnation: 0, debugInfo: {} } as Message);
-    // console.log('worker waiting 10s before finishing run', filename);
-    // await new Promise(resolve => setTimeout(resolve, 10000));
-    // return 42;
-    // let numTrans = 0;
-    // let totalTransAmount = 0;
-    await readCsv(filename, (from: string, to: string, amount: number) => {
+    await readSarafuCsv(filename, (from: string, to: string, amount: number) => {
       if (parseInt(from) % this.numWorkers === this.workerNo) {
         this.addWeight(from, to, amount);
-        // numTrans++;
-        // totalTransAmount += amount;
       }
     });
-    // console.log(`done reading csv`);
+  }
+  async readDebtFromCsv(filename: string): Promise<void> {
+    console.log(`Reading debt from ${filename} csv`);
   }
 }

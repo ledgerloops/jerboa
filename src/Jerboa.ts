@@ -1,4 +1,5 @@
 import { randomBytes, createHash } from "node:crypto";
+import { appendFile } from "node:fs/promises";
 import { Balances } from "./Balances.js";
 import { Message, TransferMessage, ProposeMessage, CommitMessage, ScoutMessage, ProbeMessage, NackMessage } from "./MessageTypes.js";
 import { printLine } from "./BirdsEyeWorm.js";
@@ -89,8 +90,10 @@ export class Jerboa {
   // } = {};
   private sendMessageCb: (to: string, message: Message) => void;
   private loopsTried: string[] = [];
-  constructor(name: string, sendMessage: (to: string, message: Message) => void) {
+  private solutionFile;
+  constructor(name: string, solutionFile: string | undefined, sendMessage: (to: string, message: Message) => void) {
     this.name = name;
+    this.solutionFile = solutionFile;
     this.sendMessageCb = sendMessage;
   }
   private sendMessage(to: string, message: Message): void {
@@ -127,7 +130,7 @@ export class Jerboa {
     return bestPickProbeSender;
 
   }
-  receiveScout(sender: string, msg: ScoutMessage): void {
+  async receiveScout(sender: string, msg: ScoutMessage): Promise<void> {
     const { probeId, amount, maxIncarnation: incarnation, debugInfo } = msg;
     if (debugInfo.loop.indexOf(this.name) === -1) {
       throw new Error(`${this.name} received scout message but not on the loop ${JSON.stringify(msg)}`);
@@ -154,6 +157,9 @@ export class Jerboa {
         throw new Error(`${this.name} looped a scout message from ${sender} for probeId ${probeId} but have no looper messages for that probe`);
       }
       this.initiatePropose(debugInfo.loop[ debugInfo.loop.length - 2], probeId, incarnation, amount, debugInfo);
+      if (this.solutionFile) {
+        await appendFile(this.solutionFile, debugInfo.loop.slice(debugInfo.loop.length - 1).concat(amount.toString()).join(' ') + '\n');
+      }
     } else {
       // no in messages
       if (Object.keys(this.probes[probeId].in).length === 0) {
@@ -436,7 +442,7 @@ export class Jerboa {
     this.sendProbeMessage(newStep, { command: 'probe', probeId, incarnation, debugInfo: { path: debugInfo.path, backtracked: [] } });
     return true;
   };
-  receiveMessage(from: string, msg: Message ): void {
+  async receiveMessage(from: string, msg: Message ): Promise<void> {
     this.messagesReceived++;
     // console.log('Jerboa receiveMessage', from, this.name, msg);
     switch((msg as { command: string }).command) {

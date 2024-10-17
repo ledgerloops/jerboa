@@ -57,5 +57,6 @@ and run:
 ```
 npm run build
 time node build/src/birdsEyeChallenge.js ../strategy-pit/debt.csv ../strategy-pit/solution.csv
+time node build/src/jerboaChallenge.js ../strategy-pit/debt.csv ../strategy-pit/solution.csv
 ```
 And then follow the [instructions](https://github.com/ledgerloops/strategy-pit/tree/sarafu-netting-challenge?tab=readme-ov-file#solution-analysis) to analyse the result.

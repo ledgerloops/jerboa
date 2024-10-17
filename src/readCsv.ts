@@ -1,7 +1,7 @@
 import { createInterface } from 'readline';
 import { createReadStream } from 'fs';
 
-export async function readCsv(filename: string, callback: (from: string, to: string, amount: number) => void): Promise<void> {
+export async function readSarafuCsv(filename: string, callback: (from: string, to: string, amount: number) => void): Promise<void> {
     return new Promise((resolve, reject) => {
       try {
         const lineReader = createInterface({
