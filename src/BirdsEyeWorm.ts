@@ -59,7 +59,7 @@ export class BirdsEyeWorm {
         smallestWeight = thisWeight;
       }
     }
-    return Math.round(smallestWeight * 1000) / 1000;
+    return smallestWeight;
   }
   // assumes all loop hops exist
   netLoop(loop: string[]): number {

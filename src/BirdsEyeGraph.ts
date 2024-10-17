@@ -1,7 +1,9 @@
+const LEDGER_SCALE = 1000;
+
 export class Graph {
   private links: {
     [from: string]: {
-      [to: string]: number;
+      [to: string]: bigint;
     }
   } = {};
   private ensureLink(from: string, to: string): void {
@@ -9,12 +11,12 @@ export class Graph {
       this.links[from] = {};
     }
     if (typeof this.links[from][to] === 'undefined') {
-      this.links[from][to] = 0;
+      this.links[from][to] = 0n;
     }
   }
   // assumes that graph[from][to] exists
   // @returns number amount removed
-  private zeroOut(from: string, to: string): number {
+  private zeroOut(from: string, to: string): bigint {
     const amount = this.links[from][to];
     delete this.links[from][to];
     if (Object.keys(this.links[from]).length === 0) {
@@ -23,19 +25,19 @@ export class Graph {
     return amount;
   }
   // assumes that both graph[from][to] and graph[to][from] exist
-  private substractAndRemoveCounterBalance(from: string, to: string): number {
+  private substractAndRemoveCounterBalance(from: string, to: string): bigint {
     const amount = this.links[to][from];
     this.links[from][to] -= amount;
     return this.zeroOut(to, from);
   }
   // assumes that graph[from][to] exists
   // @returns number amount netted
-  private netBilateralAndRemove(from: string, to: string): number {
+  private netBilateralAndRemove(from: string, to: string): bigint {
     if (typeof this.links[to] === 'undefined') {
-      return 0;
+      return 0n;
     }
     if (typeof this.links[to][from] === 'undefined') {
-      return 0;
+      return 0n;
     }
     if (this.links[from][to] > this.links[to][from]) {
       return this.substractAndRemoveCounterBalance(from, to);
@@ -61,8 +63,8 @@ export class Graph {
       throw new Error('weight should be greater than zero');
     }
     this.ensureLink(from, to);
-    this.links[from][to] += weight;
-    return this.netBilateralAndRemove(from, to);
+    this.links[from][to] += BigInt(Math.round(weight * LEDGER_SCALE));
+    return Number(this.netBilateralAndRemove(from, to)) / LEDGER_SCALE;
   }
   public removeLink(from: string, to: string): void {
     if (typeof from !== 'string') {
@@ -117,17 +119,17 @@ export class Graph {
     if (typeof this.links[from][to] === 'undefined') {
       return 0;
     }
-    return this.links[from][to];
+    return Number(this.links[from][to]) / LEDGER_SCALE;
   }
   public getLinks(): {
     [from: string]: {
-      [to: string]: number;
+      [to: string]: bigint;
     }
   } {
     return this.links;
   }
-  public getTotalWeight(): number {
-    let total = 0;
+  public getTotalWeight(): bigint {
+    let total = 0n;
     Object.keys(this.links).forEach(from => {
       Object.keys(this.links[from]).forEach(to => {
         total += this.links[from][to];
