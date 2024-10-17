@@ -49,3 +49,13 @@ time NUM_WORKERS=15 PROBING_REPORT=1 node build/src/main.js ./__tests__/fixture-
 time NUM_WORKERS=15 PROBING_REPORT=1 node build/src/main.js ./__tests__/fixture-30k.csv > ./output/jerboa-30k.out
 time NUM_WORKERS=15 PROBING_REPORT=1 node --max-old-space-size=64000 build/src/main.js ./__tests__/fixture-300k.csv > ./output/jerboa-300k.out
 ```
+
+
+## Sarafu-Based Netting Challenge
+To participate in the [Sarafu-Based Netting Challenge](https://github.com/ledgerloops/strategy-pit/pull/41), check out the strategy-pit repo next to this one,
+and run:
+```
+npm run build
+time node build/src/birdsEyeChallenge.js ../strategy-pit/debt.csv ../strategy-pit/solution.csv
+```
+And then follow the [instructions](https://github.com/ledgerloops/strategy-pit/tree/sarafu-netting-challenge?tab=readme-ov-file#solution-analysis) to analyse the result.

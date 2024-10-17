@@ -16,7 +16,7 @@ let counter = 0;
 let totalTransAmount = 0;
 let totalImmediatelyNetted = 0;
 let numTrans = 0;
-const birdsEyeWorm = new BirdsEyeWorm();
+const birdsEyeWorm = new BirdsEyeWorm(true);
 lineReader.on('line', function (line) {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [ _id,_timeset, transfer_subtype,source,target,weight,_token_name,_token_address ] = line.split(',');
@@ -33,8 +33,8 @@ lineReader.on('line', function (line) {
   }
 });
 
-lineReader.on('close', function () {
-  birdsEyeWorm.runWorm();
+lineReader.on('close', async function () {
+  await birdsEyeWorm.runWorm();
   console.log(birdsEyeWorm.stats);
   const links = birdsEyeWorm.graph.getLinks();
   let numLinks = 0;

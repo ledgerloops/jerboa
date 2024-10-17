@@ -1,4 +1,5 @@
 import { Graph } from './BirdsEyeGraph.js';
+import { writeFile, appendFile } from 'node:fs/promises';
 
 const MAX_NUM_STEPS = 1000000;
 
@@ -16,6 +17,17 @@ export class BirdsEyeWorm {
       totalAmount: number;
     }
   } = {};
+  private probingReport: boolean;
+  private solutionFile: string;
+  constructor(probingReport: boolean, solutionFile?: string) {
+    this.probingReport = probingReport;
+    this.solutionFile = solutionFile;
+  }
+  printLine(preface: string, first: string[], second: string[]): void {
+    if (this.probingReport) {
+      printLine(preface, first, second);
+    }
+  }
   report(loopLength: number, amount: number): void {
     // if (loopLength > 2) {
       // console.log('report', loopLength, amount);
@@ -47,7 +59,7 @@ export class BirdsEyeWorm {
         smallestWeight = thisWeight;
       }
     }
-    return smallestWeight;
+    return Math.round(smallestWeight * 1000) / 1000;
   }
   // assumes all loop hops exist
   netLoop(loop: string[]): number {
@@ -66,13 +78,17 @@ export class BirdsEyeWorm {
     // const after = this.graph.getTotalWeight();
     // console.log('total graph weight reduced by', before - after);
     this.report(loop.length - 1, smallestWeight);
-    return firstZeroPos;
+    return smallestWeight;
   }
   // removes dead ends as it finds them.
   // nets loops as it finds them.
-  runWorm(): void {
+  async runWorm(): Promise<void> {
     let path = [];
     let newStep = this.graph.getFirstNode();
+    if (this.solutionFile) {
+      await writeFile(this.solutionFile, '');
+    }
+
     // eslint-disable-next-line no-constant-condition
     let counter = 0;
     while (counter++ < MAX_NUM_STEPS) {
@@ -93,7 +109,7 @@ export class BirdsEyeWorm {
       // we now now that either newStep has outgoing links, or path is empty
       if (path.length === 0) {
         if (backtracked.length > 0) {
-          printLine('finished   ', path, backtracked.reverse());
+          this.printLine('finished   ', path, backtracked.reverse());
         }
         // no paths left, start with a new worm
         path = [];
@@ -110,7 +126,7 @@ export class BirdsEyeWorm {
         }
       } else {
         if (backtracked.length > 0) {
-          printLine('backtracked', path, backtracked.reverse());
+          this.printLine('backtracked', path, backtracked.reverse());
           newStep = path[path.length - 1];
           // console.log('continuing from', path, newStep);
         }
@@ -122,8 +138,11 @@ export class BirdsEyeWorm {
       const pos = path.indexOf(newStep);
       if (pos !== -1) {
         const loop = path.splice(pos).concat(newStep);
-        this.netLoop(loop);
-        printLine(`found loop `, path, loop);
+        const smallestWeight = this.netLoop(loop);
+        this.printLine(`found loop `, path, loop);
+        if (this.solutionFile) {
+          await appendFile(this.solutionFile, loop.concat(smallestWeight).join(' ') + '\n');
+        }
 
         newStep = this.graph.getFirstNode(path[path.length - 1]);
         // console.log(`Continuing with`, path, newStep);
