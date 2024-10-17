@@ -141,7 +141,7 @@ export class BirdsEyeWorm {
         const smallestWeight = this.netLoop(loop);
         this.printLine(`found loop `, path, loop);
         if (this.solutionFile) {
-          await appendFile(this.solutionFile, loop.concat(smallestWeight).join(' ') + '\n');
+          await appendFile(this.solutionFile, loop.slice(0, loop.length - 1).concat(smallestWeight).join(' ') + '\n');
         }
 
         newStep = this.graph.getFirstNode(path[path.length - 1]);
