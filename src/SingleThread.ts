@@ -28,6 +28,7 @@ export class SingleThread {
       await Promise.all(this.workers.map(async (worker) => worker.readDebtFromCsv(this.debtFile)));
     }
     if (this.solutionFile) {
+      console.log('resetting solution file', this.solutionFile);
       await writeFile(this.solutionFile, '');
     }
     await new Promise(r => setTimeout(r, 1200));

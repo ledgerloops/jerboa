@@ -1,7 +1,7 @@
 import { SingleThread } from "./SingleThread.js";
 
-const DEBT_CSV = process.argv[2] || './strategy-pit/debt.csv';
-const SOLUTION_CSV = process.argv[2] || './strategy-pit/jerboa.csv';
+const DEBT_CSV = process.argv[2] || '../strategy-pit/debt.csv';
+const SOLUTION_CSV = process.argv[3] || '../strategy-pit/jerboa.csv';
 
 const NUM_WORKERS: number = parseInt(process.env.NUM_WORKERS) || 1;
 

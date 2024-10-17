@@ -158,7 +158,9 @@ export class Jerboa {
       }
       this.initiatePropose(debugInfo.loop[ debugInfo.loop.length - 2], probeId, incarnation, amount, debugInfo);
       if (this.solutionFile) {
-        await appendFile(this.solutionFile, debugInfo.loop.slice(debugInfo.loop.length - 1).concat(amount.toString()).join(' ') + '\n');
+        const line = debugInfo.loop.slice(0, debugInfo.loop.length - 1).concat(amount.toString()).join(' ') + '\n';
+        console.log('Writing to solution file', this.solutionFile, line);
+        await appendFile(this.solutionFile, line);
       }
     } else {
       // no in messages

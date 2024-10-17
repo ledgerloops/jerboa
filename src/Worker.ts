@@ -1,6 +1,6 @@
 import { Jerboa } from "./Jerboa.js";
 import { Message } from "./MessageTypes.js";
-import { readSarafuCsv } from './readCsv.js';
+import { readSarafuCsv, readCsv } from './readCsv.js';
 
 export class Worker {
   messagesSent: number = 0;
@@ -184,6 +184,12 @@ export class Worker {
     });
   }
   async readDebtFromCsv(filename: string): Promise<void> {
-    console.log(`Reading debt from ${filename} csv`);
+    await readCsv(filename, ' ', (cells: string[]) => {
+      const [ from, to, amountStr ] = cells;
+      const amount = parseFloat(amountStr);
+      if (parseInt(from) % this.numWorkers === this.workerNo) {
+        this.addWeight(from, to, amount);
+      }
+    });
   }
 }
