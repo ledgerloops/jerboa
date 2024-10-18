@@ -159,7 +159,7 @@ export class Jerboa {
       this.initiatePropose(debugInfo.loop[ debugInfo.loop.length - 2], probeId, incarnation, amount, debugInfo);
       if (this.solutionFile) {
         const line = debugInfo.loop.slice(0, debugInfo.loop.length - 1).concat(amount.toString()).join(' ') + '\n';
-        console.log('Writing to solution file', this.solutionFile, line);
+        // console.log('Writing to solution file', this.solutionFile, line);
         await appendFile(this.solutionFile, line);
       }
     } else {
