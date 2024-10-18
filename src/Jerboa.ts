@@ -430,6 +430,7 @@ export class Jerboa {
     if (nodes.length === 0) {
       // console.log(`                     combining self, sending nack ${this.name}->${sender}`, path, backtracked);
       this.sendNackMessage(sender, probeId, incarnation, debugInfo);
+      this.currentProbe = undefined;
       return false;
     } else if (debugInfo.backtracked.length > 0) {
       if (process.env.PROBING_REPORT) {
@@ -542,7 +543,6 @@ export class Jerboa {
       this.currentProbe = this.probeQueue.shift();
       // console.log('running probe', this.currentProbe);
       const result = this.runCurrentProbe();
-      this.currentProbe = undefined;
       return result;
     }
     return false;
