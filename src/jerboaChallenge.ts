@@ -1,3 +1,5 @@
+
+import { writeFile, appendFile } from "node:fs/promises";
 import { SingleThread } from "./SingleThread.js";
 
 const DEBT_CSV = process.argv[2] || '../strategy-pit/debt.csv';
@@ -7,7 +9,15 @@ const NUM_WORKERS: number = parseInt(process.env.NUM_WORKERS) || 1;
 
 async function runSingleThread(numWorkers: number): Promise<void> {
   console.log(`Running single thread with ${numWorkers} workers`);
-  const threadRunner = new SingleThread({ debtFile: DEBT_CSV, numWorkers, solutionFile: SOLUTION_CSV });
+  console.log('resetting solution file', this.solutionCallback);
+  await writeFile(SOLUTION_CSV, '');
+  const threadRunner = new SingleThread({
+    debtFile: DEBT_CSV,
+    numWorkers, 
+    solutionCallback: (line: string) => {
+      return appendFile(SOLUTION_CSV, line);
+    }
+  });
   const numProbes = await threadRunner.runAllWorkers();
   console.log(`Finished ${numProbes} probes using ${numWorkers} workers in a single thread`);
   const stats = threadRunner.getStats();

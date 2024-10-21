@@ -1,5 +1,3 @@
-import { writeFile } from 'node:fs/promises';
-
 import { Worker } from './Worker.js';
 import { Message } from './MessageTypes.js';
 
@@ -7,14 +5,14 @@ export class SingleThread {
   private workers: Worker[] = [];
   private sarafuFile: string | undefined;
   private debtFile: string | undefined;
-  private solutionFile: string | undefined;
-  constructor(options: { numWorkers: number, sarafuFile?: string, debtFile?: string, solutionFile?: string }) {
+  private solutionCallback: (string) => Promise<void> | undefined;
+  constructor(options: { numWorkers: number, sarafuFile?: string, debtFile?: string, solutionCallback?: (string) => Promise<void> }) {
     this.debtFile = options.debtFile;
-    this.solutionFile = options.solutionFile;
+    this.solutionCallback = options.solutionCallback;
     this.sarafuFile = options.sarafuFile;
     for (let i = 0; i < options.numWorkers; i++) {
       // console.log(`Instantiating worker ${i} of ${numWorkers}`);
-      this.workers[i] = new Worker(i, options.numWorkers, this.solutionFile, (from: string, to: string, message: Message): void => {
+      this.workers[i] = new Worker(i, options.numWorkers, this.solutionCallback, (from: string, to: string, message: Message): void => {
         const receivingWorker = this.workers[parseInt(to) % this.workers.length];
         receivingWorker.deliverMessageToNodeInThisWorker(from, to, message);
       });
@@ -26,10 +24,6 @@ export class SingleThread {
     }
     if (this.debtFile) {
       await Promise.all(this.workers.map(async (worker) => worker.readDebtFromCsv(this.debtFile)));
-    }
-    if (this.solutionFile) {
-      console.log('resetting solution file', this.solutionFile);
-      await writeFile(this.solutionFile, '');
     }
     await new Promise(r => setTimeout(r, 1200));
     const nums = this.workers.map((worker) => worker.getNumProbes());

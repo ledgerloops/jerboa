@@ -1,5 +1,4 @@
 import { randomBytes, createHash } from "node:crypto";
-import { appendFile } from "node:fs/promises";
 import { Balances } from "./Balances.js";
 import { Message, TransferMessage, ProposeMessage, CommitMessage, ScoutMessage, ProbeMessage, NackMessage } from "./MessageTypes.js";
 import { printLine } from "./BirdsEyeWorm.js";
@@ -90,11 +89,11 @@ export class Jerboa {
   // } = {};
   private sendMessageCb: (to: string, message: Message) => void;
   private loopsTried: string[] = [];
-  private solutionFile;
+  private solutionCallback: (line: string) => Promise<void>;
   private maybeRunProbeTimer;
-  constructor(name: string, solutionFile: string | undefined, sendMessage: (to: string, message: Message) => void) {
+  constructor(name: string, solutionCallback: (line: string) => Promise<void> | undefined, sendMessage: (to: string, message: Message) => void) {
     this.name = name;
-    this.solutionFile = solutionFile;
+    this.solutionCallback = solutionCallback;
     this.sendMessageCb = sendMessage;
     this.maybeRunProbeTimer = setInterval(() => {
       if (this.probeQueue.length && this.currentProbe === undefined) {
@@ -168,10 +167,10 @@ export class Jerboa {
         throw new Error(`${this.name} looped a scout message from ${sender} for probeId ${probeId} but have no looper messages for that probe`);
       }
       this.initiatePropose(debugInfo.loop[ debugInfo.loop.length - 2], probeId, incarnation, amount, debugInfo);
-      if (this.solutionFile) {
+      if (this.solutionCallback) {
         const line = debugInfo.loop.slice(0, debugInfo.loop.length - 1).concat(amount.toString()).join(' ') + '\n';
         // console.log('Writing to solution file', this.solutionFile, line);
-        await appendFile(this.solutionFile, line);
+        await this.solutionCallback(line);
       }
     } else {
       // no in messages

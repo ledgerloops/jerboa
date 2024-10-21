@@ -17,11 +17,11 @@ export class Worker {
   workerNo: number;
   numWorkers: number;
   private sendMessage: (from: string, to: string, message: Message) => void;
-  private solutionFile: string | undefined;
-  constructor(workerNo: number, noWorkers: number, solutionFile: string | undefined, sendMessage: (from: string, to: string, message: Message) => void) {
+  private solutionCallback: (string) => Promise<void> | undefined;
+  constructor(workerNo: number, noWorkers: number, solutionCallback: (string) => Promise<void> | undefined, sendMessage: (from: string, to: string, message: Message) => void) {
     this.workerNo = workerNo;
     this.numWorkers = noWorkers;
-    this.solutionFile = solutionFile;
+    this.solutionCallback = solutionCallback;
     this.sendMessage = sendMessage;
   }
   public queueMessageForLocalDelivery(from: string, to: string, message: Message): void {
@@ -61,7 +61,7 @@ export class Worker {
       throw new Error('node is not ours!');
     }
     if (typeof this.ourNodes[name] === 'undefined') {
-      this.ourNodes[name] = new Jerboa(name, this.solutionFile, (to: string, message: Message) => {
+      this.ourNodes[name] = new Jerboa(name, this.solutionCallback, (to: string, message: Message) => {
         // console.log('our node', name, to, message);
         this.sendMessage(name, to, message);
       });
