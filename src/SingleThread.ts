@@ -34,6 +34,9 @@ export class SingleThread {
     }
     return cumm;
   }
+  async solutionIsComplete(): Promise<boolean> {
+    return true;
+  }
   public getStats(): {
     messagesReceived: number;
     messagesSent: number;

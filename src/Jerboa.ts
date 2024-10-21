@@ -516,11 +516,9 @@ export class Jerboa {
     this.adjustSent(to, weight);
     this.checkFriendCache(to);
     this.sendTransferMessage(to, weight);
-    setTimeout(() => {
-       if (this.balances.haveIncomingAndOutgoingLinks()) {
-        this.startProbe(`${this.name}-${this.probeMinter++}`);
-      }
-    }, 1000);
+    if (this.balances.haveIncomingAndOutgoingLinks()) {
+      this.startProbe(`${this.name}-${this.probeMinter++}`);
+    }
   }
   getOutgoingLinks(): string[] {
     return Object.keys(this.outgoingLinks);

@@ -32,6 +32,7 @@ jest.unstable_mockModule('../src/genRanHex.js', () => {
         writeFileSync(`./__tests__/fixtures/${name}.solution`, solution);
       }
       expect(solution).toEqual(read);
+      expect(await threadRunner.solutionIsComplete()).toEqual(true);
     });
   });
 });
