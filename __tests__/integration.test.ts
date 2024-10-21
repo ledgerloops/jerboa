@@ -1,33 +1,22 @@
 import { SingleThread } from "../src/SingleThread.js";
+import { readFileSync } from "fs";
 
-describe('Hourglass', () => {
-  it ('finds two loops', async () => {
-    let solution: string = '';
-    const threadRunner = new SingleThread({
-      debtFile: './__tests__/hourglass.csv',
-      solutionCallback: async (line: string): Promise<void> => {
-        solution += line;
-      },
-      numWorkers: 1
+[
+  'hourglass',
+  'small',
+].forEach((name: string) => {
+  describe(name, () => {
+    it ('finds the solution', async () => {
+      let solution: string = '';
+      const threadRunner = new SingleThread({
+        debtFile: `./__tests__/fixtures/${name}.problem`,
+        solutionCallback: async (line: string): Promise<void> => {
+          solution += line;
+        },
+        numWorkers: 1
+      });
+      await threadRunner.runAllWorkers();
+      expect(solution).toEqual(readFileSync(`./__tests__/fixtures/${name}.solution`).toString());
     });
-    const numProbes = await threadRunner.runAllWorkers();
-    const stats = threadRunner.getStats();
-    expect(numProbes).toEqual(2);
-    expect(stats).toEqual({
-      bilateralAmount: 7,
-      bilateralNum: 7,
-      messagesReceived: 35,
-      messagesSent: 35,
-      multilateralAmount: 7,
-      multilateralNum: 7,
-      numNodes: 6,
-      transferAmount: 7,
-      transfersReceived: 7,
-      transfersSent: 7,
-    });
-    expect(solution).toEqual(`\
-1 2 3 1
-1 4 5 6 1
-`);
   });
 });
