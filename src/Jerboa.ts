@@ -91,20 +91,20 @@ export class Jerboa {
   private sendMessageCb: (to: string, message: Message) => void;
   private loopsTried: string[] = [];
   private solutionCallback: (line: string) => Promise<void> | undefined;
-  private maybeRunProbeTimer;
+  // private maybeRunProbeTimer;
   constructor(name: string, solutionCallback: (line: string) => Promise<void> | undefined, sendMessage: (to: string, message: Message) => void) {
     this.name = name;
     this.solutionCallback = solutionCallback;
     this.sendMessageCb = sendMessage;
-    this.maybeRunProbeTimer = setInterval(() => {
-      if (this.probeQueue.length && this.currentProbe === undefined) {
-        // console.log(`Node ${this.name} has work`);
-        this.maybeRunProbe();
-      } else {
-        // console.log(`Node ${this.name} is done`);
-        clearInterval(this.maybeRunProbeTimer);
-      }
-    }, 1000);
+    // this.maybeRunProbeTimer = setInterval(() => {
+    //   if (this.probeQueue.length && this.currentProbe === undefined) {
+    //     // console.log(`Node ${this.name} has work`);
+    //     this.maybeRunProbe();
+    //   } else {
+    //     // console.log(`Node ${this.name} is done`);
+    //     clearInterval(this.maybeRunProbeTimer);
+    //   }
+    // }, 1000);
   }
   private sendMessage(to: string, message: Message): void {
     if (this.solutionCallback) {
