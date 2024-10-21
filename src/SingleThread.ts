@@ -5,12 +5,12 @@ export class SingleThread {
   private workers: Worker[] = [];
   private sarafuFile: string | undefined;
   private debtFile: string | undefined;
-  private solutionCallback: (string) => Promise<void> | undefined;
+  private solutionCallback: (string) => void | undefined;
   private solution: {
     loop: string[],
     amount: number
   }[] = [];
-  constructor(options: { numWorkers: number, sarafuFile?: string, debtFile?: string, solutionCallback?: (string) => Promise<void> }) {
+  constructor(options: { numWorkers: number, sarafuFile?: string, debtFile?: string, solutionCallback?: (string) => void }) {
     this.debtFile = options.debtFile;
     this.solutionCallback = options.solutionCallback;
     this.sarafuFile = options.sarafuFile;

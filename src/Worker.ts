@@ -17,14 +17,14 @@ export class Worker {
   workerNo: number;
   numWorkers: number;
   private sendMessage: (from: string, to: string, message: Message) => void;
-  private solutionCallback: (string) => Promise<void> | undefined;
-  constructor(workerNo: number, noWorkers: number, solutionCallback: (string) => Promise<void> | undefined, sendMessage: (from: string, to: string, message: Message) => void) {
+  private solutionCallback: (string) => void | undefined;
+  constructor(workerNo: number, noWorkers: number, solutionCallback: (string) => void | undefined, sendMessage: (from: string, to: string, message: Message) => void) {
     this.workerNo = workerNo;
     this.numWorkers = noWorkers;
     this.solutionCallback = solutionCallback;
     this.sendMessage = sendMessage;
   }
-  public reportState(cb: (string) => void) {
+  public reportState(cb: (string) => void): void {
     Object.keys(this.ourNodes).forEach((name: string) => {
       this.ourNodes[name].reportState(cb);
     });
