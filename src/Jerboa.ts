@@ -106,7 +106,7 @@ export class Jerboa {
     }, 1000);
   }
   private sendMessage(to: string, message: Message): void {
-    // console.log(this.name, to, message);
+    this.solutionCallback(`${this.name} ${to} ${JSON.stringify(message)}\n`);
     this.messagesSent++;
     this.sendMessageCb(to, message);
   }
