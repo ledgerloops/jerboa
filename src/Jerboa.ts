@@ -91,12 +91,23 @@ export class Jerboa {
   private sendMessageCb: (to: string, message: Message) => void;
   private loopsTried: string[] = [];
   private solutionFile;
+  private maybeRunProbeTimer;
   constructor(name: string, solutionFile: string | undefined, sendMessage: (to: string, message: Message) => void) {
     this.name = name;
     this.solutionFile = solutionFile;
     this.sendMessageCb = sendMessage;
+    this.maybeRunProbeTimer = setInterval(() => {
+      if (this.probeQueue.length && this.currentProbe === undefined) {
+        // console.log(`Node ${this.name} has work`);
+        this.maybeRunProbe();
+      } else {
+        // console.log(`Node ${this.name} is done`);
+        clearInterval(this.maybeRunProbeTimer);
+      }
+    }, 1000);
   }
   private sendMessage(to: string, message: Message): void {
+    // console.log(this.name, to, message);
     this.messagesSent++;
     this.sendMessageCb(to, message);
   }
@@ -285,6 +296,10 @@ export class Jerboa {
       this.checkFriendCache(this.probes[probeId].loops[hash].commitTo);
       this.sendCommitMessage(this.probes[probeId].loops[hash].commitTo, msg);
     }
+    if (this.currentProbe?.probeId === msg.probeId) {
+      // console.log(`Node ${this.name} received commit for current probe ${msg.probeId}`);
+      this.currentProbe = undefined;
+    }
   }
   initiatePropose(to: string, probeId: string, incarnation: number, amount: number, debugInfo: { loop: string[] }): void {
     const preimage = randomBytes(8).toString("hex");
@@ -338,7 +353,7 @@ export class Jerboa {
       // }
       // console.log(`Found loop`, loop, ` pos ${pos}`);
       if (process.env.PROBING_REPORT) {
-        printLine(`found loop (${probeId}:${incarnation}`, path, loop);
+        printLine(`Node ${this.name} found loop (${probeId}:${incarnation}`, path, loop);
       }
       return true;
     }
@@ -388,6 +403,12 @@ export class Jerboa {
       incarnation,
       debugInfo
     });
+    // console.log(`${this.name} pushed to queue`, {
+    //   sender,
+    //   probeId,
+    //   incarnation,
+    //   debugInfo
+    // });
     this.maybeRunProbe();
   }
   changeToLooper(sender: string, probeId: string, incarnation: number): void {
@@ -415,8 +436,8 @@ export class Jerboa {
           incarnation: incarnation + 1,
           debugInfo: { path: debugInfo.path, backtracked: [] },
         });
-        this.currentProbe = undefined;
-        this.maybeRunProbe();
+        // this.currentProbe = undefined;
+        // this.maybeRunProbe();
       }
       return true;
     }
@@ -426,10 +447,11 @@ export class Jerboa {
       // console.log(`${this.name} has checked the suitability of possible next hop ${x} for probe ${probeId} -> ${verdict}`);
       return verdict;
     });
-    // console.log('forwarding probe to first option from', this.getOutgoingLinks(), nodes);
+    // console.log(`Node ${this.name} is forwarding probe to first option from`, this.getOutgoingLinks(), nodes);
     if (nodes.length === 0) {
       // console.log(`                     combining self, sending nack ${this.name}->${sender}`, path, backtracked);
       this.sendNackMessage(sender, probeId, incarnation, debugInfo);
+      // console.log(`Node ${this.name} is done with probe ${probeId}`);
       this.currentProbe = undefined;
       return false;
     } else if (debugInfo.backtracked.length > 0) {
@@ -539,12 +561,15 @@ export class Jerboa {
     return this.maybeRunProbe();
   }
   maybeRunProbe(): boolean {
-    if ((this.currentProbe === undefined) && (this.probeQueue.length > 0)) {
+    if ((this.probeQueue.length > 0) && ((this.currentProbe === undefined) || (this.currentProbe.probeId === this.probeQueue[0].probeId))) {
+      // console.log(`Node ${this.name} maybeRunProbe ${this.probeQueue[0]?.probeId} -> yes`, (this.probeQueue.length > 0), (this.currentProbe === undefined), (this.currentProbe?.probeId === this.probeQueue[0]?.probeId));
       this.currentProbe = this.probeQueue.shift();
+      // console.log(`Node ${this.name} is busy with probe ${this.currentProbe.probeId}: ${JSON.stringify(this.currentProbe.debugInfo.path)}`);
       // console.log('running probe', this.currentProbe);
       const result = this.runCurrentProbe();
       return result;
     }
+    // console.log(`Node ${this.name} maybeRunProbe ${this.probeQueue[0]?.probeId} -> no`, (this.probeQueue.length > 0), (this.currentProbe === undefined), (this.currentProbe?.probeId === this.probeQueue[0]?.probeId));
     return false;
   }
   runCurrentProbe(): boolean {
