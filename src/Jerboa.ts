@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { Balances } from "./Balances.js";
-import { Message, TransferMessage, ProposeMessage, CommitMessage, ScoutMessage, ProbeMessage, NackMessage } from "./MessageTypes.js";
+import { Message, TransferMessage, ProposeMessage, CommitMessage, ScoutMessage, ProbeMessage, NackMessage, stringifyMessage } from "./MessageTypes.js";
 import { printLine } from "./BirdsEyeWorm.js";
 import { genRanHex } from "./genRanHex.js";
 
@@ -28,7 +28,7 @@ export type ProbeInfo = {
   incarnation: number;
   debugInfo: {
     path: string[];
-    backtracked: string[];
+    backtracked?: string[];
   }
 };
 
@@ -106,12 +106,12 @@ export class Jerboa {
     return `{${probeInfo.sender}->${this.name} = ${probeInfo.probeId}:${probeInfo.incarnation} = ${JSON.stringify(probeInfo.debugInfo.path)} = ${JSON.stringify(probeInfo.debugInfo.backtracked)} }`;
   }
   public reportState(cb: (string) => void): void {
-    const line = `Node ${this.name} ${this.stringifyProbeInfo(this.currentProbe)} ${this.probeQueue.map(probeInfo => this.stringifyProbeInfo(probeInfo)).join(' ')}\n`;
+    const line = `Node ${this.name} ${this.stringifyProbeInfo(this.currentProbe)} ${this.probeQueue.map(probeInfo => this.stringifyProbeInfo(probeInfo)).join(' ')}`;
     cb(line);
   }
   private async sendMessage(to: string, message: Message): Promise<void> {
     if (this.solutionCallback) {
-      this.solutionCallback(`${this.name} ${to} ${JSON.stringify(message)}\n`);
+      // this.solutionCallback(`${this.name} ${to} ${JSON.stringify(message)}`);
     }
     this.messagesSent++;
     this.sendMessageCb(to, message);
@@ -174,9 +174,9 @@ export class Jerboa {
       }
       this.initiatePropose(debugInfo.loop[ debugInfo.loop.length - 2], probeId, incarnation, amount, debugInfo);
       if (this.solutionCallback) {
-        const line = `found loop|${amount}|${debugInfo.loop.slice(0, debugInfo.loop.length - 1).concat(amount.toString()).join(' ')}\n`;
+        // const line = `found loop|${amount}|${debugInfo.loop.slice(0, debugInfo.loop.length - 1).concat(amount.toString()).join(' ')}`;
         // console.log('Writing to solution file', this.solutionFile, line);
-        this.solutionCallback(line);
+        // this.solutionCallback(line);
       }
     } else {
       // no in messages
@@ -322,6 +322,7 @@ export class Jerboa {
         if (process.env.PROBING_REPORT) {
           printLine(`finished   (${probeId}:${incarnation})`, [], [this.name, nackSender].concat(debugInfo.backtracked));
         }
+        this.solutionCallback(`(${probeId}:${incarnation}) / ${[this.name, nackSender].concat(debugInfo.backtracked).join(' ')}`);
         if (this.currentProbe?.probeId !== probeId) {
           throw new Error(`Node ${this.name} received Nack from ${nackSender} for probe ${msg.probeId}:${msg.incarnation} but current probe is ${this.currentProbe?.probeId}:${this.currentProbe.incarnation}`);
         }
@@ -330,6 +331,7 @@ export class Jerboa {
         if (process.env.PROBING_REPORT) {
           console.log(`backtrack21 (${probeId}:${incarnation})`, [ this.name ], [nackSender].concat(debugInfo.backtracked));
         }
+        this.solutionCallback(`(${probeId}:${incarnation}) ${this.name} / ${[nackSender].concat(debugInfo.backtracked).join(' ')}`);
         const newStep = randomStringFromArray(nodes);
         // console.log(`${this.name} sends probe message to ${newStep} for probeId ${probeId} after receiving nack from ${nackSender}`);
         this.sendProbeMessage(newStep, { command: 'probe', probeId, incarnation: incarnation + 1, debugInfo: { path: debugInfo.path, backtracked: [] } } as ProbeMessage);
@@ -345,7 +347,7 @@ export class Jerboa {
         incarnation,
         debugInfo: { path: debugInfo.path, backtracked: [nackSender].concat(debugInfo.backtracked) }
       });
-      this.maybeRunProbe();
+      this.maybeRunProbe(true);
     }
   }
   spliceLoop(sender: string, probeId: string, incarnation: number, path: string[]): boolean {
@@ -362,8 +364,9 @@ export class Jerboa {
       // }
       // console.log(`Found loop`, loop, ` pos ${pos}`);
       if (process.env.PROBING_REPORT) {
-        printLine(`Node ${this.name} found loop (${probeId}:${incarnation}`, path, loop);
+        printLine(`Node ${this.name} found loop (${probeId}:${incarnation})`, path, loop);
       }
+      this.solutionCallback(`(${probeId}:${incarnation}) ${path.join(' ')} [${loop.join(' ')}]`);
       return true;
     }
     return false;
@@ -410,7 +413,7 @@ export class Jerboa {
       sender,
       probeId,
       incarnation,
-      debugInfo
+      debugInfo,
     });
     // console.log(`${this.name} pushed to queue`, {
     //   sender,
@@ -418,7 +421,7 @@ export class Jerboa {
     //   incarnation,
     //   debugInfo
     // });
-    this.maybeRunProbe();
+    this.maybeRunProbe(true);
   }
   changeToLooper(sender: string, probeId: string, incarnation: number): void {
     if (typeof this.probes[probeId] === 'undefined') {
@@ -433,7 +436,7 @@ export class Jerboa {
     this.probes[probeId].looper[sender] = this.probes[probeId].in[sender];
     delete this.probes[probeId].in[sender];
   }
-  considerProbe(sender: string, probeId: string, incarnation: number, debugInfo: { path: string[], backtracked: string[] }): boolean {
+  considerProbe(sender: string, probeId: string, incarnation: number, debugInfo: { path: string[], backtracked?: string[] }): boolean {
     const loopFound = this.spliceLoop(sender, probeId, incarnation, debugInfo.path);
     if (loopFound) {
       if (debugInfo.path.length >= 1) {
@@ -456,27 +459,29 @@ export class Jerboa {
       // this.solutionCallback(`${this.name} has checked the suitability of possible next hop ${x} for probe ${probeId} -> ${verdict}`);
       return verdict;
     });
-    this.solutionCallback(`Node ${this.name} is forwarding probe to first option from ${this.getOutgoingLinks().length}`);
+    // this.solutionCallback(`Node ${this.name} is forwarding probe to first option from ${this.getOutgoingLinks().length}`);
     if (nodes.length === 0) {
-      this.solutionCallback(`sending nack ${this.name}->${sender} ${probeId}:${incarnation} [${debugInfo.path.join(' ')}] [${debugInfo.backtracked.join(' ')}]`);
+      // this.solutionCallback(`sending nack ${this.name}->${sender} ${probeId}:${incarnation} [${debugInfo.path.join(' ')}] [${debugInfo.backtracked.join(' ')}]`);
       this.currentProbe = undefined;
-      this.sendNackMessage(sender, probeId, incarnation, debugInfo);
-      this.solutionCallback(`Node ${this.name} is done with probe ${probeId}`);
+      this.sendNackMessage(sender, probeId, incarnation, { path: debugInfo.path, backtracked: debugInfo.backtracked || [] });
+      // this.solutionCallback(`Node ${this.name} is done with probe ${probeId}`);
       return false;
     } else if (debugInfo.backtracked.length > 0) {
       if (process.env.PROBING_REPORT) {
         printLine(`backtracked (${probeId}:${incarnation})`, debugInfo.path.concat([sender, this.name]), debugInfo.backtracked);
       }
+      this.solutionCallback(`(${probeId}:${incarnation}) ${debugInfo.path.concat([sender, this.name]).join(' ')} / ${debugInfo.backtracked.join(' ')}`);
       incarnation++;
     }
     // console.log('         did we print?', sender, this.name, path, backtracked);
     debugInfo.path.push(sender);
     const newStep = randomStringFromArray(nodes);
     // console.log(`forwarding from ${this.name} to ${newStep} (balance ${this.balances.getBalance(newStep)})`);
-    this.sendProbeMessage(newStep, { command: 'probe', probeId, incarnation, debugInfo: { path: debugInfo.path, backtracked: [] } });
+    this.sendProbeMessage(newStep, { command: 'probe', probeId, incarnation, debugInfo: { path: debugInfo.path } });
     return true;
   };
   async receiveMessage(from: string, msg: Message ): Promise<void> {
+    this.solutionCallback(`RCV[${from}->${this.name}]${stringifyMessage(msg)}`);
     this.messagesReceived++;
     // console.log('Jerboa receiveMessage', from, this.name, msg);
     switch((msg as { command: string }).command) {
@@ -563,23 +568,29 @@ export class Jerboa {
   sendCommitMessage(to: string, msg: CommitMessage): void {
     this.sendMessage(to, msg);
   }
-  async startProbe(probeId: string): Promise<boolean> {
+  startProbe(probeId: string): boolean {
     this.probeQueue.push({ sender: null, probeId, incarnation: 0, debugInfo: { path: [], backtracked: [] } });
-    return this.maybeRunProbe();
+    return this.maybeRunProbe(true);
   }
-  async maybeRunProbe(): Promise<boolean> {
+  maybeRunProbe(justCameIn?: boolean): boolean {
     if ((this.probeQueue.length > 0) && ((this.currentProbe === undefined) || (this.currentProbe.probeId === this.probeQueue[0].probeId))) {
       // console.log(`Node ${this.name} maybeRunProbe ${this.probeQueue[0]?.probeId} -> yes`, (this.probeQueue.length > 0), (this.currentProbe === undefined), (this.currentProbe?.probeId === this.probeQueue[0]?.probeId));
       this.currentProbe = this.probeQueue.shift();
       // console.log(`Node ${this.name} is busy with probe ${this.currentProbe.probeId}: ${JSON.stringify(this.currentProbe.debugInfo.path)}`);
       // console.log('running probe', this.currentProbe);
+      if (justCameIn !== true) {
+        this.solutionCallback(`(${this.currentProbe.probeId}:${this.currentProbe.incarnation}): ${[this.currentProbe.sender, this.name].concat(this.currentProbe.debugInfo.path).join(' ')} >>>`);
+      }
       const result = this.runCurrentProbe();
+      // if (!result) {
+      //   this.solutionCallback(`(${this.currentProbe.probeId}:${this.currentProbe.incarnation}): ${[this.currentProbe.sender, this.name].concat(this.currentProbe.debugInfo.path).join(' ')} ||`);
+      // }
       return result;
     }
     // console.log(`Node ${this.name} maybeRunProbe ${this.probeQueue[0]?.probeId} -> no`, (this.probeQueue.length > 0), (this.currentProbe === undefined), (this.currentProbe?.probeId === this.probeQueue[0]?.probeId));
     return false;
   }
-  async runCurrentProbe(): Promise<boolean> {
+  runCurrentProbe(): boolean {
     if (this.currentProbe === undefined) {
       throw new Error('there is no current probe');
     }

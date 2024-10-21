@@ -16,7 +16,7 @@ export class SingleThread {
     this.sarafuFile = options.sarafuFile;
     for (let i = 0; i < options.numWorkers; i++) {
       // console.log(`Instantiating worker ${i} of ${numWorkers}`);
-      this.workers[i] = new Worker(i, options.numWorkers, async (line: string) => {
+      this.workers[i] = new Worker(i, options.numWorkers, (line: string) => {
         const parts = line.split('|');
         if (parts.length === 3 && parts[0] === 'found loop') {
           this.solution.push({
@@ -26,14 +26,15 @@ export class SingleThread {
         }
 
         if (this.solutionCallback) {
-          let str = line;
+          const lines = [ line ];
           for (let i = 0; i < options.numWorkers; i++) {
             this.workers[i].reportState((reportLine: string) => {
-              str += reportLine; 
+              lines.push(reportLine);
             });
           }
-          str += '\n';
-          await this.solutionCallback(str);
+          lines.push('');
+          lines.push('');
+          this.solutionCallback(lines.join('\n'));
         }
       }, (from: string, to: string, message: Message): void => {
         const receivingWorker = this.workers[parseInt(to) % this.workers.length];

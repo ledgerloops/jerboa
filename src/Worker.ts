@@ -17,8 +17,8 @@ export class Worker {
   workerNo: number;
   numWorkers: number;
   private sendMessage: (from: string, to: string, message: Message) => void;
-  private solutionCallback: (string) => void | undefined;
-  constructor(workerNo: number, noWorkers: number, solutionCallback: (string) => void | undefined, sendMessage: (from: string, to: string, message: Message) => void) {
+  private solutionCallback: (string) => void;
+  constructor(workerNo: number, noWorkers: number, solutionCallback: (string) => void, sendMessage: (from: string, to: string, message: Message) => void) {
     this.workerNo = workerNo;
     this.numWorkers = noWorkers;
     this.solutionCallback = solutionCallback;
