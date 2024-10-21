@@ -90,7 +90,7 @@ export class Jerboa {
   // } = {};
   private sendMessageCb: (to: string, message: Message) => void;
   private loopsTried: string[] = [];
-  private solutionCallback: (line: string) => Promise<void>;
+  private solutionCallback: (line: string) => Promise<void> | undefined;
   private maybeRunProbeTimer;
   constructor(name: string, solutionCallback: (line: string) => Promise<void> | undefined, sendMessage: (to: string, message: Message) => void) {
     this.name = name;
@@ -107,7 +107,9 @@ export class Jerboa {
     }, 1000);
   }
   private sendMessage(to: string, message: Message): void {
-    this.solutionCallback(`${this.name} ${to} ${JSON.stringify(message)}\n`);
+    if (this.solutionCallback) {
+      this.solutionCallback(`${this.name} ${to} ${JSON.stringify(message)}\n`);
+    }
     this.messagesSent++;
     this.sendMessageCb(to, message);
   }

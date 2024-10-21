@@ -1,5 +1,4 @@
 import { jest } from '@jest/globals';
-
 import { readFileSync } from "fs";
 
 let counter: number = 0;
