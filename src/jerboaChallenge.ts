@@ -19,9 +19,9 @@ async function runSingleThread(numWorkers: number): Promise<void> {
   }
   console.log(`${stats.transfersSent} transfers between ${stats.numNodes} participants triggered an average of ${(stats.messagesSent / stats.transfersSent).toFixed(2)} messages each`);
   console.log(`Transfer amount ${Math.round(stats.transferAmount)}`);
-  console.log(`${Math.round((stats.bilateralAmount / stats.transferAmount)*100)}% netted bilaterally`);
+  console.log(`${Math.round((stats.bilateralAmount / stats.transferAmount)*100)}% netted in total`);
   console.log(`${Math.round((stats.multilateralAmount / stats.transferAmount)*100)}% netted multilaterally`);
-  console.log(`${Math.round((1 - (stats.bilateralAmount + stats.multilateralAmount) / stats.transferAmount)*100)}% not netted`);
+  console.log(`${Math.round((1 - (stats.bilateralAmount) / stats.transferAmount)*100)}% not netted`);
   console.log(stats);
 }
 

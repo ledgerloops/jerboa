@@ -82,8 +82,8 @@ export class SingleThread {
       stats.transfersReceived += workerStats.transfersReceived;
       stats.transfersSent += workerStats.transfersSent;
       stats.transferAmount += workerStats.transferAmount;
-      stats.bilateralNum += workerStats.bilateralNum;
-      stats.bilateralAmount += workerStats.bilateralAmount;
+      stats.bilateralNum += workerStats.bilateralNum / 2;
+      stats.bilateralAmount += workerStats.bilateralAmount / 2;
       stats.multilateralNum += workerStats.multilateralNum;
       stats.multilateralAmount += workerStats.multilateralAmount;
       stats.numNodes += workerStats.numNodes;

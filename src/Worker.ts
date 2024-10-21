@@ -169,7 +169,7 @@ export class Worker {
       stats.multilateralAmount += this.ourNodes[name].multilateralAmount;
       stats.numNodes++;
     });
-    console.log(`Worker ${this.workerNo} return stats`, stats);
+    // console.log(`Worker ${this.workerNo} return stats`, stats);
     return stats;
   }
   getNode(name: string): Jerboa {

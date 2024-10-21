@@ -99,9 +99,11 @@ export class Balances {
       const sent = this.sent[friend] || 0n;
       const received = this.received[friend] || 0n;
       if ((sent > 0) && (received > 0)) {
+        // console.log(`${name} has pos bilateral with ${friend}, min(${sent}, ${received}) = ${bigIntMin(sent, received)}`);
         num++;
         amount += bigIntMin(sent, received);
       } else if ((sent < 0) && (received < 0)) {
+        // console.log(`${name} has neg bilateral with ${friend}, max(${sent}, ${received}) = ${bigIntMax(sent, received)}`);
         num++;
         amount += bigIntMax(sent, received);
       }
