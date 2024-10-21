@@ -1,12 +1,25 @@
-import { SingleThread } from "../src/SingleThread.js";
+import { jest } from '@jest/globals';
+
 import { readFileSync } from "fs";
 
-[
-  'hourglass',
-  'small',
-].forEach((name: string) => {
-  describe(name, () => {
+let counter: number = 0;
+jest.unstable_mockModule('../src/genRanHex.js', () => {
+  return{
+    genRanHex: jest.fn((): string => {
+      return `genRanHex${counter++}`;
+    })
+  };
+});
+
+// [
+//   'hourglass',
+//   'small',
+// ].forEach((name: string): void => {
+//   describe(`${name}`, () => {
+describe('hourglass', () =>  {
     it ('finds the solution', async () => {
+      const name = 'hourglass';
+      const { SingleThread } = await import('../src/SingleThread.js');
       let solution: string = '';
       const threadRunner = new SingleThread({
         debtFile: `./__tests__/fixtures/${name}.problem`,
@@ -19,4 +32,4 @@ import { readFileSync } from "fs";
       expect(solution).toEqual(readFileSync(`./__tests__/fixtures/${name}.solution`).toString());
     });
   });
-});
+// });

@@ -1,7 +1,8 @@
-import { randomBytes, createHash } from "node:crypto";
+import { createHash } from "node:crypto";
 import { Balances } from "./Balances.js";
 import { Message, TransferMessage, ProposeMessage, CommitMessage, ScoutMessage, ProbeMessage, NackMessage } from "./MessageTypes.js";
 import { printLine } from "./BirdsEyeWorm.js";
+import { genRanHex } from "./genRanHex.js";
 
 const RANDOM_NEXT_STEP = false;
 const LEDGER_SCALE = 1000000;
@@ -301,7 +302,7 @@ export class Jerboa {
     }
   }
   initiatePropose(to: string, probeId: string, incarnation: number, amount: number, debugInfo: { loop: string[] }): void {
-    const preimage = randomBytes(8).toString("hex");
+    const preimage = genRanHex(8);
     const hash = createHash('sha256').update(preimage).digest('base64');
     this.probes[probeId].loops[hash] = { preimage,  proposeTo: to, amount };
     // console.log('initiating propose', this.probes[probeId], { to, probeId, amount, hash, debugInfo });

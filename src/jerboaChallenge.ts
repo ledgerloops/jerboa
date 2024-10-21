@@ -14,8 +14,8 @@ async function runSingleThread(numWorkers: number): Promise<void> {
   const threadRunner = new SingleThread({
     debtFile: DEBT_CSV,
     numWorkers, 
-    solutionCallback: (line: string) => {
-      return appendFile(SOLUTION_CSV, line);
+    solutionCallback: async (line: string): Promise<void> => {
+      await appendFile(SOLUTION_CSV, line);
     }
   });
   const numProbes = await threadRunner.runAllWorkers();
