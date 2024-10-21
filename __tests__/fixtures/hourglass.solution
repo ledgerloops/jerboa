@@ -12,6 +12,11 @@ Node 1 undefined
 Node 2 {null->2 = 2-0:0 = [] = [] } 
 Node 3 undefined 
 
+no outgoind links, so sending nack 3->2 2-0:0 [] []
+Node 1 undefined 
+Node 2 {null->2 = 2-0:0 = [] = [] } 
+Node 3 {2->3 = 2-0:0 = [] = [] } 
+
 RCV[3->2]nack 2-0:0  / 
 Node 1 undefined 
 Node 2 {null->2 = 2-0:0 = [] = [] } 
@@ -32,138 +37,109 @@ Node 1 undefined
 Node 2 undefined 
 Node 3 {null->3 = 3-0:0 = [] = [] } 
 
+1 has checked the suitability of possible next hop 2 for probe 3-0 -> true
+Node 1 {3->1 = 3-0:0 = [] = [] } 
+Node 2 undefined 
+Node 3 {null->3 = 3-0:0 = [] = [] } 
+
 RCV[1->2]probe 3-0:0 3
 Node 1 {3->1 = 3-0:0 = ["3"] = [] } 
 Node 2 undefined 
 Node 3 {null->3 = 3-0:0 = ["3"] = [] } 
 
-RCV[2->1]nack 3-0:0 3 / 
-Node 1 {3->1 = 3-0:0 = ["3"] = [] } 
-Node 2 undefined 
-Node 3 {null->3 = 3-0:0 = ["3"] = [] } 
-
-RCV[1->3]nack 3-0:0  / 2
-Node 1 undefined 
-Node 2 undefined 
-Node 3 {null->3 = 3-0:0 = [] = [] } 
-
-(3-0:0) / 3 1 2
-Node 1 undefined 
-Node 2 undefined 
-Node 3 {null->3 = 3-0:0 = [] = [] } 
-
 RCV[1->4]transfer 1
-Node 1 undefined 
-Node 2 undefined 
-Node 3 undefined 
-Node 4 undefined 
-
-RCV[1->4]probe 1-0:0 
-Node 1 {null->1 = 1-0:0 = [] = [] } 
-Node 2 undefined 
-Node 3 undefined 
-Node 4 undefined 
-
-RCV[4->1]nack 1-0:0  / 
-Node 1 {null->1 = 1-0:0 = [] = [] } 
-Node 2 undefined 
-Node 3 undefined 
-Node 4 undefined 
-
-(1-0:0) / 1 4
-Node 1 {null->1 = 1-0:0 = [] = [] } 
-Node 2 undefined 
-Node 3 undefined 
+Node 1 {3->1 = 3-0:0 = ["3"] = [] } 
+Node 2 {1->2 = 3-0:0 = ["3"] = undefined } 
+Node 3 {null->3 = 3-0:0 = ["3"] = [] } 
 Node 4 undefined 
 
 RCV[4->5]transfer 1
-Node 1 undefined 
-Node 2 undefined 
-Node 3 undefined 
+Node 1 {3->1 = 3-0:0 = ["3"] = [] } {null->1 = 1-0:0 = [] = [] }
+Node 2 {1->2 = 3-0:0 = ["3"] = undefined } 
+Node 3 {null->3 = 3-0:0 = ["3"] = [] } 
 Node 4 undefined 
 Node 5 undefined 
 
 RCV[4->5]probe 4-0:0 
-Node 1 undefined 
-Node 2 undefined 
-Node 3 undefined 
+Node 1 {3->1 = 3-0:0 = ["3"] = [] } {null->1 = 1-0:0 = [] = [] }
+Node 2 {1->2 = 3-0:0 = ["3"] = undefined } 
+Node 3 {null->3 = 3-0:0 = ["3"] = [] } 
 Node 4 {null->4 = 4-0:0 = [] = [] } 
 Node 5 undefined 
 
+no outgoind links, so sending nack 5->4 4-0:0 [] []
+Node 1 {3->1 = 3-0:0 = ["3"] = [] } {null->1 = 1-0:0 = [] = [] }
+Node 2 {1->2 = 3-0:0 = ["3"] = undefined } 
+Node 3 {null->3 = 3-0:0 = ["3"] = [] } 
+Node 4 {null->4 = 4-0:0 = [] = [] } 
+Node 5 {4->5 = 4-0:0 = [] = [] } 
+
 RCV[5->4]nack 4-0:0  / 
-Node 1 undefined 
-Node 2 undefined 
-Node 3 undefined 
+Node 1 {3->1 = 3-0:0 = ["3"] = [] } {null->1 = 1-0:0 = [] = [] }
+Node 2 {1->2 = 3-0:0 = ["3"] = undefined } 
+Node 3 {null->3 = 3-0:0 = ["3"] = [] } 
 Node 4 {null->4 = 4-0:0 = [] = [] } 
 Node 5 undefined 
 
 (4-0:0) / 4 5
-Node 1 undefined 
-Node 2 undefined 
-Node 3 undefined 
+Node 1 {3->1 = 3-0:0 = ["3"] = [] } {null->1 = 1-0:0 = [] = [] }
+Node 2 {1->2 = 3-0:0 = ["3"] = undefined } 
+Node 3 {null->3 = 3-0:0 = ["3"] = [] } 
 Node 4 {null->4 = 4-0:0 = [] = [] } 
 Node 5 undefined 
 
 RCV[5->6]transfer 1
-Node 1 undefined 
-Node 2 undefined 
-Node 3 undefined 
+Node 1 {3->1 = 3-0:0 = ["3"] = [] } {null->1 = 1-0:0 = [] = [] }
+Node 2 {1->2 = 3-0:0 = ["3"] = undefined } 
+Node 3 {null->3 = 3-0:0 = ["3"] = [] } 
 Node 4 undefined 
 Node 5 undefined 
 Node 6 undefined 
 
 RCV[5->6]probe 5-0:0 
-Node 1 undefined 
-Node 2 undefined 
-Node 3 undefined 
+Node 1 {3->1 = 3-0:0 = ["3"] = [] } {null->1 = 1-0:0 = [] = [] }
+Node 2 {1->2 = 3-0:0 = ["3"] = undefined } 
+Node 3 {null->3 = 3-0:0 = ["3"] = [] } 
 Node 4 undefined 
 Node 5 {null->5 = 5-0:0 = [] = [] } 
 Node 6 undefined 
 
+no outgoind links, so sending nack 6->5 5-0:0 [] []
+Node 1 {3->1 = 3-0:0 = ["3"] = [] } {null->1 = 1-0:0 = [] = [] }
+Node 2 {1->2 = 3-0:0 = ["3"] = undefined } 
+Node 3 {null->3 = 3-0:0 = ["3"] = [] } 
+Node 4 undefined 
+Node 5 {null->5 = 5-0:0 = [] = [] } 
+Node 6 {5->6 = 5-0:0 = [] = [] } 
+
 RCV[6->5]nack 5-0:0  / 
-Node 1 undefined 
-Node 2 undefined 
-Node 3 undefined 
+Node 1 {3->1 = 3-0:0 = ["3"] = [] } {null->1 = 1-0:0 = [] = [] }
+Node 2 {1->2 = 3-0:0 = ["3"] = undefined } 
+Node 3 {null->3 = 3-0:0 = ["3"] = [] } 
 Node 4 undefined 
 Node 5 {null->5 = 5-0:0 = [] = [] } 
 Node 6 undefined 
 
 (5-0:0) / 5 6
-Node 1 undefined 
-Node 2 undefined 
-Node 3 undefined 
+Node 1 {3->1 = 3-0:0 = ["3"] = [] } {null->1 = 1-0:0 = [] = [] }
+Node 2 {1->2 = 3-0:0 = ["3"] = undefined } 
+Node 3 {null->3 = 3-0:0 = ["3"] = [] } 
 Node 4 undefined 
 Node 5 {null->5 = 5-0:0 = [] = [] } 
 Node 6 undefined 
 
 RCV[6->1]transfer 1
-Node 1 undefined 
-Node 2 undefined 
-Node 3 undefined 
+Node 1 {3->1 = 3-0:0 = ["3"] = [] } {null->1 = 1-0:0 = [] = [] }
+Node 2 {1->2 = 3-0:0 = ["3"] = undefined } 
+Node 3 {null->3 = 3-0:0 = ["3"] = [] } 
 Node 4 undefined 
 Node 5 undefined 
 Node 6 undefined 
 
 RCV[6->1]probe 6-0:0 
-Node 1 undefined 
-Node 2 undefined 
-Node 3 undefined 
-Node 4 undefined 
-Node 5 undefined 
-Node 6 {null->6 = 6-0:0 = [] = [] } 
-
-RCV[1->6]nack 6-0:0  / 
-Node 1 undefined 
-Node 2 undefined 
-Node 3 undefined 
-Node 4 undefined 
-Node 5 undefined 
-Node 6 {null->6 = 6-0:0 = [] = [] } 
-
-(6-0:0) / 6 1
-Node 1 undefined 
-Node 2 undefined 
-Node 3 undefined 
+Node 1 {3->1 = 3-0:0 = ["3"] = [] } {null->1 = 1-0:0 = [] = [] }
+Node 2 {1->2 = 3-0:0 = ["3"] = undefined } 
+Node 3 {null->3 = 3-0:0 = ["3"] = [] } 
 Node 4 undefined 
 Node 5 undefined 
 Node 6 {null->6 = 6-0:0 = [] = [] } 
