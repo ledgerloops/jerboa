@@ -1,0 +1,89 @@
+RCV[1->2]transfer 1
+Node 1 undefined  OUT:[2]
+Node 2 undefined  OUT:[]
+
+RCV[2->3]transfer 1
+Node 1 undefined  OUT:[2]
+Node 2 undefined  OUT:[3]
+Node 3 undefined  OUT:[]
+
+Node 2 starting probe 2-0:0 [2]
+Node 1 undefined  OUT:[2]
+Node 2 {null->2 = 2-0:0 = [] = [] }  OUT:[3]
+Node 3 undefined  OUT:[]
+
+RCV[2->3]probe 2-0:0 
+Node 1 undefined  OUT:[2]
+Node 2 {null->2 = 2-0:0 = [] = [] }  OUT:[3]
+Node 3 undefined  OUT:[]
+
+3 recording probe traffic in from receiveProbe "2-0" [2 3]
+Node 1 undefined  OUT:[2]
+Node 2 {null->2 = 2-0:0 = [] = [] }  OUT:[3]
+Node 3 undefined  OUT:[]
+
+Node 3 considering probe 2-0:0 [2 3]
+Node 1 undefined  OUT:[2]
+Node 2 {null->2 = 2-0:0 = [] = [] }  OUT:[3]
+Node 3 {2->3 = 2-0:0 = [] = [] }  OUT:[]
+
+no outgoind links, so sending nack 3->2 2-0:0 [] []
+Node 1 undefined  OUT:[2]
+Node 2 {null->2 = 2-0:0 = [] = [] }  OUT:[3]
+Node 3 {2->3 = 2-0:0 = [] = [] }  OUT:[]
+
+RCV[3->2]nack 2-0:0  / 
+Node 1 undefined  OUT:[2]
+Node 2 {null->2 = 2-0:0 = [] = [] }  OUT:[3]
+Node 3 undefined  OUT:[]
+
+(2-0:0) / 2 3
+Node 1 undefined  OUT:[2]
+Node 2 {null->2 = 2-0:0 = [] = [] }  OUT:[]
+Node 3 undefined  OUT:[]
+
+RCV[3->1]transfer 1
+Node 1 undefined  OUT:[2]
+Node 2 undefined  OUT:[]
+Node 3 undefined  OUT:[1]
+
+Node 3 starting probe 3-0:0 [3]
+Node 1 undefined  OUT:[2]
+Node 2 undefined  OUT:[]
+Node 3 {null->3 = 3-0:0 = [] = [] }  OUT:[1]
+
+RCV[3->1]probe 3-0:0 
+Node 1 undefined  OUT:[2]
+Node 2 undefined  OUT:[]
+Node 3 {null->3 = 3-0:0 = [] = [] }  OUT:[1]
+
+1 recording probe traffic in from receiveProbe "3-0" [3 1]
+Node 1 undefined  OUT:[2]
+Node 2 undefined  OUT:[]
+Node 3 {null->3 = 3-0:0 = [] = [] }  OUT:[1]
+
+Node 1 considering probe 3-0:0 [3 1]
+Node 1 {3->1 = 3-0:0 = [] = [] }  OUT:[2]
+Node 2 undefined  OUT:[]
+Node 3 {null->3 = 3-0:0 = [] = [] }  OUT:[1]
+
+1 has checked the suitability of possible next hop 2 for probe 3-0 -> true
+Node 1 {3->1 = 3-0:0 = [] = [] }  OUT:[2]
+Node 2 undefined  OUT:[]
+Node 3 {null->3 = 3-0:0 = [] = [] }  OUT:[1]
+
+RCV[1->2]probe 3-0:0 3
+Node 1 {3->1 = 3-0:0 = ["3"] = [] }  OUT:[2]
+Node 2 undefined  OUT:[]
+Node 3 {null->3 = 3-0:0 = ["3"] = [] }  OUT:[1]
+
+2 recording probe traffic in from receiveProbe "3-0" [3 1 2]
+Node 1 {3->1 = 3-0:0 = ["3"] = [] }  OUT:[2]
+Node 2 undefined  OUT:[]
+Node 3 {null->3 = 3-0:0 = ["3"] = [] }  OUT:[1]
+
+Node 2 considering probe 3-0:0 [3 1 2]
+Node 1 {3->1 = 3-0:0 = ["3"] = [] }  OUT:[2]
+Node 2 {1->2 = 3-0:0 = ["3"] = undefined }  OUT:[]
+Node 3 {null->3 = 3-0:0 = ["3"] = [] }  OUT:[1]
+
