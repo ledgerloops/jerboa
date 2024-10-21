@@ -24,6 +24,11 @@ export class Worker {
     this.solutionCallback = solutionCallback;
     this.sendMessage = sendMessage;
   }
+  public reportState(cb: (string) => void) {
+    Object.keys(this.ourNodes).forEach((name: string) => {
+      this.ourNodes[name].reportState(cb);
+    });
+  }
   public queueMessageForLocalDelivery(from: string, to: string, message: Message): void {
     if (this.nodeIsOurs(to)) {
       // instead of delivering immediately, queue it up until runTasks is called on this worker:

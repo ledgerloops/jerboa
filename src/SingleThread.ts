@@ -6,13 +6,36 @@ export class SingleThread {
   private sarafuFile: string | undefined;
   private debtFile: string | undefined;
   private solutionCallback: (string) => Promise<void> | undefined;
+  private solution: {
+    loop: string[],
+    amount: number
+  }[] = [];
   constructor(options: { numWorkers: number, sarafuFile?: string, debtFile?: string, solutionCallback?: (string) => Promise<void> }) {
     this.debtFile = options.debtFile;
     this.solutionCallback = options.solutionCallback;
     this.sarafuFile = options.sarafuFile;
     for (let i = 0; i < options.numWorkers; i++) {
       // console.log(`Instantiating worker ${i} of ${numWorkers}`);
-      this.workers[i] = new Worker(i, options.numWorkers, this.solutionCallback, (from: string, to: string, message: Message): void => {
+      this.workers[i] = new Worker(i, options.numWorkers, async (line: string) => {
+        const parts = line.split('|');
+        if (parts.length === 3 && parts[0] === 'found loop') {
+          this.solution.push({
+            loop: parts[2].split(' '),
+            amount: parseInt(parts[1]),
+          });
+        }
+
+        if (this.solutionCallback) {
+          let str = line;
+          for (let i = 0; i < options.numWorkers; i++) {
+            this.workers[i].reportState((reportLine: string) => {
+              str += reportLine; 
+            });
+          }
+          str += '\n';
+          await this.solutionCallback(str);
+        }
+      }, (from: string, to: string, message: Message): void => {
         const receivingWorker = this.workers[parseInt(to) % this.workers.length];
         receivingWorker.deliverMessageToNodeInThisWorker(from, to, message);
       });
@@ -35,6 +58,7 @@ export class SingleThread {
     return cumm;
   }
   async solutionIsComplete(): Promise<boolean> {
+    console.log(this.solution);
     return true;
   }
   public getStats(): {
