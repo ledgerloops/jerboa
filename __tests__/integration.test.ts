@@ -1,5 +1,5 @@
 import { jest } from '@jest/globals';
-import { readFileSync } from "fs";
+import { readFileSync, writeFileSync } from "fs";
 
 let counter: number = 0;
 jest.unstable_mockModule('../src/genRanHex.js', () => {
@@ -10,14 +10,12 @@ jest.unstable_mockModule('../src/genRanHex.js', () => {
   };
 });
 
-// [
-//   'hourglass',
-//   'small',
-// ].forEach((name: string): void => {
-//   describe(`${name}`, () => {
-describe('hourglass', () =>  {
+[
+  'hourglass',
+  'small',
+].forEach((name: string): void => {
+  describe(`${name}`, () => {
     it ('finds the solution', async () => {
-      const name = 'hourglass';
       const { SingleThread } = await import('../src/SingleThread.js');
       let solution: string = '';
       const threadRunner = new SingleThread({
@@ -29,6 +27,7 @@ describe('hourglass', () =>  {
       });
       await threadRunner.runAllWorkers();
       expect(solution).toEqual(readFileSync(`./__tests__/fixtures/${name}.solution`).toString());
+      writeFileSync(`./__tests__/fixtures/${name}.solution`, solution);
     });
   });
-// });
+});
