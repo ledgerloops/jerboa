@@ -28,8 +28,8 @@ export class SingleThread {
         }
       }, (from: string, to: string, message: Message): void => {
         const receivingWorker = this.workers[parseInt(to) % this.workers.length];
-        // receivingWorker.queueMessageForLocalDelivery(from, to, message);
-        receivingWorker.deliverMessageToNodeInThisWorker(from, to, message);
+        receivingWorker.queueMessageForLocalDelivery(from, to, message);
+        // receivingWorker.deliverMessageToNodeInThisWorker(from, to, message);
       });
     }
   }

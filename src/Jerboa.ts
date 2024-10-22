@@ -242,9 +242,10 @@ export class Jerboa {
     // console.log(`${sender}->${this.name}: ${amount}`);
     this.adjustReceived(sender, msg.amount);
     this.checkFriendCache(sender);
-    // if (this.balances.haveIncomingAndOutgoingLinks()) {
-    //   this.startProbe(`${this.name}-${this.probeMinter++}`);
-    // }
+    if (this.balances.haveIncomingAndOutgoingLinks()) {
+      this.debug(`transfer receiver starts probe`);
+      this.startProbe();
+    }
     // if (this.graph.getNode(this.name).getBalance(sender) + this.graph.getNode(sender).getBalance(this.name) !== 0) {
     //   console.log('Probably some transfer message is still in flight?', this.name, sender, this.graph.getNode(this.name).getBalance(sender), this.graph.getNode(sender).getBalance(this.name));
     // }
@@ -507,6 +508,7 @@ export class Jerboa {
     this.sendTransferMessage(to, weight);
     this.debug(`transfer ${this.name} -> ${to}`);
     if (this.balances.haveIncomingAndOutgoingLinks()) {
+      this.debug(`transfer sender starting probe`);
       this.startProbe();
     }
   }
