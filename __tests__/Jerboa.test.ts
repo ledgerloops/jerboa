@@ -28,8 +28,8 @@ describe('Jerboa', () => {
     const a = makeJerboa(cb, '0');
     a.addWeight('1', 9);
     expect(cb).toHaveBeenCalledWith('1', {"amount": 9, "command": "transfer"});
-    a.receiveMessage('999', { command: 'probe', probeId: '1', incarnation: 123, debugInfo: { path: ['1', '2'], backtracked: [] } } as Message);
-    expect(cb).toHaveBeenCalledWith('1', { command: 'probe', probeId: '1', incarnation: 123, debugInfo: { path: ['1', '2', '999'], backtracked: []} });
+    a.receiveMessage('999', { command: 'probe', probeId: '1', incarnation: 123, debugInfo: { path: ['1', '2'] } } as Message);
+    expect(cb).toHaveBeenCalledWith('1', { command: 'probe', probeId: '1', incarnation: 123, debugInfo: { path: ['1', '2', '999'] } });
   });
   it('splices off a loop if it can', () => {
     const cb3 = jest.fn();
@@ -52,15 +52,15 @@ describe('Jerboa', () => {
     expect(e.getBalances()).toEqual({ 5: 9, 3: -9 });
     expect(f.getBalances()).toEqual({ 3: 9, 4: -9 });
     expect(cb3).toHaveBeenCalledWith('4', {"amount": 9, "command": "transfer"});
-    d.receiveMessage('2', { command: 'probe', probeId: 'probe-id', incarnation: 0, debugInfo: { path: ['0', '1'], backtracked: [] } });
-    expect(cb3).toHaveBeenCalledWith('4', { command: 'probe', probeId: 'probe-id', incarnation: 0, debugInfo: { path: ['0', '1', '2'], backtracked: [] } });
-    d.receiveMessage('5', { command: 'probe', probeId: 'probe-id', incarnation: 0, debugInfo: { path: ['0', '1', '2', '3', '4'], backtracked: [] } }); // so the probe has P-looped as: a-b-c-[d-e-f-d]
+    d.receiveMessage('2', { command: 'probe', probeId: 'probe-id', incarnation: 0, debugInfo: { path: ['0', '1'] } });
+    expect(cb3).toHaveBeenCalledWith('4', { command: 'probe', probeId: 'probe-id', incarnation: 0, debugInfo: { path: ['0', '1', '2'] } });
+    d.receiveMessage('5', { command: 'probe', probeId: 'probe-id', incarnation: 0, debugInfo: { path: ['0', '1', '2', '3', '4'] } }); // so the probe has P-looped as: a-b-c-[d-e-f-d]
     expect(cb3).toHaveBeenCalledWith('5', { command: 'scout', probeId: 'probe-id', maxIncarnation: 0, amount: 9, debugInfo: { loop: ['3', '4', '5', '3']} });
   });
   it ('replies with nack if it is a leaf', () => {
     const cb = jest.fn();
     const a = makeJerboa(cb, '0');
-    a.receiveMessage('999', { command: 'probe', probeId: 'probe-id', incarnation: 0, debugInfo: { path: [], backtracked: [] } });
+    a.receiveMessage('999', { command: 'probe', probeId: 'probe-id', incarnation: 0, debugInfo: { path: [] } });
     expect(cb).toHaveBeenCalledWith('999', { command: 'nack', probeId: 'probe-id', incarnation: 0, debugInfo: { path: [], backtracked: []} });
   });
 });
