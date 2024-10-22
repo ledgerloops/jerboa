@@ -320,7 +320,9 @@ export class Jerboa {
     if (debugInfo.path.length === 0) {
       const nodes = this.getOutgoingLinks().filter(x => {
         const verdict = (this.probeAlreadySent(probeId, x) === false);
-        this.solutionCallback(`${this.name} has checked the suitability of possible next hop ${x} for probe ${probeId} -> ${verdict}`);
+        if (process.env.VERBOSE) {
+          this.solutionCallback(`${this.name} has checked the suitability of possible next hop ${x} for probe ${probeId} -> ${verdict}`);
+        }
         return verdict;
       });
       if (nodes.length === 0) {
@@ -413,7 +415,9 @@ export class Jerboa {
   }
   receiveProbe(sender: string,  msg: ProbeMessage): void {
     const { probeId, incarnation, debugInfo } = msg;
-    this.solutionCallback(`${this.name} recording probe traffic in from receiveProbe "${probeId}" [${debugInfo.path.concat([sender, this.name]).join(' ')}]`);
+    if (process.env.VERBOSE) {
+      this.solutionCallback(`${this.name} recording probe traffic in from receiveProbe "${probeId}" [${debugInfo.path.concat([sender, this.name]).join(' ')}]`);
+    }
     this.recordProbeTraffic(sender, 'in', probeId, incarnation);
     this.probeQueue.push({
       sender,

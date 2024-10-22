@@ -1,7 +1,2 @@
-3 recording probe traffic in from receiveProbe "2-0" [2 3]
-2 has checked the suitability of possible next hop 3 for probe 2-0 -> false
 (2-0:0) / 2 3
-1 recording probe traffic in from receiveProbe "3-0" [3 1]
-2 recording probe traffic in from receiveProbe "3-0" [3 1 2]
-3 recording probe traffic in from receiveProbe "3-0" [3 1 2 3]
 (3-0:0)  [3 1 2 3]

@@ -1,18 +1,5 @@
-3 recording probe traffic in from receiveProbe "2-0" [2 3]
-2 has checked the suitability of possible next hop 3 for probe 2-0 -> false
 (2-0:0) / 2 3
-1 recording probe traffic in from receiveProbe "3-0" [3 1]
-2 recording probe traffic in from receiveProbe "3-0" [3 1 2]
-3 recording probe traffic in from receiveProbe "3-0" [3 1 2 3]
 (3-0:0)  [3 1 2 3]
-5 recording probe traffic in from receiveProbe "4-0" [4 5]
-4 has checked the suitability of possible next hop 5 for probe 4-0 -> false
 (4-0:0) / 4 5
-6 recording probe traffic in from receiveProbe "5-0" [5 6]
-5 has checked the suitability of possible next hop 6 for probe 5-0 -> false
 (5-0:0) / 5 6
-1 recording probe traffic in from receiveProbe "6-0" [6 1]
-4 recording probe traffic in from receiveProbe "6-0" [6 1 4]
-5 recording probe traffic in from receiveProbe "6-0" [6 1 4 5]
-6 recording probe traffic in from receiveProbe "6-0" [6 1 4 5 6]
 (6-0:0)  [6 1 4 5 6]
