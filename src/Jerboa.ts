@@ -315,9 +315,14 @@ export class Jerboa {
   }
   receiveNack(nackSender: string, msg: NackMessage): void {
     const { probeId, incarnation, debugInfo } = msg;
-    delete this.outgoingLinks[nackSender];
+    // Not repeating outgoing links is now handled by probeAlreadySent
+    // delete this.outgoingLinks[nackSender];
     if (debugInfo.path.length === 0) {
-      const nodes = this.getOutgoingLinks();
+      const nodes = this.getOutgoingLinks().filter(x => {
+        const verdict = (this.probeAlreadySent(probeId, x) === false);
+        this.solutionCallback(`${this.name} has checked the suitability of possible next hop ${x} for probe ${probeId} -> ${verdict}`);
+        return verdict;
+      });
       if (nodes.length === 0) {
         if (process.env.PROBING_REPORT) {
           printLine(`finished   (${probeId}:${incarnation})`, [], [this.name, nackSender].concat(debugInfo.backtracked));
@@ -397,6 +402,7 @@ export class Jerboa {
     // }
   }
   probeAlreadySent(probeId: string, to: string): boolean {
+    console.log('probeAlreadySent', probeId, this.name, to, this.probes);
     if (typeof this.probes[probeId] === 'undefined') {
       console.log(`unknown probe ${probeId} was not sent to anyone yet`);
       return false;
@@ -456,17 +462,21 @@ export class Jerboa {
     // console.log('path after splicing', path);
     const nodes = this.getOutgoingLinks().filter(x => {
       const verdict = (this.probeAlreadySent(probeId, x) === false);
-      this.solutionCallback(`${this.name} has checked the suitability of possible next hop ${x} for probe ${probeId} -> ${verdict}`);
+      if (process.env.VERBOSE) {
+        this.solutionCallback(`${this.name} has checked the suitability of possible next hop ${x} for probe ${probeId} -> ${verdict}`);
+      }
       return verdict;
     });
     // this.solutionCallback(`Node ${this.name} is forwarding probe to first option from ${this.getOutgoingLinks().length}`);
     if (nodes.length === 0) {
-      this.solutionCallback(`no outgoind links, so sending nack ${this.name}->${sender} ${probeId}:${incarnation} [${debugInfo.path.join(' ')}] [${debugInfo.backtracked.join(' ')}]`);
+      if (process.env.VERBOSE) {
+        this.solutionCallback(`no outgoing links, so sending nack ${this.name}->${sender} ${probeId}:${incarnation} [${debugInfo.path.join(' ')}] []`);
+      }
       this.currentProbe = undefined;
       this.sendNackMessage(sender, probeId, incarnation, { path: debugInfo.path, backtracked: debugInfo.backtracked || [] });
       // this.solutionCallback(`Node ${this.name} is done with probe ${probeId}`);
       return false;
-    } else if (debugInfo.backtracked.length > 0) {
+    } else if (Array.isArray(debugInfo.backtracked) && debugInfo.backtracked.length > 0) {
       if (process.env.PROBING_REPORT) {
         printLine(`backtracked (${probeId}:${incarnation})`, debugInfo.path.concat([sender, this.name]), debugInfo.backtracked);
       }
@@ -481,7 +491,9 @@ export class Jerboa {
     return true;
   };
   async receiveMessage(from: string, msg: Message ): Promise<void> {
-    this.solutionCallback(`RCV[${from}->${this.name}]${stringifyMessage(msg)}`);
+    if (process.env.VERBOSE) {
+      this.solutionCallback(`RCV[${from}->${this.name}]${stringifyMessage(msg)}`);
+    }
     this.messagesReceived++;
     // console.log('Jerboa receiveMessage', from, this.name, msg);
     switch((msg as { command: string }).command) {
@@ -596,8 +608,16 @@ export class Jerboa {
     }
     if (this.currentProbe.sender === null) {
       // console.log(`Node ${this.name} starting probe ${this.currentProbe.probeId}`);
-      this.solutionCallback(`Node ${this.name} starting probe ${this.currentProbe.probeId}:${this.currentProbe.incarnation} [${this.name}]`);
-      const nodes = this.getOutgoingLinks();
+      if (process.env.VERBOSE) {
+        this.solutionCallback(`Node ${this.name} starting probe ${this.currentProbe.probeId}:${this.currentProbe.incarnation} [${this.name}]`);
+      }
+      const nodes = this.getOutgoingLinks().filter(x => {
+        const verdict = (this.probeAlreadySent(this.currentProbe.probeId, x) === false);
+        if (process.env.VERBOSE) {
+          this.solutionCallback(`${this.name} has checked the suitability of possible next hop ${x} for probe ${this.currentProbe.probeId} -> ${verdict}`);
+        }
+        return verdict;
+      });
       // console.log('got outgoing links', nodes);
       if (nodes.length === 0) {
         // console.log('returning false on startProbe');
@@ -607,7 +627,9 @@ export class Jerboa {
       // console.log('returning true on startProbe');
       return true;
     } else {
-      this.solutionCallback(`Node ${this.name} considering probe ${this.currentProbe.probeId}:${this.currentProbe.incarnation} [${this.currentProbe.debugInfo.path.concat([this.currentProbe.sender, this.name]).join(' ')}]`);
+      if (process.env.VERBOSE) {
+        this.solutionCallback(`Node ${this.name} considering probe ${this.currentProbe.probeId}:${this.currentProbe.incarnation} [${this.currentProbe.debugInfo.path.concat([this.currentProbe.sender, this.name]).join(' ')}]`);
+      }
       return this.considerProbe(this.currentProbe.sender, this.currentProbe.probeId, this.currentProbe.incarnation, this.currentProbe.debugInfo);
     }
   }

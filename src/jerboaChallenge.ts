@@ -9,7 +9,7 @@ const NUM_WORKERS: number = parseInt(process.env.NUM_WORKERS) || 1;
 
 async function runSingleThread(numWorkers: number): Promise<void> {
   console.log(`Running single thread with ${numWorkers} workers`);
-  console.log('resetting solution file', this.solutionCallback);
+  console.log('resetting solution file', SOLUTION_CSV);
   await writeFile(SOLUTION_CSV, '');
   const threadRunner = new SingleThread({
     debtFile: DEBT_CSV,
