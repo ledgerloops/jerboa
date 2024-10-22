@@ -603,6 +603,12 @@ export class Jerboa {
       // }
       return result;
     }
+    // try later
+    if (this.probeQueue.length > 0) {
+      setTimeout(() => {
+        this.maybeRunProbe(false);
+      }, 1000);
+    }
     // console.log(`Node ${this.name} maybeRunProbe ${this.probeQueue[0]?.probeId} -> no`, (this.probeQueue.length > 0), (this.currentProbe === undefined), (this.currentProbe?.probeId === this.probeQueue[0]?.probeId));
     return false;
   }
