@@ -58,7 +58,7 @@ export class Jerboa {
     }
   } = {};
   probeQueue: ProbeInfo[] = [];
-  currentProbe: ProbeInfo | undefined;
+  currentProbeId: string | undefined;
   private probeMinter: number = 0;
   public transfersReceived: number = 0;
   public messagesReceived: number = 0;
@@ -89,15 +89,6 @@ export class Jerboa {
     this.name = name;
     this.solutionCallback = solutionCallback;
     this.sendMessageCb = sendMessage;
-    // this.maybeRunProbeTimer = setInterval(() => {
-    //   if (this.probeQueue.length && this.currentProbe === undefined) {
-    //     // console.log(`Node ${this.name} has work`);
-    //     this.maybeRunProbe();
-    //   } else {
-    //     // console.log(`Node ${this.name} is done`);
-    //     clearInterval(this.maybeRunProbeTimer);
-    //   }
-    // }, 1000);
   }
   private stringifyProbeInfo(probeInfo: ProbeInfo | undefined): string {
     if (probeInfo === undefined) {
@@ -106,7 +97,7 @@ export class Jerboa {
     return `{${probeInfo.sender}->${this.name} = ${probeInfo.probeId}:${probeInfo.incarnation} = ${JSON.stringify(probeInfo.debugInfo.path)} = ${JSON.stringify(probeInfo.debugInfo.backtracked)} }`;
   }
   public reportState(cb: (string) => void): void {
-    const line = `Node ${this.name} ${this.stringifyProbeInfo(this.currentProbe)} ${this.probeQueue.map(probeInfo => this.stringifyProbeInfo(probeInfo)).join(' ')} OUT:[${this.getOutgoingLinks().join(',')}]`;
+    const line = `Node ${this.name} ${this.currentProbeId} ${this.probeQueue.map(probeInfo => this.stringifyProbeInfo(probeInfo)).join(' ')} OUT:[${this.getOutgoingLinks().join(',')}]`;
     cb(line);
   }
   private async sendMessage(to: string, message: Message): Promise<void> {
@@ -301,9 +292,9 @@ export class Jerboa {
       this.checkFriendCache(this.probes[probeId].loops[hash].commitTo);
       this.sendCommitMessage(this.probes[probeId].loops[hash].commitTo, msg);
     }
-    if (this.currentProbe?.probeId === msg.probeId) {
+    if (this.currentProbeId === msg.probeId) {
       // console.log(`Node ${this.name} received commit for current probe ${msg.probeId}`);
-      this.currentProbe = undefined;
+      this.currentProbeId = undefined;
     }
   }
   initiatePropose(to: string, probeId: string, incarnation: number, amount: number, debugInfo: { loop: string[] }): void {
@@ -330,10 +321,10 @@ export class Jerboa {
           printLine(`finished   (${probeId}:${incarnation})`, [], [this.name, nackSender].concat(debugInfo.backtracked));
         }
         this.solutionCallback(`(${probeId}:${incarnation}) / ${[this.name, nackSender].concat(debugInfo.backtracked).join(' ')}`);
-        if (this.currentProbe?.probeId !== probeId) {
-          throw new Error(`Node ${this.name} received Nack from ${nackSender} for probe ${msg.probeId}:${msg.incarnation} but current probe is ${this.currentProbe?.probeId}:${this.currentProbe.incarnation}`);
+        if (this.currentProbeId !== probeId) {
+          throw new Error(`Node ${this.name} received Nack from ${nackSender} for probe ${msg.probeId}:${msg.incarnation} but current probe is ${this.currentProbeId}}`);
         }
-        this.currentProbe = undefined;
+        this.currentProbeId = undefined;
       } else {
         if (process.env.PROBING_REPORT) {
           console.log(`backtrack21 (${probeId}:${incarnation})`, [ this.name ], [nackSender].concat(debugInfo.backtracked));
@@ -418,6 +409,7 @@ export class Jerboa {
       this.solutionCallback(`${this.name} recording probe traffic in from receiveProbe "${probeId}" [${debugInfo.path.concat([sender, this.name]).join(' ')}]`);
     }
     this.recordProbeTraffic(sender, 'in', probeId, incarnation);
+    this.queueProbe({ sender, probeId: msg.probeId, incarnation: msg.incarnation, debugInfo: msg.debugInfo });
   }
   changeToLooper(sender: string, probeId: string, incarnation: number): void {
     if (typeof this.probes[probeId] === 'undefined') {
@@ -444,8 +436,6 @@ export class Jerboa {
           incarnation: incarnation + 1,
           debugInfo: { path: debugInfo.path, backtracked: [] },
         });
-        // this.currentProbe = undefined;
-        // this.maybeRunProbe();
       }
       return true;
     }
@@ -462,7 +452,7 @@ export class Jerboa {
       if (process.env.VERBOSE) {
         this.solutionCallback(`no outgoing links, so sending nack ${this.name}->${sender} ${probeId}:${incarnation} [${debugInfo.path.join(' ')}] []`);
       }
-      this.currentProbe = undefined;
+      this.currentProbeId = undefined;
       this.sendNackMessage(sender, probeId, incarnation, { path: debugInfo.path, backtracked: debugInfo.backtracked || [] });
       // this.solutionCallback(`Node ${this.name} is done with probe ${probeId}`);
       return false;
@@ -534,8 +524,20 @@ export class Jerboa {
       this.startProbe(`${this.name}-${this.probeMinter++}`);
     }
   }
+  queueProbe(probeInfo: ProbeInfo) {
+    if (this.currentProbeId === undefined) {
+      console.log('handling probe immediately');
+      this.currentProbeId = probeInfo.probeId;
+      // this.runCurrentProbe();
+    } else {
+
+    }
+    console.log(`queueing probe`, probeInfo);
+    this.probeQueue.push(probeInfo);
+  }
   startProbe(probeId: string) {
-    console.log(`starting probe`, probeId);
+      console.log(`starting probe`, probeId);
+      this.queueProbe({ sender: null, probeId, incarnation: 0, debugInfo: { path: [], backtracked: [] } });
   }
   getOutgoingLinks(): string[] {
     return Object.keys(this.outgoingLinks);
