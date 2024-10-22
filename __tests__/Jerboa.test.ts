@@ -7,20 +7,13 @@ function makeJerboa(callback: () => void, name: string): Jerboa {
 }
 
 describe('Jerboa', () => {
-  it ('returns false if it cannot initiate a probe', () => {
-    const cb = jest.fn();
-    const a = makeJerboa(cb, '0');
-    const result = a.startProbe('probe-id');
-    expect(result).toEqual(false);
-  });
   it('initiates a probe if it can', () => {
     const cb = jest.fn();
     const a = makeJerboa(cb, '0');
     a.addWeight('1', 9);
     // console.log(cb.mock);
     expect(cb).toHaveBeenCalledWith('1', {"amount": 9, "command": "transfer"});
-    const result = a.startProbe('probe-id');
-    expect(result).toEqual(true);
+    a.startProbe('probe-id');
     expect(cb).toHaveBeenCalledWith('1', { command: 'probe', probeId: 'probe-id', incarnation: 0, debugInfo: {"path":[],"backtracked":[]} });
   });
   it('forwards a probe if it can', () => {

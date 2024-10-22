@@ -329,7 +329,7 @@ export class Jerboa {
         if (this.currentProbeId !== probeId) {
           throw new Error(`Node ${this.name} received Nack from ${nackSender} for probe ${msg.probeId}:${msg.incarnation} but current probe is ${this.currentProbeId}}`);
         }
-        this.doneWithCurrentProbe('nack and finished');
+        this.doneWithCurrentProbe('nack-and-finished');
       } else {
         this.debug(`(${probeId}:${incarnation}) ${this.name} / ${[nackSender].concat(debugInfo.backtracked).join(' ')}`);
         const newStep = randomStringFromArray(nodes);
