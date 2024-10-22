@@ -1,537 +1,82 @@
-RCV[1->2]transfer 1
-Node 1 undefined 
-Node 2 undefined 
-
-RCV[2->3]transfer 1
-Node 1 undefined 
-Node 2 undefined 
-Node 3 undefined 
-
-RCV[2->3]probe 2-0:0 
-Node 1 undefined 
-Node 2 {null->2 = 2-0:0 = [] = [] } 
-Node 3 undefined 
-
-no outgoind links, so sending nack 3->2 2-0:0 [] []
-Node 1 undefined 
-Node 2 {null->2 = 2-0:0 = [] = [] } 
-Node 3 {2->3 = 2-0:0 = [] = [] } 
-
-RCV[3->2]nack 2-0:0  / 
-Node 1 undefined 
-Node 2 {null->2 = 2-0:0 = [] = [] } 
-Node 3 undefined 
-
+3 recording probe traffic in from receiveProbe "2-0" [2 3]
+2 has checked the suitability of possible next hop 3 for probe 2-0 -> false
 (2-0:0) / 2 3
-Node 1 undefined 
-Node 2 {null->2 = 2-0:0 = [] = [] } 
-Node 3 undefined 
-
-RCV[3->10]transfer 1
-Node 1 undefined 
-Node 2 undefined 
-Node 3 undefined 
-Node 10 undefined 
-
-RCV[3->10]probe 3-0:0 
-Node 1 undefined 
-Node 2 undefined 
-Node 3 {null->3 = 3-0:0 = [] = [] } 
-Node 10 undefined 
-
-no outgoind links, so sending nack 10->3 3-0:0 [] []
-Node 1 undefined 
-Node 2 undefined 
-Node 3 {null->3 = 3-0:0 = [] = [] } 
-Node 10 {3->10 = 3-0:0 = [] = [] } 
-
-RCV[10->3]nack 3-0:0  / 
-Node 1 undefined 
-Node 2 undefined 
-Node 3 {null->3 = 3-0:0 = [] = [] } 
-Node 10 undefined 
-
+10 recording probe traffic in from receiveProbe "3-0" [3 10]
+3 has checked the suitability of possible next hop 10 for probe 3-0 -> false
 (3-0:0) / 3 10
-Node 1 undefined 
-Node 2 undefined 
-Node 3 {null->3 = 3-0:0 = [] = [] } 
-Node 10 undefined 
-
-RCV[1->4]transfer 1
-Node 1 undefined 
-Node 2 undefined 
-Node 3 undefined 
-Node 4 undefined 
-Node 10 undefined 
-
-RCV[4->5]transfer 1
-Node 1 undefined 
-Node 2 undefined 
-Node 3 undefined 
-Node 4 undefined 
-Node 5 undefined 
-Node 10 undefined 
-
-RCV[4->5]probe 4-0:0 
-Node 1 undefined 
-Node 2 undefined 
-Node 3 undefined 
-Node 4 {null->4 = 4-0:0 = [] = [] } 
-Node 5 undefined 
-Node 10 undefined 
-
-no outgoind links, so sending nack 5->4 4-0:0 [] []
-Node 1 undefined 
-Node 2 undefined 
-Node 3 undefined 
-Node 4 {null->4 = 4-0:0 = [] = [] } 
-Node 5 {4->5 = 4-0:0 = [] = [] } 
-Node 10 undefined 
-
-RCV[5->4]nack 4-0:0  / 
-Node 1 undefined 
-Node 2 undefined 
-Node 3 undefined 
-Node 4 {null->4 = 4-0:0 = [] = [] } 
-Node 5 undefined 
-Node 10 undefined 
-
+5 recording probe traffic in from receiveProbe "4-0" [4 5]
+4 has checked the suitability of possible next hop 5 for probe 4-0 -> false
 (4-0:0) / 4 5
-Node 1 undefined 
-Node 2 undefined 
-Node 3 undefined 
-Node 4 {null->4 = 4-0:0 = [] = [] } 
-Node 5 undefined 
-Node 10 undefined 
-
-RCV[5->6]transfer 1
-Node 1 undefined 
-Node 2 undefined 
-Node 3 undefined 
-Node 4 undefined 
-Node 5 undefined 
-Node 6 undefined 
-Node 10 undefined 
-
-RCV[5->6]probe 5-0:0 
-Node 1 undefined 
-Node 2 undefined 
-Node 3 undefined 
-Node 4 undefined 
-Node 5 {null->5 = 5-0:0 = [] = [] } 
-Node 6 undefined 
-Node 10 undefined 
-
-no outgoind links, so sending nack 6->5 5-0:0 [] []
-Node 1 undefined 
-Node 2 undefined 
-Node 3 undefined 
-Node 4 undefined 
-Node 5 {null->5 = 5-0:0 = [] = [] } 
-Node 6 {5->6 = 5-0:0 = [] = [] } 
-Node 10 undefined 
-
-RCV[6->5]nack 5-0:0  / 
-Node 1 undefined 
-Node 2 undefined 
-Node 3 undefined 
-Node 4 undefined 
-Node 5 {null->5 = 5-0:0 = [] = [] } 
-Node 6 undefined 
-Node 10 undefined 
-
+6 recording probe traffic in from receiveProbe "5-0" [5 6]
+5 has checked the suitability of possible next hop 6 for probe 5-0 -> false
 (5-0:0) / 5 6
-Node 1 undefined 
-Node 2 undefined 
-Node 3 undefined 
-Node 4 undefined 
-Node 5 {null->5 = 5-0:0 = [] = [] } 
-Node 6 undefined 
-Node 10 undefined 
-
-RCV[6->1]transfer 1
-Node 1 undefined 
-Node 2 undefined 
-Node 3 undefined 
-Node 4 undefined 
-Node 5 undefined 
-Node 6 undefined 
-Node 10 undefined 
-
-RCV[6->1]probe 6-0:0 
-Node 1 undefined 
-Node 2 undefined 
-Node 3 undefined 
-Node 4 undefined 
-Node 5 undefined 
-Node 6 {null->6 = 6-0:0 = [] = [] } 
-Node 10 undefined 
-
-1 has checked the suitability of possible next hop 2 for probe 6-0 -> true
-Node 1 {6->1 = 6-0:0 = [] = [] } 
-Node 2 undefined 
-Node 3 undefined 
-Node 4 undefined 
-Node 5 undefined 
-Node 6 {null->6 = 6-0:0 = [] = [] } 
-Node 10 undefined 
-
-1 has checked the suitability of possible next hop 4 for probe 6-0 -> true
-Node 1 {6->1 = 6-0:0 = [] = [] } 
-Node 2 undefined 
-Node 3 undefined 
-Node 4 undefined 
-Node 5 undefined 
-Node 6 {null->6 = 6-0:0 = [] = [] } 
-Node 10 undefined 
-
-RCV[1->2]probe 6-0:0 6
-Node 1 {6->1 = 6-0:0 = ["6"] = [] } 
-Node 2 undefined 
-Node 3 undefined 
-Node 4 undefined 
-Node 5 undefined 
-Node 6 {null->6 = 6-0:0 = ["6"] = [] } 
-Node 10 undefined 
-
-RCV[6->7]transfer 3
-Node 1 {6->1 = 6-0:0 = ["6"] = [] } 
-Node 2 {1->2 = 6-0:0 = ["6"] = undefined } 
-Node 3 undefined 
-Node 4 undefined 
-Node 5 undefined 
-Node 6 {null->6 = 6-0:0 = ["6"] = [] } 
-Node 7 undefined 
-Node 10 undefined 
-
-RCV[7->2]transfer 2
-Node 1 {6->1 = 6-0:0 = ["6"] = [] } 
-Node 2 {1->2 = 6-0:0 = ["6"] = undefined } 
-Node 3 undefined 
-Node 4 undefined 
-Node 5 undefined 
-Node 6 {null->6 = 6-0:0 = ["6"] = [] } {null->6 = 6-1:0 = [] = [] }
-Node 7 undefined 
-Node 10 undefined 
-
-RCV[7->2]probe 7-0:0 
-Node 1 {6->1 = 6-0:0 = ["6"] = [] } 
-Node 2 {1->2 = 6-0:0 = ["6"] = undefined } 
-Node 3 undefined 
-Node 4 undefined 
-Node 5 undefined 
-Node 6 {null->6 = 6-0:0 = ["6"] = [] } {null->6 = 6-1:0 = [] = [] }
-Node 7 {null->7 = 7-0:0 = [] = [] } 
-Node 10 undefined 
-
-RCV[2->8]transfer 2
-Node 1 {6->1 = 6-0:0 = ["6"] = [] } 
-Node 2 {1->2 = 6-0:0 = ["6"] = undefined } {7->2 = 7-0:0 = [] = [] }
-Node 3 undefined 
-Node 4 undefined 
-Node 5 undefined 
-Node 6 {null->6 = 6-0:0 = ["6"] = [] } {null->6 = 6-1:0 = [] = [] }
-Node 7 {null->7 = 7-0:0 = [] = [] } 
-Node 8 undefined 
-Node 10 undefined 
-
-RCV[8->9]transfer 5
-Node 1 {6->1 = 6-0:0 = ["6"] = [] } 
-Node 2 {1->2 = 6-0:0 = ["6"] = undefined } {7->2 = 7-0:0 = [] = [] } {null->2 = 2-1:0 = [] = [] }
-Node 3 undefined 
-Node 4 undefined 
-Node 5 undefined 
-Node 6 {null->6 = 6-0:0 = ["6"] = [] } {null->6 = 6-1:0 = [] = [] }
-Node 7 {null->7 = 7-0:0 = [] = [] } 
-Node 8 undefined 
-Node 9 undefined 
-Node 10 undefined 
-
-RCV[8->9]probe 8-0:0 
-Node 1 {6->1 = 6-0:0 = ["6"] = [] } 
-Node 2 {1->2 = 6-0:0 = ["6"] = undefined } {7->2 = 7-0:0 = [] = [] } {null->2 = 2-1:0 = [] = [] }
-Node 3 undefined 
-Node 4 undefined 
-Node 5 undefined 
-Node 6 {null->6 = 6-0:0 = ["6"] = [] } {null->6 = 6-1:0 = [] = [] }
-Node 7 {null->7 = 7-0:0 = [] = [] } 
-Node 8 {null->8 = 8-0:0 = [] = [] } 
-Node 9 undefined 
-Node 10 undefined 
-
-no outgoind links, so sending nack 9->8 8-0:0 [] []
-Node 1 {6->1 = 6-0:0 = ["6"] = [] } 
-Node 2 {1->2 = 6-0:0 = ["6"] = undefined } {7->2 = 7-0:0 = [] = [] } {null->2 = 2-1:0 = [] = [] }
-Node 3 undefined 
-Node 4 undefined 
-Node 5 undefined 
-Node 6 {null->6 = 6-0:0 = ["6"] = [] } {null->6 = 6-1:0 = [] = [] }
-Node 7 {null->7 = 7-0:0 = [] = [] } 
-Node 8 {null->8 = 8-0:0 = [] = [] } 
-Node 9 {8->9 = 8-0:0 = [] = [] } 
-Node 10 undefined 
-
-RCV[9->8]nack 8-0:0  / 
-Node 1 {6->1 = 6-0:0 = ["6"] = [] } 
-Node 2 {1->2 = 6-0:0 = ["6"] = undefined } {7->2 = 7-0:0 = [] = [] } {null->2 = 2-1:0 = [] = [] }
-Node 3 undefined 
-Node 4 undefined 
-Node 5 undefined 
-Node 6 {null->6 = 6-0:0 = ["6"] = [] } {null->6 = 6-1:0 = [] = [] }
-Node 7 {null->7 = 7-0:0 = [] = [] } 
-Node 8 {null->8 = 8-0:0 = [] = [] } 
-Node 9 undefined 
-Node 10 undefined 
-
+1 recording probe traffic in from receiveProbe "6-0" [6 1]
+2 recording probe traffic in from receiveProbe "6-0" [6 1 2]
+3 recording probe traffic in from receiveProbe "6-0" [6 1 2 3]
+10 recording probe traffic in from receiveProbe "6-0" [6 1 2 3 10]
+(6-0:0) 6 1 / 2 3 10
+4 recording probe traffic in from receiveProbe "6-0" [6 1 4]
+5 recording probe traffic in from receiveProbe "6-0" [6 1 4 5]
+6 recording probe traffic in from receiveProbe "6-0" [6 1 4 5 6]
+(6-0:1)  [6 1 4 5 6]
+2 recording probe traffic in from receiveProbe "7-0" [7 2]
+3 recording probe traffic in from receiveProbe "7-0" [7 2 3]
+10 recording probe traffic in from receiveProbe "7-0" [7 2 3 10]
+7 has checked the suitability of possible next hop 2 for probe 7-0 -> false
+(7-0:0) / 7 2 3 10
+3 recording probe traffic in from receiveProbe "2-1" [2 3]
+10 recording probe traffic in from receiveProbe "2-1" [2 3 10]
+2 has checked the suitability of possible next hop 3 for probe 2-1 -> false
+2 has checked the suitability of possible next hop 8 for probe 2-1 -> true
+(2-1:0) 2 / 3 10
+8 recording probe traffic in from receiveProbe "2-1" [2 8]
+2 has checked the suitability of possible next hop 3 for probe 2-1 -> false
+2 has checked the suitability of possible next hop 8 for probe 2-1 -> false
+(2-1:1) / 2 8
+9 recording probe traffic in from receiveProbe "8-0" [8 9]
+8 has checked the suitability of possible next hop 9 for probe 8-0 -> false
 (8-0:0) / 8 9
-Node 1 {6->1 = 6-0:0 = ["6"] = [] } 
-Node 2 {1->2 = 6-0:0 = ["6"] = undefined } {7->2 = 7-0:0 = [] = [] } {null->2 = 2-1:0 = [] = [] }
-Node 3 undefined 
-Node 4 undefined 
-Node 5 undefined 
-Node 6 {null->6 = 6-0:0 = ["6"] = [] } {null->6 = 6-1:0 = [] = [] }
-Node 7 {null->7 = 7-0:0 = [] = [] } 
-Node 8 {null->8 = 8-0:0 = [] = [] } 
-Node 9 undefined 
-Node 10 undefined 
-
-RCV[9->1]transfer 1
-Node 1 {6->1 = 6-0:0 = ["6"] = [] } 
-Node 2 {1->2 = 6-0:0 = ["6"] = undefined } {7->2 = 7-0:0 = [] = [] } {null->2 = 2-1:0 = [] = [] }
-Node 3 undefined 
-Node 4 undefined 
-Node 5 undefined 
-Node 6 {null->6 = 6-0:0 = ["6"] = [] } {null->6 = 6-1:0 = [] = [] }
-Node 7 {null->7 = 7-0:0 = [] = [] } 
-Node 8 undefined 
-Node 9 undefined 
-Node 10 undefined 
-
-RCV[9->1]probe 9-0:0 
-Node 1 {6->1 = 6-0:0 = ["6"] = [] } 
-Node 2 {1->2 = 6-0:0 = ["6"] = undefined } {7->2 = 7-0:0 = [] = [] } {null->2 = 2-1:0 = [] = [] }
-Node 3 undefined 
-Node 4 undefined 
-Node 5 undefined 
-Node 6 {null->6 = 6-0:0 = ["6"] = [] } {null->6 = 6-1:0 = [] = [] }
-Node 7 {null->7 = 7-0:0 = [] = [] } 
-Node 8 undefined 
-Node 9 {null->9 = 9-0:0 = [] = [] } 
-Node 10 undefined 
-
-RCV[10->5]transfer 2
-Node 1 {6->1 = 6-0:0 = ["6"] = [] } {9->1 = 9-0:0 = [] = [] }
-Node 2 {1->2 = 6-0:0 = ["6"] = undefined } {7->2 = 7-0:0 = [] = [] } {null->2 = 2-1:0 = [] = [] }
-Node 3 undefined 
-Node 4 undefined 
-Node 5 undefined 
-Node 6 {null->6 = 6-0:0 = ["6"] = [] } {null->6 = 6-1:0 = [] = [] }
-Node 7 {null->7 = 7-0:0 = [] = [] } 
-Node 8 undefined 
-Node 9 {null->9 = 9-0:0 = [] = [] } 
-Node 10 undefined 
-
-RCV[10->5]probe 10-0:0 
-Node 1 {6->1 = 6-0:0 = ["6"] = [] } {9->1 = 9-0:0 = [] = [] }
-Node 2 {1->2 = 6-0:0 = ["6"] = undefined } {7->2 = 7-0:0 = [] = [] } {null->2 = 2-1:0 = [] = [] }
-Node 3 undefined 
-Node 4 undefined 
-Node 5 undefined 
-Node 6 {null->6 = 6-0:0 = ["6"] = [] } {null->6 = 6-1:0 = [] = [] }
-Node 7 {null->7 = 7-0:0 = [] = [] } 
-Node 8 undefined 
-Node 9 {null->9 = 9-0:0 = [] = [] } 
-Node 10 {null->10 = 10-0:0 = [] = [] } 
-
-no outgoind links, so sending nack 5->10 10-0:0 [] []
-Node 1 {6->1 = 6-0:0 = ["6"] = [] } {9->1 = 9-0:0 = [] = [] }
-Node 2 {1->2 = 6-0:0 = ["6"] = undefined } {7->2 = 7-0:0 = [] = [] } {null->2 = 2-1:0 = [] = [] }
-Node 3 undefined 
-Node 4 undefined 
-Node 5 {10->5 = 10-0:0 = [] = [] } 
-Node 6 {null->6 = 6-0:0 = ["6"] = [] } {null->6 = 6-1:0 = [] = [] }
-Node 7 {null->7 = 7-0:0 = [] = [] } 
-Node 8 undefined 
-Node 9 {null->9 = 9-0:0 = [] = [] } 
-Node 10 {null->10 = 10-0:0 = [] = [] } 
-
-RCV[5->10]nack 10-0:0  / 
-Node 1 {6->1 = 6-0:0 = ["6"] = [] } {9->1 = 9-0:0 = [] = [] }
-Node 2 {1->2 = 6-0:0 = ["6"] = undefined } {7->2 = 7-0:0 = [] = [] } {null->2 = 2-1:0 = [] = [] }
-Node 3 undefined 
-Node 4 undefined 
-Node 5 undefined 
-Node 6 {null->6 = 6-0:0 = ["6"] = [] } {null->6 = 6-1:0 = [] = [] }
-Node 7 {null->7 = 7-0:0 = [] = [] } 
-Node 8 undefined 
-Node 9 {null->9 = 9-0:0 = [] = [] } 
-Node 10 {null->10 = 10-0:0 = [] = [] } 
-
+1 recording probe traffic in from receiveProbe "9-0" [9 1]
+2 recording probe traffic in from receiveProbe "9-0" [9 1 2]
+3 recording probe traffic in from receiveProbe "9-0" [9 1 2 3]
+10 recording probe traffic in from receiveProbe "9-0" [9 1 2 3 10]
+(9-0:0) 9 1 2 / 3 10
+8 recording probe traffic in from receiveProbe "9-0" [9 1 2 8]
+9 recording probe traffic in from receiveProbe "9-0" [9 1 2 8 9]
+(9-0:1)  [9 1 2 8 9]
+5 recording probe traffic in from receiveProbe "10-0" [10 5]
+10 has checked the suitability of possible next hop 5 for probe 10-0 -> false
 (10-0:0) / 10 5
-Node 1 {6->1 = 6-0:0 = ["6"] = [] } {9->1 = 9-0:0 = [] = [] }
-Node 2 {1->2 = 6-0:0 = ["6"] = undefined } {7->2 = 7-0:0 = [] = [] } {null->2 = 2-1:0 = [] = [] }
-Node 3 undefined 
-Node 4 undefined 
-Node 5 undefined 
-Node 6 {null->6 = 6-0:0 = ["6"] = [] } {null->6 = 6-1:0 = [] = [] }
-Node 7 {null->7 = 7-0:0 = [] = [] } 
-Node 8 undefined 
-Node 9 {null->9 = 9-0:0 = [] = [] } 
-Node 10 {null->10 = 10-0:0 = [] = [] } 
-
-RCV[3->5]transfer 1
-Node 1 {6->1 = 6-0:0 = ["6"] = [] } {9->1 = 9-0:0 = [] = [] }
-Node 2 {1->2 = 6-0:0 = ["6"] = undefined } {7->2 = 7-0:0 = [] = [] } {null->2 = 2-1:0 = [] = [] }
-Node 3 undefined 
-Node 4 undefined 
-Node 5 undefined 
-Node 6 {null->6 = 6-0:0 = ["6"] = [] } {null->6 = 6-1:0 = [] = [] }
-Node 7 {null->7 = 7-0:0 = [] = [] } 
-Node 8 undefined 
-Node 9 {null->9 = 9-0:0 = [] = [] } 
-Node 10 undefined 
-
-RCV[3->5]probe 3-1:0 
-Node 1 {6->1 = 6-0:0 = ["6"] = [] } {9->1 = 9-0:0 = [] = [] }
-Node 2 {1->2 = 6-0:0 = ["6"] = undefined } {7->2 = 7-0:0 = [] = [] } {null->2 = 2-1:0 = [] = [] }
-Node 3 {null->3 = 3-1:0 = [] = [] } 
-Node 4 undefined 
-Node 5 undefined 
-Node 6 {null->6 = 6-0:0 = ["6"] = [] } {null->6 = 6-1:0 = [] = [] }
-Node 7 {null->7 = 7-0:0 = [] = [] } 
-Node 8 undefined 
-Node 9 {null->9 = 9-0:0 = [] = [] } 
-Node 10 undefined 
-
-no outgoind links, so sending nack 5->3 3-1:0 [] []
-Node 1 {6->1 = 6-0:0 = ["6"] = [] } {9->1 = 9-0:0 = [] = [] }
-Node 2 {1->2 = 6-0:0 = ["6"] = undefined } {7->2 = 7-0:0 = [] = [] } {null->2 = 2-1:0 = [] = [] }
-Node 3 {null->3 = 3-1:0 = [] = [] } 
-Node 4 undefined 
-Node 5 {3->5 = 3-1:0 = [] = [] } 
-Node 6 {null->6 = 6-0:0 = ["6"] = [] } {null->6 = 6-1:0 = [] = [] }
-Node 7 {null->7 = 7-0:0 = [] = [] } 
-Node 8 undefined 
-Node 9 {null->9 = 9-0:0 = [] = [] } 
-Node 10 undefined 
-
-RCV[5->3]nack 3-1:0  / 
-Node 1 {6->1 = 6-0:0 = ["6"] = [] } {9->1 = 9-0:0 = [] = [] }
-Node 2 {1->2 = 6-0:0 = ["6"] = undefined } {7->2 = 7-0:0 = [] = [] } {null->2 = 2-1:0 = [] = [] }
-Node 3 {null->3 = 3-1:0 = [] = [] } 
-Node 4 undefined 
-Node 5 undefined 
-Node 6 {null->6 = 6-0:0 = ["6"] = [] } {null->6 = 6-1:0 = [] = [] }
-Node 7 {null->7 = 7-0:0 = [] = [] } 
-Node 8 undefined 
-Node 9 {null->9 = 9-0:0 = [] = [] } 
-Node 10 undefined 
-
-(3-1:0) / 3 5
-Node 1 {6->1 = 6-0:0 = ["6"] = [] } {9->1 = 9-0:0 = [] = [] }
-Node 2 {1->2 = 6-0:0 = ["6"] = undefined } {7->2 = 7-0:0 = [] = [] } {null->2 = 2-1:0 = [] = [] }
-Node 3 {null->3 = 3-1:0 = [] = [] } 
-Node 4 undefined 
-Node 5 undefined 
-Node 6 {null->6 = 6-0:0 = ["6"] = [] } {null->6 = 6-1:0 = [] = [] }
-Node 7 {null->7 = 7-0:0 = [] = [] } 
-Node 8 undefined 
-Node 9 {null->9 = 9-0:0 = [] = [] } 
-Node 10 undefined 
-
-RCV[5->6]transfer 1
-Node 1 {6->1 = 6-0:0 = ["6"] = [] } {9->1 = 9-0:0 = [] = [] }
-Node 2 {1->2 = 6-0:0 = ["6"] = undefined } {7->2 = 7-0:0 = [] = [] } {null->2 = 2-1:0 = [] = [] }
-Node 3 undefined 
-Node 4 undefined 
-Node 5 undefined 
-Node 6 {null->6 = 6-0:0 = ["6"] = [] } {null->6 = 6-1:0 = [] = [] }
-Node 7 {null->7 = 7-0:0 = [] = [] } 
-Node 8 undefined 
-Node 9 {null->9 = 9-0:0 = [] = [] } 
-Node 10 undefined 
-
-RCV[5->6]probe 5-1:0 
-Node 1 {6->1 = 6-0:0 = ["6"] = [] } {9->1 = 9-0:0 = [] = [] }
-Node 2 {1->2 = 6-0:0 = ["6"] = undefined } {7->2 = 7-0:0 = [] = [] } {null->2 = 2-1:0 = [] = [] }
-Node 3 undefined 
-Node 4 undefined 
-Node 5 {null->5 = 5-1:0 = [] = [] } 
-Node 6 {null->6 = 6-0:0 = ["6"] = [] } {null->6 = 6-1:0 = [] = [] }
-Node 7 {null->7 = 7-0:0 = [] = [] } 
-Node 8 undefined 
-Node 9 {null->9 = 9-0:0 = [] = [] } 
-Node 10 undefined 
-
-RCV[6->3]transfer 1
-Node 1 {6->1 = 6-0:0 = ["6"] = [] } {9->1 = 9-0:0 = [] = [] }
-Node 2 {1->2 = 6-0:0 = ["6"] = undefined } {7->2 = 7-0:0 = [] = [] } {null->2 = 2-1:0 = [] = [] }
-Node 3 undefined 
-Node 4 undefined 
-Node 5 {null->5 = 5-1:0 = [] = [] } 
-Node 6 {null->6 = 6-0:0 = ["6"] = [] } {null->6 = 6-1:0 = [] = [] } {5->6 = 5-1:0 = [] = [] }
-Node 7 {null->7 = 7-0:0 = [] = [] } 
-Node 8 undefined 
-Node 9 {null->9 = 9-0:0 = [] = [] } 
-Node 10 undefined 
-
-RCV[4->6]transfer 1
-Node 1 {6->1 = 6-0:0 = ["6"] = [] } {9->1 = 9-0:0 = [] = [] }
-Node 2 {1->2 = 6-0:0 = ["6"] = undefined } {7->2 = 7-0:0 = [] = [] } {null->2 = 2-1:0 = [] = [] }
-Node 3 undefined 
-Node 4 undefined 
-Node 5 {null->5 = 5-1:0 = [] = [] } 
-Node 6 {null->6 = 6-0:0 = ["6"] = [] } {null->6 = 6-1:0 = [] = [] } {5->6 = 5-1:0 = [] = [] } {null->6 = 6-2:0 = [] = [] }
-Node 7 {null->7 = 7-0:0 = [] = [] } 
-Node 8 undefined 
-Node 9 {null->9 = 9-0:0 = [] = [] } 
-Node 10 undefined 
-
-RCV[4->6]probe 4-1:0 
-Node 1 {6->1 = 6-0:0 = ["6"] = [] } {9->1 = 9-0:0 = [] = [] }
-Node 2 {1->2 = 6-0:0 = ["6"] = undefined } {7->2 = 7-0:0 = [] = [] } {null->2 = 2-1:0 = [] = [] }
-Node 3 undefined 
-Node 4 {null->4 = 4-1:0 = [] = [] } 
-Node 5 {null->5 = 5-1:0 = [] = [] } 
-Node 6 {null->6 = 6-0:0 = ["6"] = [] } {null->6 = 6-1:0 = [] = [] } {5->6 = 5-1:0 = [] = [] } {null->6 = 6-2:0 = [] = [] }
-Node 7 {null->7 = 7-0:0 = [] = [] } 
-Node 8 undefined 
-Node 9 {null->9 = 9-0:0 = [] = [] } 
-Node 10 undefined 
-
-RCV[7->4]transfer 1
-Node 1 {6->1 = 6-0:0 = ["6"] = [] } {9->1 = 9-0:0 = [] = [] }
-Node 2 {1->2 = 6-0:0 = ["6"] = undefined } {7->2 = 7-0:0 = [] = [] } {null->2 = 2-1:0 = [] = [] }
-Node 3 undefined 
-Node 4 {null->4 = 4-1:0 = [] = [] } 
-Node 5 {null->5 = 5-1:0 = [] = [] } 
-Node 6 {null->6 = 6-0:0 = ["6"] = [] } {null->6 = 6-1:0 = [] = [] } {5->6 = 5-1:0 = [] = [] } {null->6 = 6-2:0 = [] = [] } {4->6 = 4-1:0 = [] = [] }
-Node 7 {null->7 = 7-0:0 = [] = [] } 
-Node 8 undefined 
-Node 9 {null->9 = 9-0:0 = [] = [] } 
-Node 10 undefined 
-
-RCV[8->7]transfer 1
-Node 1 {6->1 = 6-0:0 = ["6"] = [] } {9->1 = 9-0:0 = [] = [] }
-Node 2 {1->2 = 6-0:0 = ["6"] = undefined } {7->2 = 7-0:0 = [] = [] } {null->2 = 2-1:0 = [] = [] }
-Node 3 undefined 
-Node 4 {null->4 = 4-1:0 = [] = [] } 
-Node 5 {null->5 = 5-1:0 = [] = [] } 
-Node 6 {null->6 = 6-0:0 = ["6"] = [] } {null->6 = 6-1:0 = [] = [] } {5->6 = 5-1:0 = [] = [] } {null->6 = 6-2:0 = [] = [] } {4->6 = 4-1:0 = [] = [] }
-Node 7 {null->7 = 7-0:0 = [] = [] } {null->7 = 7-1:0 = [] = [] }
-Node 8 undefined 
-Node 9 {null->9 = 9-0:0 = [] = [] } 
-Node 10 undefined 
-
-RCV[8->7]probe 8-1:0 
-Node 1 {6->1 = 6-0:0 = ["6"] = [] } {9->1 = 9-0:0 = [] = [] }
-Node 2 {1->2 = 6-0:0 = ["6"] = undefined } {7->2 = 7-0:0 = [] = [] } {null->2 = 2-1:0 = [] = [] }
-Node 3 undefined 
-Node 4 {null->4 = 4-1:0 = [] = [] } 
-Node 5 {null->5 = 5-1:0 = [] = [] } 
-Node 6 {null->6 = 6-0:0 = ["6"] = [] } {null->6 = 6-1:0 = [] = [] } {5->6 = 5-1:0 = [] = [] } {null->6 = 6-2:0 = [] = [] } {4->6 = 4-1:0 = [] = [] }
-Node 7 {null->7 = 7-0:0 = [] = [] } {null->7 = 7-1:0 = [] = [] }
-Node 8 {null->8 = 8-1:0 = [] = [] } 
-Node 9 {null->9 = 9-0:0 = [] = [] } 
-Node 10 undefined 
-
+5 recording probe traffic in from receiveProbe "3-1" [3 5]
+3 has checked the suitability of possible next hop 5 for probe 3-1 -> false
+3 has checked the suitability of possible next hop 10 for probe 3-1 -> true
+(3-1:0) 3 / 5
+10 recording probe traffic in from receiveProbe "3-1" [3 10]
+5 recording probe traffic in from receiveProbe "3-1" [3 10 5]
+3 has checked the suitability of possible next hop 5 for probe 3-1 -> false
+3 has checked the suitability of possible next hop 10 for probe 3-1 -> false
+(3-1:1) / 3 10 5
+6 recording probe traffic in from receiveProbe "5-1" [5 6]
+7 recording probe traffic in from receiveProbe "5-1" [5 6 7]
+2 recording probe traffic in from receiveProbe "5-1" [5 6 7 2]
+3 recording probe traffic in from receiveProbe "5-1" [5 6 7 2 3]
+5 recording probe traffic in from receiveProbe "5-1" [5 6 7 2 3 5]
+(5-1:0)  [5 6 7 2 3 5]
+2 recording probe traffic in from receiveProbe "7-1" [7 2]
+8 recording probe traffic in from receiveProbe "7-1" [7 2 8]
+9 recording probe traffic in from receiveProbe "7-1" [7 2 8 9]
+7 has checked the suitability of possible next hop 2 for probe 7-1 -> false
+7 has checked the suitability of possible next hop 4 for probe 7-1 -> true
+(7-1:0) 7 / 2 8 9
+4 recording probe traffic in from receiveProbe "7-1" [7 4]
+6 recording probe traffic in from receiveProbe "7-1" [7 4 6]
+3 recording probe traffic in from receiveProbe "7-1" [7 4 6 3]
+10 recording probe traffic in from receiveProbe "7-1" [7 4 6 3 10]
+5 recording probe traffic in from receiveProbe "7-1" [7 4 6 3 10 5]
+(7-1:1) 7 4 6 / 3 10 5
+7 recording probe traffic in from receiveProbe "7-1" [7 4 6 7]
+(7-1:2)  [7 4 6 7]
+7 recording probe traffic in from receiveProbe "8-1" [8 7]
+2 recording probe traffic in from receiveProbe "8-1" [8 7 2]
+8 recording probe traffic in from receiveProbe "8-1" [8 7 2 8]
+(8-1:0)  [8 7 2 8]

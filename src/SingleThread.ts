@@ -27,12 +27,14 @@ export class SingleThread {
 
         if (this.solutionCallback) {
           const lines = [ line ];
-          for (let i = 0; i < options.numWorkers; i++) {
-            this.workers[i].reportState((reportLine: string) => {
-              lines.push(reportLine);
-            });
+          if (process.env.VERBOSE) {
+            for (let i = 0; i < options.numWorkers; i++) {
+              this.workers[i].reportState((reportLine: string) => {
+                lines.push(reportLine);
+              });
+            }
+            lines.push('');
           }
-          lines.push('');
           lines.push('');
           this.solutionCallback(lines.join('\n'));
         }
