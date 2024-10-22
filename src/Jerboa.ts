@@ -402,9 +402,9 @@ export class Jerboa {
     // }
   }
   probeAlreadySent(probeId: string, to: string): boolean {
-    console.log('probeAlreadySent', probeId, this.name, to, this.probes);
+    // console.log('probeAlreadySent', probeId, this.name, to, this.probes);
     if (typeof this.probes[probeId] === 'undefined') {
-      console.log(`unknown probe ${probeId} was not sent to anyone yet`);
+      // console.log(`unknown probe ${probeId} was not sent to anyone yet`);
       return false;
     }
     const ret = (typeof this.probes[probeId].out[to] !== 'undefined');
