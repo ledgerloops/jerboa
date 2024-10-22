@@ -90,7 +90,7 @@ export class Jerboa {
     this.solutionCallback = solutionCallback;
     this.sendMessageCb = sendMessage;
   }
-  private debug(str: string) {
+  private debug(str: string): void {
     if (process.env.VERBOSE) {
       this.solutionCallback(str);
     }
@@ -331,10 +331,10 @@ export class Jerboa {
         }
         this.doneWithCurrentProbe('nack and finished');
       } else {
-        this.solutionCallback(`(${probeId}:${incarnation}) ${this.name} / ${[nackSender].concat(debugInfo.backtracked).join(' ')}`);
+        this.debug(`(${probeId}:${incarnation}) ${this.name} / ${[nackSender].concat(debugInfo.backtracked).join(' ')}`);
         const newStep = randomStringFromArray(nodes);
         // console.log(`${this.name} sends probe message to ${newStep} for probeId ${probeId} after receiving nack from ${nackSender}`);
-        this.solutionCallback(`${this.name} received nack from ${nackSender} and switches to next incarnation`);
+        this.debug(`${this.name} received nack from ${nackSender} and switches to next incarnation`);
         this.sendProbeMessage(newStep, { command: 'probe', probeId, incarnation: incarnation + 1, debugInfo: { path: debugInfo.path, backtracked: [] } } as ProbeMessage);
       }
     } else {
