@@ -12,8 +12,8 @@ jest.unstable_mockModule('../src/genRanHex.js', () => {
 
 [
   'triangle',
-  // 'hourglass',
-  // 'small',
+  'hourglass',
+  'small',
 ].forEach((name: string): void => {
   describe(`${name}`, () => {
     it ('finds the solution', async () => {
