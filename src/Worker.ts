@@ -39,6 +39,15 @@ export class Worker {
       throw Error('to node is not ours');
     }
   }
+  public async deliverOneMessage(): Promise<boolean> {
+    if (this.messages.length === 0) {
+      return false;
+    }
+    const msg = this.messages.shift();
+    // console.log('delivering', msg);
+    await this.deliverMessageToNodeInThisWorker(msg.from, msg.to, msg.message);
+    return true;
+  }
   async deliverMessageToNodeInThisWorker(from: string, to: string, message: Message): Promise<void> {
     this.messagesSent++;
     // console.log(`Worker ${this.workerNo} delivering message to node ${to}`, from, to, message, this.messages.length);

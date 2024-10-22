@@ -13,8 +13,8 @@ describe('Jerboa', () => {
     a.addWeight('1', 9);
     // console.log(cb.mock);
     expect(cb).toHaveBeenCalledWith('1', {"amount": 9, "command": "transfer"});
-    a.startProbe('probe-id');
-    expect(cb).toHaveBeenCalledWith('1', { command: 'probe', probeId: 'probe-id', incarnation: 0, debugInfo: {"path":[],"backtracked":[]} });
+    a.startProbe();
+    expect(cb).toHaveBeenCalledWith('1', { command: 'probe', probeId: '0-0', incarnation: 0, debugInfo: {"path":[],"backtracked":[]} });
   });
   it('forwards a probe if it can', () => {
     const cb = jest.fn();

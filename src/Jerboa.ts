@@ -92,6 +92,7 @@ export class Jerboa {
   }
   private debug(str: string): void {
     if (process.env.VERBOSE) {
+      console.log(str);
       this.solutionCallback(str);
     }
   }
@@ -106,9 +107,7 @@ export class Jerboa {
     cb(line);
   }
   private async sendMessage(to: string, message: Message): Promise<void> {
-    if (this.solutionCallback) {
-      // this.solutionCallback(`${this.name} ${to} ${JSON.stringify(message)}`);
-    }
+    this.debug(`SEND ${this.name} ${to} ${JSON.stringify(message)}`);
     this.messagesSent++;
     this.sendMessageCb(to, message);
   }
@@ -427,8 +426,10 @@ export class Jerboa {
           sender: oldSender,
           probeId,
           incarnation: incarnation + 1,
-          debugInfo: { path: debugInfo.path, backtracked: [] },
+          debugInfo: { path: debugInfo.path },
         });
+      } else {
+        this.startProbe();
       }
       return true;
     }
@@ -498,10 +499,6 @@ export class Jerboa {
       this.outgoingLinks[friend] = true;
     } else {
       delete this.outgoingLinks[friend];
-      // if (Object.keys(this.outgoingLinks).length === 0) {
-        // console.log('calling deregister');
-        // this.deregister();
-      // }
     }
   }
   addWeight(to: string, weight: number): void {
@@ -510,9 +507,7 @@ export class Jerboa {
     this.sendTransferMessage(to, weight);
     this.debug(`transfer ${this.name} -> ${to}`);
     if (this.balances.haveIncomingAndOutgoingLinks()) {
-      const probeId = `${this.name}-${this.probeMinter++}`;
-      this.debug(`${this.name} starts probe ${probeId}`);
-      this.startProbe(probeId);
+      this.startProbe();
     }
   }
   queueProbe(probeInfo: ProbeInfo): void {
@@ -544,9 +539,10 @@ export class Jerboa {
       this.debug(`${this.name} has emptied its probes queue`);
     }
   }
-  startProbe(probeId: string): void {
-      this.debug(`starting probe ${probeId}`);
-      this.queueProbe({ sender: null, probeId, incarnation: 0, debugInfo: { path: [], backtracked: [] } });
+  startProbe(): void {
+    const probeId = `${this.name}-${this.probeMinter++}`;
+    this.debug(`${this.name} starts probe ${probeId}`);
+    this.queueProbe({ sender: null, probeId, incarnation: 0, debugInfo: { path: [], backtracked: [] } });
   }
   runProbe(probeInfo: ProbeInfo): void {
     if (probeInfo.sender === null) {

@@ -6,10 +6,6 @@ export class SingleThread {
   private sarafuFile: string | undefined;
   private debtFile: string | undefined;
   private solutionCallback: (string) => void | undefined;
-  private solution: {
-    loop: string[],
-    amount: number
-  }[] = [];
   constructor(options: { numWorkers: number, sarafuFile?: string, debtFile?: string, solutionCallback?: (string) => void }) {
     this.debtFile = options.debtFile;
     this.solutionCallback = options.solutionCallback;
@@ -17,29 +13,22 @@ export class SingleThread {
     for (let i = 0; i < options.numWorkers; i++) {
       // console.log(`Instantiating worker ${i} of ${numWorkers}`);
       this.workers[i] = new Worker(i, options.numWorkers, (line: string) => {
-        const parts = line.split('|');
-        if (parts.length === 3 && parts[0] === 'found loop') {
-          this.solution.push({
-            loop: parts[2].split(' '),
-            amount: parseInt(parts[1]),
-          });
-        }
-
         if (this.solutionCallback) {
           const lines = [ line ];
-          if (process.env.VERBOSE) {
-            for (let i = 0; i < options.numWorkers; i++) {
-              this.workers[i].reportState((reportLine: string) => {
-                lines.push(reportLine);
-              });
-            }
-            lines.push('');
-          }
+          // if (process.env.VERBOSE) {
+          //   for (let i = 0; i < options.numWorkers; i++) {
+          //     this.workers[i].reportState((reportLine: string) => {
+          //       lines.push(reportLine);
+          //     });
+          //   }
+          //   lines.push('');
+          // }
           lines.push('');
           this.solutionCallback(lines.join('\n'));
         }
       }, (from: string, to: string, message: Message): void => {
         const receivingWorker = this.workers[parseInt(to) % this.workers.length];
+        // receivingWorker.queueMessageForLocalDelivery(from, to, message);
         receivingWorker.deliverMessageToNodeInThisWorker(from, to, message);
       });
     }
@@ -51,6 +40,16 @@ export class SingleThread {
     if (this.debtFile) {
       await Promise.all(this.workers.map(async (worker) => worker.readDebtFromCsv(this.debtFile)));
     }
+    let hadWork;
+    do {
+      hadWork = false;
+      for (let i = 0; i < this.workers.length; i++ ) {
+        if (await this.workers[i].deliverOneMessage()) {
+          hadWork = true;
+        }
+      }
+      // console.log({ hadWork });
+    } while(hadWork);
     await new Promise(r => setTimeout(r, 1200));
     const nums = this.workers.map((worker) => worker.getNumProbes());
 
