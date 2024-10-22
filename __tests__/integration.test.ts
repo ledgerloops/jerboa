@@ -31,7 +31,7 @@ jest.unstable_mockModule('../src/genRanHex.js', () => {
       await threadRunner.runAllWorkers();
       const read = readFileSync(`./__tests__/fixtures/${name}.solution`).toString();
       if (solution !== read) {
-        console.log(`mending test`);
+        // console.log(`mending test`);
         writeFileSync(`./__tests__/fixtures/${name}.solution`, solution);
       }
       expect(solution).toEqual(read);

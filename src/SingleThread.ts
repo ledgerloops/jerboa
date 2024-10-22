@@ -61,7 +61,7 @@ export class SingleThread {
     return cumm;
   }
   async solutionIsComplete(): Promise<boolean> {
-    console.log(this.solution);
+    // console.log(this.solution);
     return true;
   }
   public getStats(): {

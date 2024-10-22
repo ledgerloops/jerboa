@@ -4,7 +4,7 @@ import { BirdsEyeWorm } from './BirdsEyeWorm.js';
 
 // const SARAFU_CSV = '../Sarafu2021_UKdb_submission/sarafu_xDAI/sarafu_txns_20200125-20210615.csv';
 const SARAFU_CSV = process.argv[2] || './__tests__/fixture-3k.csv';
-console.log('Opening', SARAFU_CSV);
+// console.log('Opening', SARAFU_CSV);
 
 const lineReader = createInterface({
   input: createReadStream(SARAFU_CSV),
@@ -35,7 +35,7 @@ lineReader.on('line', function (line) {
 
 lineReader.on('close', async function () {
   await birdsEyeWorm.runWorm();
-  console.log(birdsEyeWorm.stats);
+  // console.log(birdsEyeWorm.stats);
   const links = birdsEyeWorm.graph.getLinks();
   let numLinks = 0;
   Object.keys(links).forEach(from => {
