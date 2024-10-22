@@ -606,6 +606,7 @@ export class Jerboa {
     // try later
     if (this.probeQueue.length > 0) {
       setTimeout(() => {
+        console.log(`Node ${this.name} queue length ${this.probeQueue.length}`);
         this.maybeRunProbe(false);
       }, 1000);
     }
