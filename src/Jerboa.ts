@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { Balances } from "./Balances.js";
-import { Message, TransferMessage, ProposeMessage, CommitMessage, ScoutMessage, ProbeMessage, NackMessage, stringifyMessage } from "./MessageTypes.js";
+import { Message, TransferMessage, ProposeMessage, CommitMessage, ScoutMessage, ProbeMessage, FollowMessage, NackMessage, stringifyMessage } from "./MessageTypes.js";
 import { printLine } from "./BirdsEyeWorm.js";
 import { genRanHex } from "./genRanHex.js";
 
@@ -600,6 +600,10 @@ export class Jerboa {
     }
 
     // console.log(`${this.name} recording probe traffic out sendProbeMessage to ${to}`, msg.debugInfo);
+    this.recordProbeTraffic(to, 'out', msg.probeId, msg.incarnation);
+    this.sendMessage(to, msg);
+  }
+  sendFollowMessage(to: string, msg: FollowMessage): void {
     this.recordProbeTraffic(to, 'out', msg.probeId, msg.incarnation);
     this.sendMessage(to, msg);
   }
