@@ -27,6 +27,9 @@ export class SingleThread {
           this.solutionCallback(lines.join('\n'));
         }
       }, (from: string, to: string, message: Message): void => {
+        if (isNaN(parseInt(to)))  {
+          throw new Error(`to '${to}' is not parseable as an int - ${from} ${to} ${JSON.stringify(message)}`);
+        }
         const receivingWorker = this.workers[parseInt(to) % this.workers.length];
         receivingWorker.queueMessageForLocalDelivery(from, to, message);
         // receivingWorker.deliverMessageToNodeInThisWorker(from, to, message);
