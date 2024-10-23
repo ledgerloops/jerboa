@@ -42,7 +42,8 @@ export class Jerboa {
     [probeId: string]: {
       in: { [from: string]: number },
       looper: { [from: string]: number },
-      out: { [from: string]: number },
+      out: { [to: string]: number },
+      currentOut?: string,
       loops: {
         [hash: string]: {
           proposeFrom?: string,
@@ -55,6 +56,14 @@ export class Jerboa {
       },
       preimage?: string,
       hash?: string,
+    }
+  } = {};
+  private follow: {
+    [probeId: string]: {
+       from: string;
+       to?: string;
+       incarnation: number;
+       followee: string;
     }
   } = {};
   probeQueue: ProbeInfo[] = [];
@@ -379,6 +388,9 @@ export class Jerboa {
       // throw new Error('repeated entry!');
     }
     this.probes[probeId][direction][other] = incarnation;
+    if (direction === 'out') {
+      this.probes[probeId].currentOut = other;
+    }
     // if (direction === 'in') {
     //   console.log(`${this.name} recorded ${direction}coming probe incarnation (${probeId}:${incarnation}) from ${other}`, this.probes[probeId]);
     // } else if (direction === 'looper') {
@@ -467,6 +479,47 @@ export class Jerboa {
     this.sendProbeMessage(newStep, { command: 'probe', probeId, incarnation: forwardIncarnation, debugInfo: { path: debugInfo.path } });
     return true;
   };
+  receiveFollow(from: string, msg: FollowMessage) {
+    const loopFound = this.spliceLoop(from, msg.probeId, msg.incarnation, msg.debugInfo.path);
+    if (loopFound) {
+      this.debug(`LOOP FOUND IN FOLLOW ${JSON.stringify(msg)}`);
+      return;
+    }
+    if (typeof this.follow[msg.probeId] !== 'undefined') {
+      this.debug(`Already have a follow record for this probe`);
+      return;
+    }
+
+    this.follow[msg.probeId] = {
+      from,
+      incarnation: msg.incarnation,
+      followee: msg.followee,
+    };
+    this.recordProbeTraffic(from, 'in', msg.probeId, msg.incarnation);
+    this.debug(`receiveFollow ${JSON.stringify(msg)} comparing ${this.currentProbeId} ${JSON.stringify(this.follow)}`);
+    if (this.currentProbeId === msg.followee) {
+      this.follow[msg.probeId].to = this.probes[msg.probeId].currentOut;
+      const msgOut = JSON.parse(JSON.stringify(msg));
+      msgOut.debugInfo.path.push(from);
+      this.debug(`Follow forwarded along current probe ${msg.followee} at ${this.name} to ${this.probes[msg.probeId].currentOut}: ${JSON.stringify(msg)} -> ${JSON.stringify(msgOut)}`);
+      this.sendFollowMessage(this.probes[msg.probeId].currentOut, msgOut);
+    } else if (typeof this.follow[msg.followee] !== 'undefined') {
+      const msgOut = JSON.parse(JSON.stringify(msg));
+      msgOut.followee = this.follow[msg.followee].followee;
+      if (msgOut.followee === msg.probeId) {
+        this.debug(`Follow found itself`);
+      }
+      msgOut.debugInfo.path.push(from);
+      this.debug(`Follow tailgates onto ${msg.followee} at ${this.name} to ${this.follow[msg.followee].to}: ${JSON.stringify(msg)} -> ${JSON.stringify(msgOut)}`);
+      if (this.follow[msg.followee].to === undefined) {
+        console.log(`Follow tailgates onto ${msg.followee} at ${this.name} to ${this.follow[msg.followee].to}: ${JSON.stringify(msg)} -> ${JSON.stringify(msgOut)}`);
+      } else {
+        this.sendFollowMessage(this.follow[msg.followee].to, msgOut);
+      }
+    } else {
+      this.debug(`Follow ends at ${this.name}: ${JSON.stringify(msg)}`);
+    }
+  }
   async receiveMessage(from: string, msg: Message ): Promise<void> {
     this.debug(`RCV[${from}->${this.name}]${stringifyMessage(msg)}`);
     this.messagesReceived++;
@@ -475,28 +528,31 @@ export class Jerboa {
       case 'probe': {
         return this.receiveProbe(from, msg as ProbeMessage);
       }
-    case 'nack': {
-      return this.receiveNack(from, msg as NackMessage);
-    }
-    case 'transfer': {
-      this.transfersReceived++;
-      this.transfersReceivedAmount += (msg as TransferMessage).amount;
-      return this.receiveTransfer(from, msg as TransferMessage);
-    }
-    case 'scout': {
-      return this.receiveScout(from, msg as ScoutMessage);
-    }
-    case 'propose': {
-      return this.receivePropose(from, msg as ProposeMessage);
-    }
-    case 'commit': {
-      this.multilateralNum ++;
-      this.multilateralAmount += (msg as CommitMessage).amount;
-      return this.receiveCommit(from, msg as CommitMessage);
-    }
-    default:
-      console.log(from, this.name, msg);
-      throw new Error('unknown task');
+      case 'follow': {
+        return this.receiveFollow(from, msg as FollowMessage);
+      }
+      case 'nack': {
+        return this.receiveNack(from, msg as NackMessage);
+      }
+      case 'transfer': {
+        this.transfersReceived++;
+        this.transfersReceivedAmount += (msg as TransferMessage).amount;
+        return this.receiveTransfer(from, msg as TransferMessage);
+      }
+      case 'scout': {
+        return this.receiveScout(from, msg as ScoutMessage);
+      }
+      case 'propose': {
+        return this.receivePropose(from, msg as ProposeMessage);
+      }
+      case 'commit': {
+        this.multilateralNum ++;
+        this.multilateralAmount += (msg as CommitMessage).amount;
+        return this.receiveCommit(from, msg as CommitMessage);
+      }
+      default:
+        console.log(from, this.name, msg);
+        throw new Error('unknown task');
     }
   }
   checkFriendCache(friend: string): void {
@@ -531,6 +587,19 @@ export class Jerboa {
       }
       this.debug(`(${probeInfo.probeId}:${probeInfo.incarnation}) ${[this.name, probeInfo.sender].concat(probeInfo.debugInfo.backtracked).join(' ')} ||`);
       this.probeQueue.push(probeInfo);
+      this.follow[probeInfo.probeId] = {
+        from: null,
+        to: this.probes[this.currentProbeId].currentOut,
+        incarnation: probeInfo.incarnation,
+        followee: this.currentProbeId,
+      };
+      this.sendFollowMessage(this.probes[this.currentProbeId].currentOut, {
+        command: 'follow',
+        probeId: probeInfo.probeId,
+        incarnation: probeInfo.incarnation,
+        followee: this.currentProbeId,
+        debugInfo: probeInfo.debugInfo,
+      } as FollowMessage);
     }
   }
   resumeProbeQueue(): void {
@@ -604,6 +673,9 @@ export class Jerboa {
     this.sendMessage(to, msg);
   }
   sendFollowMessage(to: string, msg: FollowMessage): void {
+    if (to === undefined) {
+      return;
+    }
     this.recordProbeTraffic(to, 'out', msg.probeId, msg.incarnation);
     this.sendMessage(to, msg);
   }
