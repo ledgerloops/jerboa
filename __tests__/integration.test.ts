@@ -11,7 +11,7 @@ jest.unstable_mockModule('../src/genRanHex.js', () => {
 });
 
 [
-  // 'triangle',
+  'triangle',
   'hourglass',
   // 'small',
   // 'parallels',

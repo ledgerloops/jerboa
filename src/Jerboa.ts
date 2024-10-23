@@ -66,7 +66,7 @@ export class Jerboa {
   //      followee: string;
   //   }
   // } = {};
-  probeQueue: ProbeInfo[] = [];
+  // probeQueue: ProbeInfo[] = [];
   currentProbeIds: string[] = [];
   private probeMinter: number = 0;
   public transfersReceived: number = 0;
@@ -105,14 +105,14 @@ export class Jerboa {
       this.solutionCallback(str);
     }
   }
-  private stringifyProbeInfo(probeInfo: ProbeInfo | undefined): string {
-    if (probeInfo === undefined) {
-      return 'undefined';
-    }
-    return `{${probeInfo.sender}->${this.name} = ${probeInfo.probeId}:${probeInfo.incarnation} = ${JSON.stringify(probeInfo.debugInfo.path)} = ${JSON.stringify(probeInfo.debugInfo.backtracked)} }`;
-  }
+  // private stringifyProbeInfo(probeInfo: ProbeInfo | undefined): string {
+  //   if (probeInfo === undefined) {
+  //     return 'undefined';
+  //   }
+  //   return `{${probeInfo.sender}->${this.name} = ${probeInfo.probeId}:${probeInfo.incarnation} = ${JSON.stringify(probeInfo.debugInfo.path)} = ${JSON.stringify(probeInfo.debugInfo.backtracked)} }`;
+  // }
   public reportState(cb: (string) => void): void {
-    const line = `Node ${this.name} currentprobes=[${this.currentProbeIds.join(' ')}] ${this.probeQueue.map(probeInfo => this.stringifyProbeInfo(probeInfo)).join(' ')} OUT:[${this.getOutgoingLinks().join(',')}]`;
+    const line = `Node ${this.name} currentprobes=[${this.currentProbeIds.join(' ')}] OUT:[${this.getOutgoingLinks().join(',')}]`;
     cb(line);
   }
   private async sendMessage(to: string, message: Message): Promise<void> {
@@ -317,7 +317,7 @@ export class Jerboa {
     if (index > -1) { // only splice array when item is found
       this.currentProbeIds.splice(index, 1); // 2nd parameter means remove one item only
     }
-    this.resumeProbeQueue();
+    // this.resumeProbeQueue();
   }
   initiatePropose(to: string, probeId: string, incarnation: number, amount: number, debugInfo: { loop: string[] }): void {
     const preimage = genRanHex(8);
@@ -443,7 +443,7 @@ export class Jerboa {
       if (debugInfo.path.length >= 1) {
         // console.log('                   continuing by popping old sender from', path);
         const oldSender = debugInfo.path.pop();
-        this.probeQueue.push({
+        this.queueProbe({
           sender: oldSender,
           probeId,
           incarnation: incarnation + 1,
@@ -481,48 +481,7 @@ export class Jerboa {
     // console.log(`forwarding from ${this.name} to ${newStep} (balance ${this.balances.getBalance(newStep)})`);
     this.sendProbeMessage(newStep, { command: 'probe', probeId, incarnation: forwardIncarnation, debugInfo: { path: debugInfo.path } });
     return true;
-  };
-  // receiveFollow(from: string, msg: FollowMessage): void {
-  //   const loopFound = this.spliceLoop(from, msg.probeId, msg.incarnation, msg.debugInfo.path);
-  //   if (loopFound) {
-  //     this.debug(`LOOP FOUND IN FOLLOW ${JSON.stringify(msg)}`);
-  //     return;
-  //   }
-  //   if (typeof this.follow[msg.probeId] !== 'undefined') {
-  //     this.debug(`Already have a follow record for this probe`);
-  //     return;
-  //   }
-
-  //   this.follow[msg.probeId] = {
-  //     from,
-  //     incarnation: msg.incarnation,
-  //     followee: msg.followee,
-  //   };
-  //   this.recordProbeTraffic(from, 'in', msg.probeId, msg.incarnation);
-  //   this.debug(`receiveFollow ${JSON.stringify(msg)} comparing [${this.currentProbeIds.join(' ')}] ${JSON.stringify(this.follow)}`);
-  //   if (this.currentProbeIds.indexOf(msg.followee) !== -1) {
-  //     this.follow[msg.probeId].to = this.probes[msg.probeId].currentOut;
-  //     const msgOut = JSON.parse(JSON.stringify(msg));
-  //     msgOut.debugInfo.path.push(from);
-  //     this.debug(`Follow forwarded along current probe ${msg.followee} at ${this.name} to ${this.probes[msg.probeId].currentOut}: ${JSON.stringify(msg)} -> ${JSON.stringify(msgOut)}`);
-  //     this.sendFollowMessage(this.probes[msg.probeId].currentOut, msgOut);
-  //   } else if (typeof this.follow[msg.followee] !== 'undefined') {
-  //     const msgOut = JSON.parse(JSON.stringify(msg));
-  //     msgOut.followee = this.follow[msg.followee].followee;
-  //     if (msgOut.followee === msg.probeId) {
-  //       this.debug(`Follow found itself`);
-  //     }
-  //     msgOut.debugInfo.path.push(from);
-  //     this.debug(`Follow tailgates onto ${msg.followee} at ${this.name} to ${this.follow[msg.followee].to}: ${JSON.stringify(msg)} -> ${JSON.stringify(msgOut)}`);
-  //     if (this.follow[msg.followee].to === undefined) {
-  //       console.log(`Follow tailgates onto ${msg.followee} at ${this.name} to ${this.follow[msg.followee].to}: ${JSON.stringify(msg)} -> ${JSON.stringify(msgOut)}`);
-  //     } else {
-  //       this.sendFollowMessage(this.follow[msg.followee].to, msgOut);
-  //     }
-  //   } else {
-  //     this.debug(`Follow ends at ${this.name}: ${JSON.stringify(msg)}`);
-  //   }
-  // }
+  }
   async receiveMessage(from: string, msg: Message ): Promise<void> {
     this.debug(`RCV[${from}->${this.name}]${stringifyMessage(msg)}`);
     this.messagesReceived++;
@@ -577,45 +536,7 @@ export class Jerboa {
     }
   }
   queueProbe(probeInfo: ProbeInfo): void {
-    if (this.currentProbeIds.length === 0) {
-      this.debug(`${this.name} handles probe immediately ${this.stringifyProbeInfo(probeInfo)}`);
-      this.runProbe(probeInfo);
-    } else if (this.currentProbeIds.indexOf(probeInfo.probeId) !== -1) {
-      this.debug(`${this.name} received a current probe ${probeInfo.probeId} from ${probeInfo.sender}`);
-      this.runProbe(probeInfo);
-    } else {
-      this.debug(`${this.name} queues probe ${this.stringifyProbeInfo(probeInfo)} because it's busy with [${this.currentProbeIds.join(' ')}]`);
-      if (process.env.PROBING_REPORT) {
-        printLine(`queued   (${probeInfo.probeId}:${probeInfo.incarnation})`, [], [this.name, probeInfo.sender].concat(probeInfo.debugInfo.backtracked));
-      }
-      this.debug(`(${probeInfo.probeId}:${probeInfo.incarnation}) ${[this.name, probeInfo.sender].concat(probeInfo.debugInfo.backtracked).join(' ')} ||`);
-      this.probeQueue.push(probeInfo);
-      // this.follow[probeInfo.probeId] = {
-      //   from: null,
-      //   to: this.probes[this.currentProbeId].currentOut,
-      //   incarnation: probeInfo.incarnation,
-      //   followee: this.currentProbeId,
-      // };
-      // this.sendFollowMessage(this.probes[this.currentProbeId].currentOut, {
-      //   command: 'follow',
-      //   probeId: probeInfo.probeId,
-      //   incarnation: probeInfo.incarnation,
-      //   followee: this.currentProbeId,
-      //   debugInfo: probeInfo.debugInfo,
-      // } as FollowMessage);
-    }
-  }
-  resumeProbeQueue(): void {
-    if (this.probeQueue.length > 0) {
-      const nextProbe = this.probeQueue.shift();
-      if (process.env.PROBING_REPORT) {
-        printLine(`resumed   (${nextProbe.probeId}:${nextProbe.incarnation})`, [], [this.name, nextProbe.sender].concat(nextProbe.debugInfo.backtracked));
-      }
-      this.debug(`(${nextProbe.probeId}:${nextProbe.incarnation}) ${[this.name, nextProbe.sender].concat(nextProbe.debugInfo.backtracked).join(' ')} >>>`);
-      this.runProbe(nextProbe);
-    } else {
-      this.debug(`${this.name} has emptied its probes queue`);
-    }
+    this.runProbe(probeInfo);
   }
   startProbe(): void {
     const probeId = `${this.name}-${this.probeMinter++}`;
@@ -623,9 +544,9 @@ export class Jerboa {
     this.queueProbe({ sender: null, probeId, incarnation: 0, debugInfo: { path: [], backtracked: [] } });
   }
   runProbe(probeInfo: ProbeInfo): void {
-    if (this.currentProbeIds.length > 0 && this.currentProbeIds.indexOf(probeInfo.probeId) === -1) {
-      throw new Error(`${this.name} cannot run probe ${this.stringifyProbeInfo(probeInfo)} if other probes [${this.currentProbeIds.join(' ')}] is still running`);
-    }
+    // if (this.currentProbeIds.length > 0 && this.currentProbeIds.indexOf(probeInfo.probeId) === -1) {
+    //   throw new Error(`${this.name} cannot run probe ${this.stringifyProbeInfo(probeInfo)} if other probes [${this.currentProbeIds.join(' ')}] is still running`);
+    // }
     this.currentProbeIds.push(probeInfo.probeId);
 
     if (probeInfo.sender === null) {
@@ -640,7 +561,7 @@ export class Jerboa {
       if (nodes.length === 0) {
         // console.log('returning false on startProbe');
         this.doneWithCurrentProbe('non-starter', probeInfo.probeId);
-        this.resumeProbeQueue();
+        // this.resumeProbeQueue();
         return;
       }
       this.sendProbeMessage(nodes[0], { command: 'probe', probeId: probeInfo.probeId, incarnation: probeInfo.incarnation, debugInfo: probeInfo.debugInfo });
