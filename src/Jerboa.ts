@@ -457,7 +457,7 @@ export class Jerboa {
       if (process.env.PROBING_REPORT) {
         printLine(`backtracked (${probeId}:${incarnation})`, debugInfo.path.concat([sender, this.name]), debugInfo.backtracked);
       }
-      this.debug(`(${probeId}:${incarnation}) ${debugInfo.path.concat([sender, this.name]).join(' ')} / ${debugInfo.backtracked.join(' ')}`);
+      this.debug(`(${probeId}:${incarnation}) ${debugInfo.path.concat([sender, this.name]).join(' ')} / ${(debugInfo.backtracked || []).join(' ')}`);
       forwardIncarnation++;
     }
     // console.log('         did we print?', sender, this.name, path, backtracked);
