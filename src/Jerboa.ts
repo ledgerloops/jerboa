@@ -479,7 +479,7 @@ export class Jerboa {
     this.sendProbeMessage(newStep, { command: 'probe', probeId, incarnation: forwardIncarnation, debugInfo: { path: debugInfo.path } });
     return true;
   };
-  receiveFollow(from: string, msg: FollowMessage) {
+  receiveFollow(from: string, msg: FollowMessage): void {
     const loopFound = this.spliceLoop(from, msg.probeId, msg.incarnation, msg.debugInfo.path);
     if (loopFound) {
       this.debug(`LOOP FOUND IN FOLLOW ${JSON.stringify(msg)}`);
