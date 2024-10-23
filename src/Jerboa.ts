@@ -6,6 +6,7 @@ import { genRanHex } from "./genRanHex.js";
 
 const RANDOM_NEXT_STEP = false;
 const LEDGER_SCALE = 1000000;
+const MAX_INCARNATION = 20;
 
 function randomStringFromArray(arr: string[]): string {
   if (!Array.isArray(arr)) {
@@ -347,6 +348,9 @@ export class Jerboa {
         const newStep = randomStringFromArray(nodes);
         // console.log(`${this.name} sends probe message to ${newStep} for probeId ${probeId} after receiving nack from ${nackSender}`);
         this.debug(`${this.name} received nack from ${nackSender} and switches to next incarnation`);
+        if (incarnation > MAX_INCARNATION) {
+          throw new Error('incarnation getting too high!');
+        }
         this.queueProbe({ sender: newStep, probeId, incarnation: incarnation + 1, debugInfo: { path: debugInfo.path } } as ProbeInfo);
       }
     } else {
