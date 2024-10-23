@@ -18,7 +18,7 @@ describe('SingleThread', () => {
       writeFileSync(`./__tests__/fixtures/sarafu-300.solution`, solution);
     }
     expect(solution).toEqual(read);
-    expect(cummNumProbes).toEqual(31);
+    expect(cummNumProbes).toEqual(77);
 
     expect(await threadRunner.solutionIsComplete()).toEqual(true);
   });

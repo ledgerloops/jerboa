@@ -418,6 +418,11 @@ export class Jerboa {
   }
   considerProbe(probeInfo: ProbeInfo): boolean {
     const { sender, probeId, incarnation, debugInfo } = probeInfo;
+    if (this.balances.getBalance(sender) >= 0) {
+      this.debug(`${this.name} nacks counter-balance probe ${probeId}:${incarnation} from ${sender}`);
+      this.sendNackMessage(sender, probeId, incarnation, { path: debugInfo.path, backtracked: [] });
+      return false;
+    }
     const loopFound = this.spliceLoop(sender, probeId, incarnation, debugInfo.path);
     if (loopFound) {
       if (debugInfo.path.length >= 1) {
