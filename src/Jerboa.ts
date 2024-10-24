@@ -6,6 +6,7 @@ import { genRanHex } from "./genRanHex.js";
 
 const RANDOM_NEXT_STEP = false;
 const LEDGER_SCALE = 1000000;
+const MAX_TRANSFER_AMOUNT = 1000000;
 const MAX_INCARNATION = 20;
 
 function randomStringFromArray(arr: string[]): string {
@@ -136,13 +137,14 @@ export class Jerboa {
     // console.log(`${this.name} received a message for probeId (${probeId}:${maxIncarnation}) but have multiple in messages for that probe ${JSON.stringify(this.probes[probeId])}`);
     let bestPickProbeSender;
     let bestPickIncarnation = -1;
+    this.debug(`picking incarnation for ${probeId}:${maxIncarnation}- ` + JSON.stringify(this.probes[probeId].in));
     Object.keys(this.probes[probeId].in).forEach((probeSender: string) => {
       if (this.probes[probeId].in[probeSender] > maxIncarnation) {
-        // console.log('discarding newer incarnation', probeSender, this.probes[probeId].in[probeSender]);
+        this.debug(`discarding newer incarnation ${probeSender} ${this.probes[probeId].in[probeSender]}`);
       } else if (this.probes[probeId].in[probeSender] > bestPickIncarnation) {
         bestPickProbeSender = probeSender;
         bestPickIncarnation = this.probes[probeId].in[probeSender];
-        // console.log('best pick so far', bestPickProbeSender, bestPickIncarnation);
+        this.debug(`best pick so far ${bestPickProbeSender} ${bestPickIncarnation}`);
       }
     });
     if (typeof bestPickProbeSender === 'undefined') {
@@ -199,6 +201,7 @@ export class Jerboa {
       //   throw new Error(`${this.name} received a scout message from ${sender} for probeId ${probeId} but have multiple out messages for that probe ${JSON.stringify(this.probes[probeId])}`);
       // }
       const outBalance = this.balances.getBalance(sender);
+      this.debug(`converting ${amount} to BigInt`);
       let amountOut = BigInt(Math.round(amount * LEDGER_SCALE));
       if (amountOut > outBalance) {
         // console.log(`${this.name} adjust the scout amount from ${amount} to ${outBalance} based on out balance to ${sender}`);
@@ -607,14 +610,21 @@ export class Jerboa {
   //   this.sendMessage(to, msg);
   // }
   sendNackMessage(to: string, probeId: string, incarnation: number, debugInfo: { path: string[], backtracked: string[] }): void {
+    delete this.probes[probeId].in[to];
     this.sendMessage(to, { command: 'nack', probeId, incarnation, debugInfo });
   }
   sendTransferMessage(to: string, amount: number): void {
+    if (amount > MAX_TRANSFER_AMOUNT) {
+      throw new Error(`Transfer amount too big ${amount}`);
+    }
     this.transfersSent++;
     this.transfersSentAmount += amount;
     this.sendMessage(to, { command: 'transfer', amount });
   }
   sendScoutMessage(to: string, msg: ScoutMessage): void {
+    if (msg.amount > MAX_TRANSFER_AMOUNT) {
+      throw new Error(`Attempt to send scout message with amount ${msg.amount}`);
+    }
     this.sendMessage(to, msg);
   }
   sendProposeMessage(to: string, msg: ProposeMessage): void {
