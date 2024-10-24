@@ -2,6 +2,7 @@ import { Graph } from './BirdsEyeGraph.js';
 import { writeFile, appendFile } from 'node:fs/promises';
 
 const MAX_NUM_STEPS = 1000000;
+const MAX_LOOP_WEIGHT = Number.MAX_SAFE_INTEGER;
 
 export function printLine(preface: string, first: string[], second: string[]): void {
   const firstStr = first.length > 0 ? `[ ${first.map(x => `'${x}'`).join(', ')} ]` : `[]`;
@@ -51,7 +52,7 @@ export class BirdsEyeWorm {
   }
   // assumes all loop hops exist
   getSmallestWeight(loop: string[]): number {
-    let smallestWeight = Infinity;
+    let smallestWeight = MAX_LOOP_WEIGHT;
     for (let k = 0; k < loop.length - 1; k++) {
       const thisWeight = this.graph.getWeight(loop[k], loop[k+1]);
       // console.log(`Weight on loop from ${loop[k]} to ${loop[k+1]} is ${thisWeight}`);

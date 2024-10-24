@@ -6,6 +6,7 @@ import { genRanHex } from "./genRanHex.js";
 
 const RANDOM_NEXT_STEP = false;
 const LEDGER_SCALE = 1000000;
+const MAX_TRANSFER_AMOUNT = 1000000;
 const MAX_INCARNATION = 20;
 
 function randomStringFromArray(arr: string[]): string {
@@ -200,6 +201,7 @@ export class Jerboa {
       //   throw new Error(`${this.name} received a scout message from ${sender} for probeId ${probeId} but have multiple out messages for that probe ${JSON.stringify(this.probes[probeId])}`);
       // }
       const outBalance = this.balances.getBalance(sender);
+      this.debug(`converting ${amount} to BigInt`);
       let amountOut = BigInt(Math.round(amount * LEDGER_SCALE));
       if (amountOut > outBalance) {
         // console.log(`${this.name} adjust the scout amount from ${amount} to ${outBalance} based on out balance to ${sender}`);
@@ -612,11 +614,17 @@ export class Jerboa {
     this.sendMessage(to, { command: 'nack', probeId, incarnation, debugInfo });
   }
   sendTransferMessage(to: string, amount: number): void {
+    if (amount > MAX_TRANSFER_AMOUNT) {
+      throw new Error(`Transfer amount too big ${amount}`);
+    }
     this.transfersSent++;
     this.transfersSentAmount += amount;
     this.sendMessage(to, { command: 'transfer', amount });
   }
   sendScoutMessage(to: string, msg: ScoutMessage): void {
+    if (msg.amount > MAX_TRANSFER_AMOUNT) {
+      throw new Error(`Attempt to send scout message with amount ${msg.amount}`);
+    }
     this.sendMessage(to, msg);
   }
   sendProposeMessage(to: string, msg: ProposeMessage): void {
