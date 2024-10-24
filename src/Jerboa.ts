@@ -179,7 +179,15 @@ export class Jerboa {
       if (Object.keys(this.probes[probeId].looper).length === 0) {
         throw new Error(`${this.name} looped a scout message from ${sender} for probeId ${probeId} but have no looper messages for that probe`);
       }
-      this.initiatePropose(debugInfo.loop[ debugInfo.loop.length - 2], probeId, incarnation, amount, debugInfo);
+      const outBalance = this.getBalance(sender);
+      let amountOut = Math.round(amount);
+      if (amountOut > outBalance) {
+        this.debug(`Initiator ${this.name} now adjust the scout amount for (${msg.probeId}:${msg.maxIncarnation}-) based on out balance to ${sender} from ${amountOut} to ${outBalance}`);
+        amountOut = outBalance;
+      } else {
+        this.debug(`Initiator ${this.name} is still OK with scout amount for (${msg.probeId}:${msg.maxIncarnation}-) based on out balance to ${sender} because ${amountOut} <= ${outBalance}`);
+      }
+      this.initiatePropose(debugInfo.loop[ debugInfo.loop.length - 2], probeId, incarnation, amountOut, debugInfo);
       if (this.solutionCallback) {
         // const line = `found loop|${amount}|${debugInfo.loop.slice(0, debugInfo.loop.length - 1).concat(amount.toString()).join(' ')}`;
         // console.log('Writing to solution file', this.solutionFile, line);
@@ -200,22 +208,25 @@ export class Jerboa {
       // if (Object.keys(this.probes[probeId].out).length > 1) {
       //   throw new Error(`${this.name} received a scout message from ${sender} for probeId ${probeId} but have multiple out messages for that probe ${JSON.stringify(this.probes[probeId])}`);
       // }
-      const outBalance = this.balances.getBalance(sender);
-      this.debug(`converting ${amount} to BigInt`);
-      let amountOut = BigInt(Math.round(amount * LEDGER_SCALE));
+      const outBalance = this.getBalance(sender);
+      let amountOut = Math.round(amount);
       if (amountOut > outBalance) {
-        // console.log(`${this.name} adjust the scout amount from ${amount} to ${outBalance} based on out balance to ${sender}`);
+        this.debug(`${this.name} adjust the scout amount for (${msg.probeId}:${msg.maxIncarnation}-) based on out balance to ${sender} from ${amountOut} to ${outBalance}`);
         amountOut = outBalance;
+      } else {
+        this.debug(`${this.name} is OK with scout amount for (${msg.probeId}:${msg.maxIncarnation}-) based on out balance to ${sender} because ${amountOut} <= ${outBalance}`);
       }
-      const inBalance = this.balances.getBalance(sender);
+      const inBalance = this.getBalance(sender);
       if (amountOut > inBalance) {
-        // console.log(`${this.name} adjust the scout amount from ${amount} to ${inBalance} based on in balance from ${forwardTo}`);
+        this.debug(`${this.name} adjust the scout amount (${msg.probeId}:${msg.maxIncarnation}-) based on in balance from ${forwardTo} from ${amountOut} to ${inBalance}`);
         amountOut = inBalance;
+      } else {
+        this.debug(`${this.name} is OK with scout amount for (${msg.probeId}:${msg.maxIncarnation}-) based on in balance from ${forwardTo} because ${amountOut} <= ${inBalance}`);
       }
-      if (amountOut === 0n) {
+      if (amountOut === 0) {
         // console.log('scout amount too small');
       } else {
-        this.sendScoutMessage(forwardTo, { command: 'scout', probeId, maxIncarnation: incarnation, amount: Number(amountOut) / LEDGER_SCALE, debugInfo });
+        this.sendScoutMessage(forwardTo, { command: 'scout', probeId, maxIncarnation: incarnation, amount: amountOut, debugInfo });
       }
     }
   }
@@ -241,14 +252,17 @@ export class Jerboa {
       throw new Error('loop doesnt end here');
     }
     const incomingNeighbour = loop[loop.length - 2];
-    const incomingBalance = this.balances.getBalance(incomingNeighbour);
+    const incomingBalance = this.getBalance(incomingNeighbour);
     // console.log('scoutLoop considering incoming balance', this.name, incomingNeighbour, incomingBalance);
-    if (incomingBalance === 0n) {
+    if (incomingBalance === 0) {
       // console.log(this.name, incomingNeighbour, incomingBalance, 'incoming balance not negative enough');
       return;
     } else {
       // console.log('calling sendScoutMessage');
-      this.sendScoutMessage(incomingNeighbour, { command: 'scout', probeId, maxIncarnation: incarnation,  amount: Number(-incomingBalance) / LEDGER_SCALE, debugInfo: { loop } });
+      this.debug(`Initiator ${this.name} sets scout amount for (${probeId}:${incarnation}-) to incoming balance ${-incomingBalance}`);
+      setTimeout(() => {
+        this.sendScoutMessage(incomingNeighbour, { command: 'scout', probeId, maxIncarnation: incarnation,  amount: -incomingBalance, debugInfo: { loop } });
+      }, 100);
     }
   }
   receiveTransfer(sender: string, msg: TransferMessage): void {
@@ -257,7 +271,9 @@ export class Jerboa {
     this.checkFriendCache(sender);
     if (this.balances.haveIncomingAndOutgoingLinks()) {
       this.debug(`transfer receiver starts probe`);
-      this.startProbe();
+      setTimeout(() => {
+        this.startProbe();
+      }, 500);
     }
     // if (this.graph.getNode(this.name).getBalance(sender) + this.graph.getNode(sender).getBalance(this.name) !== 0) {
     //   console.log('Probably some transfer message is still in flight?', this.name, sender, this.graph.getNode(this.name).getBalance(sender), this.graph.getNode(sender).getBalance(this.name));
@@ -271,6 +287,10 @@ export class Jerboa {
     if (typeof this.probes[probeId].loops[hash] === 'undefined') {
       const proposeTo = this.pickIncarnation(probeId, maxIncarnation);
       this.probes[probeId].loops[hash] = { proposeTo, proposeFrom: sender, amount };
+      if (-this.getBalance(proposeTo) < msg.amount) {
+        this.debug(`Node ${this.name} is not interested in proposal from ${sender} (${-this.getBalance(proposeTo)} < ${msg.amount})`);
+        return;
+      }
       this.sendProposeMessage(proposeTo, { command: 'propose', probeId, maxIncarnation, amount, hash, debugInfo });
     } else {
       // console.log('our hashlock', hash, this.probes[probeId], amount);
@@ -300,6 +320,7 @@ export class Jerboa {
     }
     this.probes[probeId].loops[hash].preimage = preimage;
     this.probes[probeId].loops[hash].commitFrom = sender;
+    this.debug(`Node ${this.name} adjustSent for ${sender} to ${this.getBalance(sender)}+${amount} while processing commit`);
     this.adjustSent(sender, amount);
     this.checkFriendCache(sender);
     if (typeof this.probes[probeId].loops[hash].proposeFrom === 'undefined') {
@@ -335,9 +356,9 @@ export class Jerboa {
     // Not repeating outgoing links is now handled by probeAlreadySent
     // delete this.outgoingLinks[nackSender];
     if (debugInfo.path.length === 0) {
-      const nodes = this.getOutgoingLinks().filter(x => {
-        const verdict = (this.probeAlreadySent(probeId, x) === false);
-        this.debug(`${this.name} has checked the suitability of possible next hop ${x} for probe ${probeId} -> ${verdict}`);
+      const nodes = this.getOutgoingLinks().filter(friend => {
+        const verdict = (this.probeAlreadySent(probeId, friend) === false);
+        this.debug(`${this.name} has checked the suitability of possible next hop ${friend} for probe ${probeId} (balance: ${this.balances.getBalance(friend)} -> ${verdict}`);
         return verdict;
       });
       if (nodes.length === 0) {
@@ -508,6 +529,7 @@ export class Jerboa {
         return this.receiveTransfer(from, msg as TransferMessage);
       }
       case 'scout': {
+        await new Promise(resolve => setTimeout(resolve, 100));
         return this.receiveScout(from, msg as ScoutMessage);
       }
       case 'propose': {
@@ -532,14 +554,15 @@ export class Jerboa {
     }
   }
   addWeight(to: string, weight: number): void {
+    this.debug(`Node ${this.name} adjustSent for ${to} to ${this.getBalance(to)}+${weight} while processing addWeight`);
     this.adjustSent(to, weight);
     this.checkFriendCache(to);
     this.sendTransferMessage(to, weight);
     this.debug(`transfer ${this.name} -> ${to}`);
-    if (this.balances.haveIncomingAndOutgoingLinks()) {
-      this.debug(`transfer sender starting probe`);
-      this.startProbe();
-    }
+    // if (this.balances.haveIncomingAndOutgoingLinks()) {
+    //   this.debug(`transfer sender starting probe`);
+    //   this.startProbe();
+    // }
   }
   queueProbe(probeInfo: ProbeInfo): void {
     this.runProbe(probeInfo);
