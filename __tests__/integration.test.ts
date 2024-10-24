@@ -11,11 +11,11 @@ jest.unstable_mockModule('../src/genRanHex.js', () => {
 });
 
 [
-  // 'triangle',
-  // 'hourglass',
+  'triangle',
+  'hourglass',
   'small',
-  // 'parallels',
-  // 'parallels-backwards',
+  'parallels',
+  'parallels-backwards',
 ].forEach((name: string): void => {
   describe(`${name}`, () => {
     it ('finds the solution', async () => {
@@ -36,6 +36,6 @@ jest.unstable_mockModule('../src/genRanHex.js', () => {
       }
       expect(solution).toEqual(read);
       expect(await threadRunner.solutionIsComplete()).toEqual(true);
-    });
+    }, 10000);
   });
 });

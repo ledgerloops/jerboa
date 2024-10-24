@@ -345,13 +345,12 @@ export class Jerboa {
         this.doneWithCurrentProbe('nack-and-finished', probeId);
       } else {
         this.debug(`(${probeId}:${incarnation}) ${this.name} / ${[nackSender].concat(debugInfo.backtracked).join(' ')}`);
-        const newStep = randomStringFromArray(nodes);
         // console.log(`${this.name} sends probe message to ${newStep} for probeId ${probeId} after receiving nack from ${nackSender}`);
-        this.debug(`${this.name} received nack from ${nackSender} and switches to next incarnation`);
+        this.debug(`${this.name} received nack from ${nackSender} for its own probe (${probeId}:${incarnation}) and switches to next incarnation (${probeId}:${incarnation + 1})`);
         if (incarnation > MAX_INCARNATION) {
           throw new Error('incarnation getting too high!');
         }
-        this.queueProbe({ sender: newStep, probeId, incarnation: incarnation + 1, debugInfo: { path: debugInfo.path } } as ProbeInfo);
+        this.queueProbe({ sender: null, probeId, incarnation: incarnation + 1, debugInfo: { path: debugInfo.path } } as ProbeInfo);
       }
     } else {
       // console.log('backtracked', path.concat(this.name), [ nackSender ].concat(backtracked));
