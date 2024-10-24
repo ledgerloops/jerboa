@@ -136,13 +136,14 @@ export class Jerboa {
     // console.log(`${this.name} received a message for probeId (${probeId}:${maxIncarnation}) but have multiple in messages for that probe ${JSON.stringify(this.probes[probeId])}`);
     let bestPickProbeSender;
     let bestPickIncarnation = -1;
+    this.debug(`picking incarnation for ${probeId}:${maxIncarnation}- ` + JSON.stringify(this.probes[probeId].in));
     Object.keys(this.probes[probeId].in).forEach((probeSender: string) => {
       if (this.probes[probeId].in[probeSender] > maxIncarnation) {
-        // console.log('discarding newer incarnation', probeSender, this.probes[probeId].in[probeSender]);
+        this.debug(`discarding newer incarnation ${probeSender} ${this.probes[probeId].in[probeSender]}`);
       } else if (this.probes[probeId].in[probeSender] > bestPickIncarnation) {
         bestPickProbeSender = probeSender;
         bestPickIncarnation = this.probes[probeId].in[probeSender];
-        // console.log('best pick so far', bestPickProbeSender, bestPickIncarnation);
+        this.debug(`best pick so far ${bestPickProbeSender} ${bestPickIncarnation}`);
       }
     });
     if (typeof bestPickProbeSender === 'undefined') {
@@ -607,6 +608,7 @@ export class Jerboa {
   //   this.sendMessage(to, msg);
   // }
   sendNackMessage(to: string, probeId: string, incarnation: number, debugInfo: { path: string[], backtracked: string[] }): void {
+    delete this.probes[probeId].in[to];
     this.sendMessage(to, { command: 'nack', probeId, incarnation, debugInfo });
   }
   sendTransferMessage(to: string, amount: number): void {
