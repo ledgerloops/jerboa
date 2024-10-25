@@ -46,7 +46,14 @@ export class SingleThread {
       this.workers[i] = new Worker(workerOptions);
     }
   }
+  private debug(str: string): void {
+    if (process.env.VERBOSE) {
+      console.log(str);
+    }
+  }
+
   async runAllWorkers(): Promise<number> {
+    this.debug(`SingleThread runAllWorkers`);
     if (this.sarafuFile) {
       await Promise.all(this.workers.map(async (worker) => worker.readTransfersFromCsv(this.sarafuFile)));
     }

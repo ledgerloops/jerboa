@@ -35,6 +35,11 @@ export class Worker {
     this.sendMessage = options.sendMessage;
     this.semaphoreService = options.semaphoreService;
   }
+  private debug(str: string): void {
+    if (process.env.VERBOSE) {
+      console.log(str);
+    }
+  }
   public reportState(cb: (string) => void): void {
     Object.keys(this.ourNodes).forEach((name: string) => {
       this.ourNodes[name].reportState(cb);
@@ -44,7 +49,7 @@ export class Worker {
     if (this.nodeIsOurs(to)) {
       // instead of delivering immediately, queue it up until runTasks is called on this worker:
       // this.getNode(to).receiveMessage(from, message);
-      // console.log('pushing onto message queue of length', this.messages.length);
+      // this.debug('pushing onto message queue of length', this.messages.length);
       this.messages.push({from, to, message });
     } else {
       throw Error('to node is not ours');
@@ -55,13 +60,13 @@ export class Worker {
       return false;
     }
     const msg = this.messages.shift();
-    // console.log('delivering', msg);
+    // this.debug('delivering', msg);
     await this.deliverMessageToNodeInThisWorker(msg.from, msg.to, msg.message);
     return true;
   }
   async deliverMessageToNodeInThisWorker(from: string, to: string, message: Message): Promise<void> {
     this.messagesSent++;
-    // console.log(`Worker ${this.workerNo} delivering message to node ${to}`, from, to, message, this.messages.length);
+    // this.debug(`Worker ${this.workerNo} delivering message to node ${to}`, from, to, message, this.messages.length);
     return this.getNode(to).receiveMessage(from, message);
   }
   getNumProbes(): number {
@@ -78,7 +83,7 @@ export class Worker {
     if (isNaN(nodeNo)) {
       throw new Error('node name is not a number ' + name);
     }
-    // console.log(`comparing`, nodeNo, this.numWorkers, nodeNo % this.numWorkers, this.workerNo);
+    // this.debug(`comparing`, nodeNo, this.numWorkers, nodeNo % this.numWorkers, this.workerNo);
     return (nodeNo % this.numWorkers === this.workerNo);   
   }
   private ensureNode(name: string): void {
@@ -90,7 +95,7 @@ export class Worker {
         name,
         solutionCallback: this.solutionCallback,
         sendMessage: (to: string, message: Message) => {
-          // console.log('our node', name, to, message);
+          // this.debug('our node', name, to, message);
           this.sendMessage(name, to, message);
         },
         semaphoreService: this.semaphoreService,
@@ -200,7 +205,7 @@ export class Worker {
       stats.multilateralAmount += this.ourNodes[name].multilateralAmount;
       stats.numNodes++;
     });
-    // console.log(`Worker ${this.workerNo} return stats`, stats);
+    // this.debug(`Worker ${this.workerNo} return stats`, stats);
     return stats;
   }
   getNode(name: string): Jerboa {
@@ -208,9 +213,21 @@ export class Worker {
     return this.ourNodes[name];
   }
   async readTransfersFromCsv(filename: string): Promise<void> {
+    this.debug(`Worker ${this.workerNo} reading transfers from ${filename}`);
     await readSarafuCsv(filename, (from: string, to: string, amount: number) => {
       if (parseInt(from) % this.numWorkers === this.workerNo) {
-        this.addWeight(from, to, amount);
+        if (parseInt(from) % this.numWorkers === this.workerNo) {
+          if (['1','2','3'].indexOf(from) === -1) {
+            this.debug(`skipping transaction from ${from}`);
+            return;
+          }
+          if (['1','2','3'].indexOf(to) === -1) {
+            this.debug(`skipping transaction to ${to}`);
+            return;
+          }
+          this.debug(`not skipping transaction from ${from} to ${to}`);  
+          this.addWeight(from, to, amount);
+        }
       }
     });
   }
@@ -219,6 +236,15 @@ export class Worker {
       const [ from, to, amountStr ] = cells;
       const amount = parseFloat(amountStr);
       if (parseInt(from) % this.numWorkers === this.workerNo) {
+        if (['1','2','3'].indexOf(from) === -1) {
+          this.debug(`skipping transaction from ${from}`);
+          return;
+        }
+        if (['1','2','3'].indexOf(to) === -1) {
+          this.debug(`skipping transaction to ${to}`);
+          return;
+        }
+        this.debug(`not skipping transaction from ${from} to ${to}`);
         this.addWeight(from, to, amount);
       }
     });

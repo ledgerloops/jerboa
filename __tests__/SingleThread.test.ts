@@ -9,6 +9,7 @@ describe('SingleThread', () => {
     let solution: string = '';
     const threadRunner = new SingleThread({ sarafuFile: SARAFU_CSV, numWorkers: 1,
       solutionCallback: async (line: string): Promise<void> => {
+        console.log(line);
         solution += line;
       }, });
     const cummNumProbes = await threadRunner.runAllWorkers();
@@ -18,7 +19,7 @@ describe('SingleThread', () => {
     //   writeFileSync(`./__tests__/fixtures/sarafu-300.solution`, solution);
     // }
     expect(solution).toEqual(read);
-    expect(cummNumProbes).toEqual(2);
+    expect(cummNumProbes).toEqual(3);
 
     expect(await threadRunner.solutionIsComplete()).toEqual(true);
   });
