@@ -104,7 +104,9 @@ export class Jerboa {
   private sendMessageCb: (to: string, message: Message) => void;
   private loopsTried: string[] = [];
   private solutionCallback: (line: string) => void;
-  private whenDone: (value: unknown) => void;
+  private whenDone: {
+    [probeId: string]: (value: unknown) => void
+  } = {};
   // private maybeRunProbeTimer;
   constructor(options: JerboaOptions) {
     this.name = options.name;
@@ -350,9 +352,13 @@ export class Jerboa {
       this.currentProbeIds.splice(index, 1); // 2nd parameter means remove one item only
     }
     // this.resumeProbeQueue();
-    if (this.whenDone) {
-      this.whenDone(undefined);
-      delete this.whenDone;
+    if (this.whenDone[probeId]) {
+      this.debug(`${this.name} is calling whenDone for ${probeId}`);
+      this.whenDone[probeId](undefined);
+      this.debug(`${this.name} is deleting whenDone for ${probeId}`);
+      delete this.whenDone[probeId];
+    } else {
+      this.debug(`${this.name} has no whenDone callback found for probeId ${probeId}`);
     }
   }
   initiatePropose(to: string, probeId: string, incarnation: number, amount: number, debugInfo: { loop: string[] }): void {
@@ -454,6 +460,9 @@ export class Jerboa {
     const { probeId, incarnation, debugInfo } = msg;
     this.debug(`${this.name} recording probe traffic in from receiveProbe "${probeId}" [${debugInfo.path.concat([sender, this.name]).join(' ')}]`);
     this.recordProbeTraffic(sender, 'in', probeId, incarnation);
+    this.whenDone[msg.probeId] = () => {
+      this.debug(`${this.name} is done with incoming ${msg.probeId}`);
+    }
     this.runProbe({ sender, probeId: msg.probeId, incarnation: msg.incarnation, debugInfo: msg.debugInfo });
   }
   changeToLooper(sender: string, probeId: string, incarnation: number): void {
@@ -571,11 +580,18 @@ export class Jerboa {
     this.debug(`transfer ${this.name} -> ${to}`);
   }
   startProbe(): void {
+    this.debug(`SEMAPHORE REQ ${this.name}`);
     this.semaphoreService.joinQueue(async () => {
       const probeId = `${this.name}-${this.probeMinter++}`;
+      this.debug(`SEMAPHORE GO ${probeId}`);
       this.debug(`${this.name} starts probe ${probeId}`);
+      const promise = new Promise(resolve => {
+        this.debug(`${this.name} is setting whenDone for ${probeId}`);
+        this.whenDone[probeId] = resolve;
+      });
       this.runProbe({ sender: null, probeId, incarnation: 0, debugInfo: { path: [], backtracked: [] } });
-      await new Promise(resolve => this.whenDone = resolve);
+      await promise;
+      this.debug(`SEMAPHORE DONE ${probeId}`);
     });
   }
   runProbe(probeInfo: ProbeInfo): void {
