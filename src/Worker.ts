@@ -1,4 +1,4 @@
-import { Jerboa } from "./Jerboa.js";
+import { Jerboa, JerboaOptions } from "./Jerboa.js";
 import { Message } from "./MessageTypes.js";
 import { readSarafuCsv, readCsv } from './readCsv.js';
 import { SemaphoreService } from './SemaphoreService.js';
@@ -86,10 +86,15 @@ export class Worker {
       throw new Error('node is not ours!');
     }
     if (typeof this.ourNodes[name] === 'undefined') {
-      this.ourNodes[name] = new Jerboa(name, this.solutionCallback, (to: string, message: Message) => {
-        // console.log('our node', name, to, message);
-        this.sendMessage(name, to, message);
-      });
+      const options = {
+        name,
+        solutionCallback: this.solutionCallback,
+        sendMessage: (to: string, message: Message) => {
+          // console.log('our node', name, to, message);
+          this.sendMessage(name, to, message);
+        }
+      } as JerboaOptions;
+      this.ourNodes[name] = new Jerboa(options);
     }
   }
   public addWeight(from: string, to: string, weight: number): void {

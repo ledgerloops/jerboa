@@ -1,8 +1,13 @@
 import { jest } from '@jest/globals';
-import { Jerboa } from '../src/Jerboa.js'; 
+import { Jerboa, JerboaOptions } from '../src/Jerboa.js'; 
 function makeJerboa(callback: () => void, name: string): Jerboa {
   // (name: string, solutionCallback: (line: string) => Promise<void> | undefined, sendMessage: (to: string, message: Message)
-  return new Jerboa(name, async () => {}, callback);
+  const options = {
+    name,
+    solutionCallback: async (): Promise<void> => {},
+    sendMessage: callback
+  } as JerboaOptions;
+  return new Jerboa(options);
 }
 
 describe('Jerboa', () => {

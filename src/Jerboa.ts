@@ -9,6 +9,12 @@ const LEDGER_SCALE = 1000000;
 const MAX_TRANSFER_AMOUNT = 1000000;
 const MAX_INCARNATION = 20;
 
+export type JerboaOptions = {
+  name: string,
+  solutionCallback: (line: string) => void,
+  sendMessage: (to: string, message: Message) => void,
+};
+
 function randomStringFromArray(arr: string[]): string {
   if (!Array.isArray(arr)) {
     throw new Error('not an array!');
@@ -96,10 +102,10 @@ export class Jerboa {
   private loopsTried: string[] = [];
   private solutionCallback: (line: string) => void;
   // private maybeRunProbeTimer;
-  constructor(name: string, solutionCallback: (line: string) => void, sendMessage: (to: string, message: Message) => void) {
-    this.name = name;
-    this.solutionCallback = solutionCallback;
-    this.sendMessageCb = sendMessage;
+  constructor(options: JerboaOptions) {
+    this.name = options.name;
+    this.solutionCallback = options.solutionCallback;
+    this.sendMessageCb = options.sendMessage;
   }
   private debug(str: string): void {
     if (process.env.VERBOSE) {
