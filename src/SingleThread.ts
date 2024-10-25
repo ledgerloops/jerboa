@@ -8,17 +8,21 @@ export class SingleThread {
   private debtFile: string | undefined;
   private solutionCallback: (string) => void | undefined;
   private semaphoreService: SemaphoreService;
-  constructor(options: { numWorkers: number, sarafuFile?: string, debtFile?: string, solutionCallback?: (string) => void }) {
+  private maxSecondsBetweenLoops?: number;
+  private lastFindTime: number;
+  constructor(options: { numWorkers: number, sarafuFile?: string, debtFile?: string, solutionCallback?: (string) => void, maxSecondsBetweenLoops?: number }) {
     this.debtFile = options.debtFile;
     this.solutionCallback = options.solutionCallback;
     this.sarafuFile = options.sarafuFile;
     this.semaphoreService = new SemaphoreService();
+    this.maxSecondsBetweenLoops = options.maxSecondsBetweenLoops;
     for (let i = 0; i < options.numWorkers; i++) {
       // console.log(`Instantiating worker ${i} of ${numWorkers}`);
       const workerOptions: WorkerOptions = {
         workerNo: i,
         numWorkers: options.numWorkers,
         solutionCallback: (line: string) => {
+          this.lastFindTime = new Date().getTime();
           if (this.solutionCallback) {
             const lines = [ line ];
             // if (process.env.VERBOSE) {
@@ -46,6 +50,11 @@ export class SingleThread {
       this.workers[i] = new Worker(workerOptions);
     }
   }
+  debug(str: string): void {
+    if (process.env.VERBOSE) {
+      console.log(str);
+    }
+  }
   async deliverAllMessages(): Promise<void> {
     let hadMessagesToDeliver;
     do {
@@ -55,7 +64,17 @@ export class SingleThread {
           hadMessagesToDeliver = true;
         }
       }
+      // this helps flushing the output to stdout and into the solution file:
+      await new Promise(resolve => setTimeout(resolve, 0));
     } while(hadMessagesToDeliver);
+  }
+  private gettingBored(): boolean {
+    if (this.maxSecondsBetweenLoops === undefined) {
+      return false;
+    }
+    const msSinceLastFind = new Date().getTime() - this.lastFindTime;
+    this.debug(`${msSinceLastFind}ms since last find`);
+    return  msSinceLastFind > 1000 * this.maxSecondsBetweenLoops;
   }
   async runAllWorkers(): Promise<number> {
     if (this.sarafuFile) {
@@ -67,7 +86,7 @@ export class SingleThread {
     do {
       await new Promise(resolve => setTimeout(resolve, 10));
       await this.deliverAllMessages();
-    } while(this.semaphoreService.getQueueLength() > 0);
+    } while(this.semaphoreService.getQueueLength() > 0 && !this.gettingBored());
     await new Promise(r => setTimeout(r, 1200));
     const nums = this.workers.map((worker) => worker.getNumProbes());
 
