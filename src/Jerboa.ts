@@ -199,11 +199,6 @@ export class Jerboa {
         this.debug(`Initiator ${this.name} is still OK with scout amount for (${msg.probeId}:${msg.maxIncarnation}-) based on out balance to ${sender} because ${amountOut} <= ${outBalance}`);
       }
       this.initiatePropose(debugInfo.loop[ debugInfo.loop.length - 2], probeId, incarnation, amountOut, debugInfo);
-      if (this.solutionCallback) {
-        // const line = `found loop|${amount}|${debugInfo.loop.slice(0, debugInfo.loop.length - 1).concat(amount.toString()).join(' ')}`;
-        // console.log('Writing to solution file', this.solutionFile, line);
-        // this.solutionCallback(line);
-      }
     } else {
       // no in messages
       if (Object.keys(this.probes[probeId].in).length === 0) {
@@ -360,6 +355,7 @@ export class Jerboa {
     const hash = createHash('sha256').update(preimage).digest('base64');
     this.probes[probeId].loops[hash] = { preimage,  proposeTo: to, amount };
     // console.log('initiating propose', this.probes[probeId], { to, probeId, amount, hash, debugInfo });
+    this.solutionCallback(`${debugInfo.loop.join(' ')} ${amount}`);
     this.sendProposeMessage(to, { command: 'propose', probeId, maxIncarnation: incarnation, amount, hash, debugInfo });
   }
   receiveNack(nackSender: string, msg: NackMessage): void {
@@ -375,7 +371,7 @@ export class Jerboa {
       if (nodes.length === 0) {
         this.debug(`(${probeId}:${incarnation}) / ${[this.name, nackSender].concat(debugInfo.backtracked).join(' ')}`);
         if (this.currentProbeIds.indexOf(probeId) === -1) {
-          this.solutionCallback(`Node ${this.name} received Nack from ${nackSender} for probe ${msg.probeId}:${msg.incarnation} but current probes are [${this.currentProbeIds.join(' ')}]`);
+          this.debug(`Node ${this.name} received Nack from ${nackSender} for probe ${msg.probeId}:${msg.incarnation} but current probes are [${this.currentProbeIds.join(' ')}]`);
         }
         this.doneWithCurrentProbe('nack-and-finished', probeId);
       } else {
@@ -407,7 +403,6 @@ export class Jerboa {
       const loop = path.splice(pos).concat([sender, this.name]);
       this.changeToLooper(sender, probeId, incarnation);
       this.scoutLoop(probeId, incarnation, loop);
-      this.solutionCallback(`(${probeId}:${incarnation}) ${path.join(' ')} [${loop.join(' ')}]`);
       return true;
     }
     return false;

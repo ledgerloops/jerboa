@@ -1,5 +1,5 @@
 
-import { readFileSync, writeFileSync } from "fs";
+import { readFileSync } from "fs";
 import { SingleThread } from '../src/SingleThread.js';
 
 const SARAFU_CSV = './__tests__/fixtures/sarafu-10k.csv';
@@ -13,10 +13,10 @@ describe('SingleThread', () => {
       }, });
     const cummNumProbes = await threadRunner.runAllWorkers();
     const read = readFileSync(`./__tests__/fixtures/sarafu-10k.solution`).toString();
-    if (solution !== read) {
-      // console.log(`mending test`);
-      writeFileSync(`./__tests__/fixtures/sarafu-10k.solution`, solution);
-    }
+    // if (solution !== read) {
+    //   // console.log(`mending test`);
+    //   writeFileSync(`./__tests__/fixtures/sarafu-10k.solution`, solution);
+    // }
     expect(solution).toEqual(read);
     expect(cummNumProbes).toEqual(60);
 
