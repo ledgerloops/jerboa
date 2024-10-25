@@ -27,6 +27,6 @@ function runTest(testName: string, numProbesExpected: number): void {
 // ...
 runTest('sarafu-300', 78);
 runTest('sarafu-10k', 628);
-// runTest('sarafu-50k', 0);
+runTest('sarafu-50k', 0);
 // runTest('sarafu-100k', 0);
 // runTest('sarafu-full', 0);
