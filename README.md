@@ -37,6 +37,10 @@ node ./build/src/analyse-sarafu-challenge-solution.js ./debt.csv ../jerboa/__tes
 The last three lines will show you the performance of Min-Cost-Flow, Dept-First Search, and Jerboa (this prototype).
 * Min-Cost-Flow will show a performance of roughly 18.9%, the optimum.
 * Depth-First Search will show a performance of roughly 16.6%, a close second, but still a centralised algorithm.
-* Jerboa will show our prototype's performance of roughly 15.5%
+* Jerboa will show a performance of roughly 15.5%.
 
-So this prototype achieves 80% of the optimum total amount of obligation cleared, which we believe is encouraging performance for a prototype.
+So our Jerboa prototype achieves 80% of the optimum total amount of obligation cleared, which we believe is encouraging performance for a prototype.
+As mentioned before, this prototype is not entirely decentralised yet, it still [uses a semaphore services](https://github.com/ledgerloops/jerboa/issues/57).
+Its source code is also quite rough and it [takes a few shortcuts](https://github.com/ledgerloops/jerboa/issues), which is why we plan to do a full rewrite in 2025.
+
+We did want to share these preliminary results though, to show to the CoFi community that peer-to-peer obligation clearing is, in principle, feasible.
