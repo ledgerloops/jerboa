@@ -46,6 +46,17 @@ export class SingleThread {
       this.workers[i] = new Worker(workerOptions);
     }
   }
+  async deliverAllMessages(): Promise<void> {
+    let hadMessagesToDeliver;
+    do {
+      hadMessagesToDeliver = false;
+      for (let i = 0; i < this.workers.length; i++ ) {
+        if (await this.workers[i].deliverOneMessage()) {
+          hadMessagesToDeliver = true;
+        }
+      }
+    } while(hadMessagesToDeliver);
+  }
   async runAllWorkers(): Promise<number> {
     if (this.sarafuFile) {
       await Promise.all(this.workers.map(async (worker) => worker.readTransfersFromCsv(this.sarafuFile)));
@@ -53,16 +64,10 @@ export class SingleThread {
     if (this.debtFile) {
       await Promise.all(this.workers.map(async (worker) => worker.readDebtFromCsv(this.debtFile)));
     }
-    let hadWork;
     do {
-      hadWork = false;
-      for (let i = 0; i < this.workers.length; i++ ) {
-        if (await this.workers[i].deliverOneMessage()) {
-          hadWork = true;
-        }
-      }
-      // console.log({ hadWork });
-    } while(hadWork);
+      await new Promise(resolve => setTimeout(resolve, 0));
+      await this.deliverAllMessages();
+    } while(this.semaphoreService.getQueueLength() > 0);
     await new Promise(r => setTimeout(r, 1200));
     const nums = this.workers.map((worker) => worker.getNumProbes());
 

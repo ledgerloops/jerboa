@@ -52,6 +52,7 @@ export class Worker {
   }
   public async deliverOneMessage(): Promise<boolean> {
     if (this.messages.length === 0) {
+      // console.log(`worker ${this.workerNo} has no more messages to deliver`);
       return false;
     }
     const msg = this.messages.shift();
