@@ -35,6 +35,8 @@ node ./build/src/analyse-sarafu-challenge-solution.js ./debt.csv ./dfs.csv
 node ./build/src/analyse-sarafu-challenge-solution.js ./debt.csv ../jerboa/__tests__fixtures/sarafu-50k.solution
 ```
 The last three lines will show you the performance of Min-Cost-Flow, Dept-First Search, and Jerboa (this prototype).
-Min-Cost-Flow will show a performance of roughly 18.9%, the optimum.
-Depth-First Search will show a performance of roughly 16.6%, a close second, but still a centralised algorithm.
-Jerboa will show our prototype's performance of roughly 15.5%, so that's 80% of the optimum, which we believe is encouraging performance for a prototype.
+* Min-Cost-Flow will show a performance of roughly 18.9%, the optimum.
+* Depth-First Search will show a performance of roughly 16.6%, a close second, but still a centralised algorithm.
+* Jerboa will show our prototype's performance of roughly 15.5%
+
+So this prototype achieves 80% of the optimum total amount of obligation cleared, which we believe is encouraging performance for a prototype.
