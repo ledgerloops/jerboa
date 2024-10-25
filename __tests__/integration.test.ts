@@ -1,5 +1,5 @@
 import { jest } from '@jest/globals';
-import { readFileSync, writeFileSync } from "fs";
+import { readFileSync } from "fs";
 
 let counter: number = 0;
 jest.unstable_mockModule('../src/genRanHex.js', () => {
