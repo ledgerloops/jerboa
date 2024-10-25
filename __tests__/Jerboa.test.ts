@@ -1,11 +1,14 @@
 import { jest } from '@jest/globals';
 import { Jerboa, JerboaOptions } from '../src/Jerboa.js'; 
+import { SemaphoreService } from '../src/SemaphoreService.js';
+
 function makeJerboa(callback: () => void, name: string): Jerboa {
   // (name: string, solutionCallback: (line: string) => Promise<void> | undefined, sendMessage: (to: string, message: Message)
   const options = {
     name,
     solutionCallback: async (): Promise<void> => {},
-    sendMessage: callback
+    sendMessage: callback,
+    semaphoreService: new SemaphoreService(),
   } as JerboaOptions;
   return new Jerboa(options);
 }

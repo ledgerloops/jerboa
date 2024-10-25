@@ -92,7 +92,8 @@ export class Worker {
         sendMessage: (to: string, message: Message) => {
           // console.log('our node', name, to, message);
           this.sendMessage(name, to, message);
-        }
+        },
+        semaphoreService: this.semaphoreService,
       } as JerboaOptions;
       this.ourNodes[name] = new Jerboa(options);
     }

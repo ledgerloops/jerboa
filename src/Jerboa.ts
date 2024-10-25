@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { Balances } from "./Balances.js";
 import { Message, TransferMessage, ProposeMessage, CommitMessage, ScoutMessage, ProbeMessage, NackMessage, stringifyMessage } from "./MessageTypes.js";
+import { SemaphoreService } from "./SemaphoreService.js";
 import { printLine } from "./BirdsEyeWorm.js";
 import { genRanHex } from "./genRanHex.js";
 
@@ -13,6 +14,7 @@ export type JerboaOptions = {
   name: string,
   solutionCallback: (line: string) => void,
   sendMessage: (to: string, message: Message) => void,
+  semaphoreService: SemaphoreService,
 };
 
 function randomStringFromArray(arr: string[]): string {
@@ -74,6 +76,7 @@ export class Jerboa {
   //      followee: string;
   //   }
   // } = {};
+  private semaphoreService: SemaphoreService;
   // probeQueue: ProbeInfo[] = [];
   currentProbeIds: string[] = [];
   private probeMinter: number = 0;
@@ -101,11 +104,13 @@ export class Jerboa {
   private sendMessageCb: (to: string, message: Message) => void;
   private loopsTried: string[] = [];
   private solutionCallback: (line: string) => void;
+  private whenDone: (value: unknown) => void;
   // private maybeRunProbeTimer;
   constructor(options: JerboaOptions) {
     this.name = options.name;
     this.solutionCallback = options.solutionCallback;
     this.sendMessageCb = options.sendMessage;
+    this.semaphoreService = options.semaphoreService;
   }
   private debug(str: string): void {
     if (process.env.VERBOSE) {
@@ -266,9 +271,7 @@ export class Jerboa {
     } else {
       // console.log('calling sendScoutMessage');
       this.debug(`Initiator ${this.name} sets scout amount for (${probeId}:${incarnation}-) to incoming balance ${-incomingBalance}`);
-      setTimeout(() => {
-        this.sendScoutMessage(incomingNeighbour, { command: 'scout', probeId, maxIncarnation: incarnation,  amount: -incomingBalance, debugInfo: { loop } });
-      }, 100);
+      this.sendScoutMessage(incomingNeighbour, { command: 'scout', probeId, maxIncarnation: incarnation,  amount: -incomingBalance, debugInfo: { loop } });
     }
   }
   receiveTransfer(sender: string, msg: TransferMessage): void {
@@ -277,9 +280,7 @@ export class Jerboa {
     this.checkFriendCache(sender);
     if (this.balances.haveIncomingAndOutgoingLinks()) {
       this.debug(`transfer receiver starts probe`);
-      setTimeout(() => {
-        this.startProbe();
-      }, 500);
+      this.startProbe();
     }
     // if (this.graph.getNode(this.name).getBalance(sender) + this.graph.getNode(sender).getBalance(this.name) !== 0) {
     //   console.log('Probably some transfer message is still in flight?', this.name, sender, this.graph.getNode(this.name).getBalance(sender), this.graph.getNode(sender).getBalance(this.name));
@@ -349,6 +350,10 @@ export class Jerboa {
       this.currentProbeIds.splice(index, 1); // 2nd parameter means remove one item only
     }
     // this.resumeProbeQueue();
+    if (this.whenDone) {
+      this.whenDone(undefined);
+      delete this.whenDone;
+    }
   }
   initiatePropose(to: string, probeId: string, incarnation: number, amount: number, debugInfo: { loop: string[] }): void {
     const preimage = genRanHex(8);
@@ -380,7 +385,7 @@ export class Jerboa {
         if (incarnation > MAX_INCARNATION) {
           throw new Error('incarnation getting too high!');
         }
-        this.queueProbe({ sender: null, probeId, incarnation: incarnation + 1, debugInfo: { path: debugInfo.path } } as ProbeInfo);
+        this.runProbe({ sender: null, probeId, incarnation: incarnation + 1, debugInfo: { path: debugInfo.path } } as ProbeInfo);
       }
     } else {
       // console.log('backtracked', path.concat(this.name), [ nackSender ].concat(backtracked));
@@ -449,7 +454,7 @@ export class Jerboa {
     const { probeId, incarnation, debugInfo } = msg;
     this.debug(`${this.name} recording probe traffic in from receiveProbe "${probeId}" [${debugInfo.path.concat([sender, this.name]).join(' ')}]`);
     this.recordProbeTraffic(sender, 'in', probeId, incarnation);
-    this.queueProbe({ sender, probeId: msg.probeId, incarnation: msg.incarnation, debugInfo: msg.debugInfo });
+    this.runProbe({ sender, probeId: msg.probeId, incarnation: msg.incarnation, debugInfo: msg.debugInfo });
   }
   changeToLooper(sender: string, probeId: string, incarnation: number): void {
     if (typeof this.probes[probeId] === 'undefined') {
@@ -476,7 +481,7 @@ export class Jerboa {
       if (debugInfo.path.length >= 1) {
         // console.log('                   continuing by popping old sender from', path);
         const oldSender = debugInfo.path.pop();
-        this.queueProbe({
+        this.runProbe({
           sender: oldSender,
           probeId,
           incarnation: incarnation + 1,
@@ -535,7 +540,6 @@ export class Jerboa {
         return this.receiveTransfer(from, msg as TransferMessage);
       }
       case 'scout': {
-        await new Promise(resolve => setTimeout(resolve, 100));
         return this.receiveScout(from, msg as ScoutMessage);
       }
       case 'propose': {
@@ -565,18 +569,14 @@ export class Jerboa {
     this.checkFriendCache(to);
     this.sendTransferMessage(to, weight);
     this.debug(`transfer ${this.name} -> ${to}`);
-    // if (this.balances.haveIncomingAndOutgoingLinks()) {
-    //   this.debug(`transfer sender starting probe`);
-    //   this.startProbe();
-    // }
-  }
-  queueProbe(probeInfo: ProbeInfo): void {
-    this.runProbe(probeInfo);
   }
   startProbe(): void {
-    const probeId = `${this.name}-${this.probeMinter++}`;
-    this.debug(`${this.name} starts probe ${probeId}`);
-    this.queueProbe({ sender: null, probeId, incarnation: 0, debugInfo: { path: [], backtracked: [] } });
+    this.semaphoreService.joinQueue(async () => {
+      const probeId = `${this.name}-${this.probeMinter++}`;
+      this.debug(`${this.name} starts probe ${probeId}`);
+      this.runProbe({ sender: null, probeId, incarnation: 0, debugInfo: { path: [], backtracked: [] } });
+      await new Promise(resolve => this.whenDone = resolve);
+    });
   }
   runProbe(probeInfo: ProbeInfo): void {
     // if (this.currentProbeIds.length > 0 && this.currentProbeIds.indexOf(probeInfo.probeId) === -1) {
