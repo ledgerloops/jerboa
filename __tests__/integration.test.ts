@@ -24,7 +24,7 @@ jest.unstable_mockModule('../src/genRanHex.js', () => {
       const threadRunner = new SingleThread({
         debtFile: `./__tests__/fixtures/${name}.problem`,
         solutionCallback: async (line: string): Promise<void> => {
-          solution += line;
+          solution += `${line}\n`;
         },
         numWorkers: 1
       });

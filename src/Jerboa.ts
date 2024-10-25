@@ -8,7 +8,7 @@ import { genRanHex } from "./genRanHex.js";
 const RANDOM_NEXT_STEP = false;
 const LEDGER_SCALE = 1000000;
 const MAX_TRANSFER_AMOUNT = 1000000;
-const MAX_INCARNATION = 20;
+const MAX_INCARNATION = 10000;
 
 export type JerboaOptions = {
   name: string,
@@ -115,7 +115,7 @@ export class Jerboa {
   private debug(str: string): void {
     if (process.env.VERBOSE) {
       console.log(str);
-      this.solutionCallback(str);
+      // this.solutionCallback(str);
     }
   }
   // private stringifyProbeInfo(probeInfo: ProbeInfo | undefined): string {
@@ -215,7 +215,7 @@ export class Jerboa {
       //   throw new Error(`${this.name} received a scout message from ${sender} for probeId ${probeId} but have multiple out messages for that probe ${JSON.stringify(this.probes[probeId])}`);
       // }
       const outBalance = this.getBalance(sender);
-      let amountOut = Math.round(amount);
+      let amountOut = Math.round(amount * LEDGER_SCALE) / LEDGER_SCALE;
       if (amountOut > outBalance) {
         this.debug(`${this.name} adjust the scout amount for (${msg.probeId}:${msg.maxIncarnation}-) based on out balance to ${sender} from ${amountOut} to ${outBalance}`);
         amountOut = outBalance;

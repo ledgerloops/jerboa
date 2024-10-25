@@ -50,13 +50,18 @@ export class Worker {
       throw Error('to node is not ours');
     }
   }
+  private debug(str: string): void {
+    if (process.env.VERBOSE) {
+      console.log(str);
+    }
+  }
   public async deliverOneMessage(): Promise<boolean> {
     if (this.messages.length === 0) {
-      // console.log(`worker ${this.workerNo} has no more messages to deliver`);
+      this.debug(`worker ${this.workerNo} has no more messages to deliver`);
       return false;
     }
     const msg = this.messages.shift();
-    // console.log('delivering', msg);
+    this.debug(`delivering: ${JSON.stringify(msg)}`);
     await this.deliverMessageToNodeInThisWorker(msg.from, msg.to, msg.message);
     return true;
   }

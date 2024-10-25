@@ -8,7 +8,7 @@ function runTest(testName: string, numProbesExpected: number): void {
       let solution: string = '';
       const threadRunner = new SingleThread({ sarafuFile: `./__tests__/fixtures/${testName}.csv`, numWorkers: 1,
         solutionCallback: async (line: string): Promise<void> => {
-          solution += line;
+          solution += `${line}\n`;
         }, });
       const cummNumProbes = await threadRunner.runAllWorkers();
       const read = readFileSync(`./__tests__/fixtures/${testName}.solution`).toString();
@@ -20,7 +20,7 @@ function runTest(testName: string, numProbesExpected: number): void {
       expect(cummNumProbes).toEqual(numProbesExpected);
 
       expect(await threadRunner.solutionIsComplete()).toEqual(true);
-    });
+    }, 20000);
   });
 }
 

@@ -9,9 +9,9 @@ and run:
 ```
 npm run build
 time node build/src/jerboaChallenge.js __tests__/fixtures/sarafu-10k.csv
-time node build/src/jerboaChallenge.js __tests__/fixtures/sarafu-50k.csv
-time node build/src/jerboaChallenge.js __tests__/fixtures/sarafu-100k.csv
-time node build/src/jerboaChallenge.js ../Sarafu2021_UKdb_submission/sarafu_xDAI/sarafu_txns_20200125-20210615.csv
+NUM_WORKERS=20 time node build/src/jerboaChallenge.js __tests__/fixtures/sarafu-50k.csv __tests__/fixtures/sarafu-50k.solution
+NUM_WORKERS=20 time node build/src/jerboaChallenge.js __tests__/fixtures/sarafu-100k.csv
+NUM_WORKERS=20 time node build/src/jerboaChallenge.js ../Sarafu2021_UKdb_submission/sarafu_xDAI/sarafu_txns_20200125-20210615.csv
 ```
 
 You can pipe the output to a file (or add some code to write it to a file from `./src/jerboaChallenge.ts`)
