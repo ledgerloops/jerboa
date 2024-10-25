@@ -1,16 +1,28 @@
+import { writeFile, appendFile } from "node:fs/promises";
 import { SingleThread } from "./SingleThread.js";
 
 const SARAFU_FILE = process.argv[2] || '__tests__/fixtures/sarafu-full.csv';
+const SOLUTION_FILE = process.argv[3] || '__tests__/fixtures/sarafu-full.solution';
 
 const NUM_WORKERS: number = parseInt(process.env.NUM_WORKERS) || 1;
 
 async function runSingleThread(numWorkers: number): Promise<void> {
   console.log(`Running single thread with ${numWorkers} workers`);
+  await writeFile(SOLUTION_FILE, '');
+  let numLoopsFound = 0;
+  setInterval(() => {
+    console.log(`${numLoopsFound} loops found`);
+  }, 1000);
   const threadRunner = new SingleThread({
     sarafuFile: SARAFU_FILE,
     numWorkers, 
     solutionCallback: async (line: string): Promise<void> => {
-      console.log(line);
+      if (process.env.VERBOSE) {
+        console.log(line);
+      } else {
+        await appendFile(SOLUTION_FILE, `${line}\n`);
+        numLoopsFound++;
+      }
     }
   });
   const cummNumProbes = await threadRunner.runAllWorkers();

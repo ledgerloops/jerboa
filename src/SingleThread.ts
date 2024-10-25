@@ -29,7 +29,7 @@ export class SingleThread {
             //   }
             //   lines.push('');
             // }
-            lines.push('');
+            // lines.push('');
             this.solutionCallback(lines.join('\n'));
           }
         },

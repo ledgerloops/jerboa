@@ -215,7 +215,7 @@ export class Jerboa {
       //   throw new Error(`${this.name} received a scout message from ${sender} for probeId ${probeId} but have multiple out messages for that probe ${JSON.stringify(this.probes[probeId])}`);
       // }
       const outBalance = this.getBalance(sender);
-      let amountOut = amount;
+      let amountOut = Math.round(amount * LEDGER_SCALE) / LEDGER_SCALE;
       if (amountOut > outBalance) {
         this.debug(`${this.name} adjust the scout amount for (${msg.probeId}:${msg.maxIncarnation}-) based on out balance to ${sender} from ${amountOut} to ${outBalance}`);
         amountOut = outBalance;
