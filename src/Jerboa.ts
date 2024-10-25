@@ -355,7 +355,7 @@ export class Jerboa {
     const hash = createHash('sha256').update(preimage).digest('base64');
     this.probes[probeId].loops[hash] = { preimage,  proposeTo: to, amount };
     // console.log('initiating propose', this.probes[probeId], { to, probeId, amount, hash, debugInfo });
-    this.solutionCallback(`${debugInfo.loop.join(' ')} ${amount}`);
+    this.solutionCallback(`${debugInfo.loop.slice(0, debugInfo.loop.length - 1).join(' ')} ${amount}`);
     this.sendProposeMessage(to, { command: 'propose', probeId, maxIncarnation: incarnation, amount, hash, debugInfo });
   }
   receiveNack(nackSender: string, msg: NackMessage): void {
