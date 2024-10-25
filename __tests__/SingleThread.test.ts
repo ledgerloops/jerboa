@@ -2,7 +2,7 @@
 import { readFileSync, writeFileSync } from "fs";
 import { SingleThread } from '../src/SingleThread.js';
 
-const SARAFU_CSV = './__tests__/fixtures/sarafu-300.csv';
+const SARAFU_CSV = './__tests__/fixtures/sarafu-10k.csv';
 
 describe('SingleThread', () => {
   it('finds loops', async () => {
@@ -12,13 +12,13 @@ describe('SingleThread', () => {
         solution += line;
       }, });
     const cummNumProbes = await threadRunner.runAllWorkers();
-    const read = readFileSync(`./__tests__/fixtures/sarafu-300.solution`).toString();
+    const read = readFileSync(`./__tests__/fixtures/sarafu-10k.solution`).toString();
     if (solution !== read) {
       // console.log(`mending test`);
-      writeFileSync(`./__tests__/fixtures/sarafu-300.solution`, solution);
+      writeFileSync(`./__tests__/fixtures/sarafu-10k.solution`, solution);
     }
     expect(solution).toEqual(read);
-    expect(cummNumProbes).toEqual(78);
+    expect(cummNumProbes).toEqual(60);
 
     expect(await threadRunner.solutionIsComplete()).toEqual(true);
   });
