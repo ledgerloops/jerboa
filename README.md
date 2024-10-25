@@ -21,6 +21,8 @@ NUM_WORKERS=20 time node build/src/jerboaChallenge.js __tests__/fixtures/sarafu-
 ```
 This will take roughly 6 minutes, depending on your laptop. Taking into account that this simulates the entire network of about 7,000 nodes over 18 months, we believe this processing time to be acceptable.
 
+The output will also show that 30726 transfers between 7154 participants triggered an average of 9.19 messages each, which we think is an acceptable number in terms of bandwidth requirements (these messages are all roughly 64 bytes long).
+
 ```
 cd ../strategy-pit
 npm run build
@@ -40,6 +42,7 @@ The last three lines will show you the performance of Min-Cost-Flow, Dept-First 
 * Jerboa will show a performance of roughly 15.5%.
 
 So our Jerboa prototype achieves 80% of the optimum total amount of obligation cleared, which we believe is encouraging performance for a prototype.
+
 As mentioned before, this prototype is not entirely decentralised yet, it still [uses a semaphore services](https://github.com/ledgerloops/jerboa/issues/57).
 Its source code is also quite rough and it [takes a few shortcuts](https://github.com/ledgerloops/jerboa/issues), which is why we plan to do a full rewrite in 2025.
 
