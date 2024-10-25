@@ -1,9 +1,14 @@
 export class SemaphoreService {
   private queue: (() => Promise<void>)[] = [];
   private running: boolean = false;
+  debug(str: string): void {
+    if (process.env.VERBOSE) {
+      console.log(str);
+    }
+  }
   joinQueue(callback: () => Promise<void>): void {
     this.queue.push(callback);
-    // console.log(`semaphore queue length increased to ${this.queue.length}`);
+    this.debug(`semaphore queue length increased to ${this.queue.length}`);
     this.maybeRun();
   }
   maybeRun(): void {
@@ -14,7 +19,7 @@ export class SemaphoreService {
       return;
     }
     const currentCallback = this.queue.shift();
-    // console.log(`semaphore queue length decreased to ${this.queue.length}`);
+    this.debug(`semaphore queue length decreased to ${this.queue.length}`);
     this.running = true;
     currentCallback().then(() => {
       this.running = false;
