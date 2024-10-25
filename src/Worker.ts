@@ -1,6 +1,15 @@
 import { Jerboa } from "./Jerboa.js";
 import { Message } from "./MessageTypes.js";
 import { readSarafuCsv, readCsv } from './readCsv.js';
+import { SemaphoreService } from './SemaphoreService.js';
+
+export type WorkerOptions = {
+    workerNo: number,
+    numWorkers: number,
+    solutionCallback: (string) => void,
+    sendMessage: (from: string, to: string, message: Message) => void,
+    semaphoreService: SemaphoreService,
+};
 
 export class Worker {
   messagesSent: number = 0;
@@ -16,13 +25,15 @@ export class Worker {
   } = {};
   workerNo: number;
   numWorkers: number;
+  semaphoreService: SemaphoreService;
   private sendMessage: (from: string, to: string, message: Message) => void;
   private solutionCallback: (string) => void;
-  constructor(workerNo: number, noWorkers: number, solutionCallback: (string) => void, sendMessage: (from: string, to: string, message: Message) => void) {
-    this.workerNo = workerNo;
-    this.numWorkers = noWorkers;
-    this.solutionCallback = solutionCallback;
-    this.sendMessage = sendMessage;
+  constructor(options: WorkerOptions) {
+    this.workerNo = options.workerNo;
+    this.numWorkers = options.numWorkers;
+    this.solutionCallback = options.solutionCallback;
+    this.sendMessage = options.sendMessage;
+    this.semaphoreService = options.semaphoreService;
   }
   public reportState(cb: (string) => void): void {
     Object.keys(this.ourNodes).forEach((name: string) => {

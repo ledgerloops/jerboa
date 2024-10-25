@@ -1,39 +1,49 @@
-import { Worker } from './Worker.js';
+import { Worker, WorkerOptions } from './Worker.js';
 import { Message } from './MessageTypes.js';
+import { SemaphoreService } from './SemaphoreService.js';
 
 export class SingleThread {
   private workers: Worker[] = [];
   private sarafuFile: string | undefined;
   private debtFile: string | undefined;
   private solutionCallback: (string) => void | undefined;
+  private semaphoreService: SemaphoreService;
   constructor(options: { numWorkers: number, sarafuFile?: string, debtFile?: string, solutionCallback?: (string) => void }) {
     this.debtFile = options.debtFile;
     this.solutionCallback = options.solutionCallback;
     this.sarafuFile = options.sarafuFile;
+    this.semaphoreService = new SemaphoreService();
     for (let i = 0; i < options.numWorkers; i++) {
       // console.log(`Instantiating worker ${i} of ${numWorkers}`);
-      this.workers[i] = new Worker(i, options.numWorkers, (line: string) => {
-        if (this.solutionCallback) {
-          const lines = [ line ];
-          // if (process.env.VERBOSE) {
-          //   for (let i = 0; i < options.numWorkers; i++) {
-          //     this.workers[i].reportState((reportLine: string) => {
-          //       lines.push(reportLine);
-          //     });
-          //   }
-          //   lines.push('');
-          // }
-          lines.push('');
-          this.solutionCallback(lines.join('\n'));
-        }
-      }, (from: string, to: string, message: Message): void => {
-        if (isNaN(parseInt(to)))  {
-          throw new Error(`to '${to}' is not parseable as an int - ${from} ${to} ${JSON.stringify(message)}`);
-        }
-        const receivingWorker = this.workers[parseInt(to) % this.workers.length];
-        receivingWorker.queueMessageForLocalDelivery(from, to, message);
-        // receivingWorker.deliverMessageToNodeInThisWorker(from, to, message);
-      });
+      const workerOptions: WorkerOptions = {
+        workerNo: i,
+        numWorkers: options.numWorkers,
+        solutionCallback: (line: string) => {
+          if (this.solutionCallback) {
+            const lines = [ line ];
+            // if (process.env.VERBOSE) {
+            //   for (let i = 0; i < options.numWorkers; i++) {
+            //     this.workers[i].reportState((reportLine: string) => {
+            //       lines.push(reportLine);
+            //     });
+            //   }
+            //   lines.push('');
+            // }
+            lines.push('');
+            this.solutionCallback(lines.join('\n'));
+          }
+        },
+        sendMessage: (from: string, to: string, message: Message): void => {
+          if (isNaN(parseInt(to)))  {
+            throw new Error(`to '${to}' is not parseable as an int - ${from} ${to} ${JSON.stringify(message)}`);
+          }
+          const receivingWorker = this.workers[parseInt(to) % this.workers.length];
+          receivingWorker.queueMessageForLocalDelivery(from, to, message);
+          // receivingWorker.deliverMessageToNodeInThisWorker(from, to, message);
+        },
+        semaphoreService: this.semaphoreService,
+      };
+      this.workers[i] = new Worker(workerOptions);
     }
   }
   async runAllWorkers(): Promise<number> {
