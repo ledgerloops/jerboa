@@ -217,12 +217,8 @@ export class Worker {
     await readSarafuCsv(filename, (from: string, to: string, amount: number) => {
       if (parseInt(from) % this.numWorkers === this.workerNo) {
         if (parseInt(from) % this.numWorkers === this.workerNo) {
-          if (['1','2','3'].indexOf(from) === -1) {
+          if (parseInt(from) === 0) {
             this.debug(`skipping transaction from ${from}`);
-            return;
-          }
-          if (['1','2','3'].indexOf(to) === -1) {
-            this.debug(`skipping transaction to ${to}`);
             return;
           }
           this.debug(`not skipping transaction from ${from} to ${to}`);  
@@ -236,15 +232,6 @@ export class Worker {
       const [ from, to, amountStr ] = cells;
       const amount = parseFloat(amountStr);
       if (parseInt(from) % this.numWorkers === this.workerNo) {
-        if (['1','2','3'].indexOf(from) === -1) {
-          this.debug(`skipping transaction from ${from}`);
-          return;
-        }
-        if (['1','2','3'].indexOf(to) === -1) {
-          this.debug(`skipping transaction to ${to}`);
-          return;
-        }
-        this.debug(`not skipping transaction from ${from} to ${to}`);
         this.addWeight(from, to, amount);
       }
     });
