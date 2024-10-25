@@ -574,8 +574,9 @@ export class Jerboa {
     this.semaphoreService.joinQueue(async () => {
       const probeId = `${this.name}-${this.probeMinter++}`;
       this.debug(`${this.name} starts probe ${probeId}`);
+      const promise = new Promise(resolve => this.whenDone = resolve);
       this.runProbe({ sender: null, probeId, incarnation: 0, debugInfo: { path: [], backtracked: [] } });
-      await new Promise(resolve => this.whenDone = resolve);
+      await promise;
     });
   }
   runProbe(probeInfo: ProbeInfo): void {
