@@ -1,25 +1,20 @@
-
-import { writeFile, appendFile } from "node:fs/promises";
 import { SingleThread } from "./SingleThread.js";
 
-const DEBT_CSV = process.argv[2] || '../strategy-pit/debt.csv';
-const SOLUTION_CSV = process.argv[3] || '../strategy-pit/jerboa.csv';
+const SARAFU_FILE = process.argv[2] || '__tests__/fixtures/sarafu-full.csv';
 
 const NUM_WORKERS: number = parseInt(process.env.NUM_WORKERS) || 1;
 
 async function runSingleThread(numWorkers: number): Promise<void> {
   console.log(`Running single thread with ${numWorkers} workers`);
-  console.log('resetting solution file', SOLUTION_CSV);
-  await writeFile(SOLUTION_CSV, '');
   const threadRunner = new SingleThread({
-    debtFile: DEBT_CSV,
+    sarafuFile: SARAFU_FILE,
     numWorkers, 
     solutionCallback: async (line: string): Promise<void> => {
-      await appendFile(SOLUTION_CSV, line);
+      console.log(line);
     }
   });
-  const numProbes = await threadRunner.runAllWorkers();
-  console.log(`Finished ${numProbes} probes using ${numWorkers} workers in a single thread`);
+  const cummNumProbes = await threadRunner.runAllWorkers();
+  console.log(`Finished ${cummNumProbes} probes using ${numWorkers} workers in a single thread`);
   const stats = threadRunner.getStats();
   if (stats.messagesReceived != stats.messagesSent) {
     console.log(`Hm, aggregate stats say ${stats.messagesSent} messages were sent but ${stats.messagesReceived} messages were received`);
