@@ -217,14 +217,6 @@ export class Worker {
     await readSarafuCsv(filename, (from: string, to: string, amount: number) => {
       if (parseInt(from) % this.numWorkers === this.workerNo) {
         if (parseInt(from) % this.numWorkers === this.workerNo) {
-          if (parseInt(from) > 3) {
-            this.debug(`skipping transaction from ${from}`);
-            return;
-          }
-          if (parseInt(to) > 3) {
-            this.debug(`skipping transaction to ${to}`);
-            return;
-          }
           this.debug(`not skipping transaction from ${from} to ${to}`);  
           this.addWeight(from, to, amount);
         }
