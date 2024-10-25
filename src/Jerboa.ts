@@ -274,7 +274,7 @@ export class Jerboa {
     this.adjustReceived(sender, msg.amount);
     this.checkFriendCache(sender);
     if (this.balances.haveIncomingAndOutgoingLinks()) {
-      this.debug(`transfer receiver starts probe`);
+      this.debug(`transfer receiver ${this.name} starts probe`);
       this.startProbe();
     }
     // if (this.graph.getNode(this.name).getBalance(sender) + this.graph.getNode(sender).getBalance(this.name) !== 0) {
@@ -566,12 +566,15 @@ export class Jerboa {
     this.debug(`transfer ${this.name} -> ${to}`);
   }
   startProbe(): void {
+    this.debug(`SEMAPHORE REQ ${this.name}`);
     this.semaphoreService.joinQueue(async () => {
       const probeId = `${this.name}-${this.probeMinter++}`;
+      this.debug(`$SEMAPHORE GO ${probeId}`);
       this.debug(`${this.name} starts probe ${probeId}`);
       const promise = new Promise(resolve => this.whenDone = resolve);
       this.runProbe({ sender: null, probeId, incarnation: 0, debugInfo: { path: [], backtracked: [] } });
       await promise;
+      this.debug(`SEMAPHORE DONE ${probeId}`);
     });
   }
   runProbe(probeInfo: ProbeInfo): void {
