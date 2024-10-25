@@ -5,7 +5,7 @@
 
 This repository contains a prototype of LedgerLoops, for demonstration purposes.
 
-It uses peer-to-peer messaging, [Decentralized Cycle Detection](https://datatracker.ietf.org/doc/draft-dejong-decentralized-cycle-detection/), and [hashlocks](https://ledgerloops.com/description), and a centralised [Semaphore Service](https://github.com/ledgerloops/jerboa/blob/main/src/SemaphoreService.ts) to successfully clear obligations in a network setting.
+It uses peer-to-peer messaging, [Decentralized Cycle Detection](https://datatracker.ietf.org/doc/draft-dejong-decentralized-cycle-detection/), [hashlocks](https://ledgerloops.com/description), and a centralised [Semaphore Service](https://github.com/ledgerloops/jerboa/blob/main/src/SemaphoreService.ts) to successfully clear obligations in a network setting.
 
 NB: this prototype [still uses a centralised semaphore service](https://github.com/ledgerloops/jerboa/issues/57) - an issue we hope to resolve in Q1/Q2 of 2025.
 
