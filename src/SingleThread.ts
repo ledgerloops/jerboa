@@ -9,7 +9,7 @@ export class SingleThread {
   private solutionCallback: (string) => void | undefined;
   private semaphoreService: SemaphoreService;
   private maxSecondsBetweenLoops?: number;
-  private lastFindTime: number;
+  private lastFindTime: number = new Date().getTime();
   constructor(options: { numWorkers: number, sarafuFile?: string, debtFile?: string, solutionCallback?: (string) => void, maxSecondsBetweenLoops?: number }) {
     this.debtFile = options.debtFile;
     this.solutionCallback = options.solutionCallback;
