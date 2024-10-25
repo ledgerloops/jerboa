@@ -65,7 +65,7 @@ export class SingleThread {
       await Promise.all(this.workers.map(async (worker) => worker.readDebtFromCsv(this.debtFile)));
     }
     do {
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise(resolve => setTimeout(resolve, 10));
       await this.deliverAllMessages();
     } while(this.semaphoreService.getQueueLength() > 0);
     await new Promise(r => setTimeout(r, 1200));
