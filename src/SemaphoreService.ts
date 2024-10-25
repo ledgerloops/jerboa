@@ -31,7 +31,7 @@ export class SemaphoreService {
         return;
       }
       throw new Error(`Job is taking too long!`);
-    }, 20000);
+    }, 100000);
     currentCallback().then(() => {
       clearTimeout(this.timer);
       this.running = false;
