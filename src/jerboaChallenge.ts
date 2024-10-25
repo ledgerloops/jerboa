@@ -3,7 +3,7 @@ import { SingleThread } from "./SingleThread.js";
 
 const SARAFU_FILE = process.argv[2] || '__tests__/fixtures/sarafu-full.csv';
 const SOLUTION_FILE = process.argv[3] || '__tests__/fixtures/sarafu-full.solution';
-const MAX_SECONDS_BETWEEN_LOOPS = 20;
+const MAX_SECONDS_BETWEEN_LOOPS = 2;
 
 const NUM_WORKERS: number = parseInt(process.env.NUM_WORKERS) || 1;
 
@@ -11,7 +11,7 @@ async function runSingleThread(numWorkers: number): Promise<void> {
   console.log(`Running single thread with ${numWorkers} workers`);
   await writeFile(SOLUTION_FILE, '');
   let numLoopsFound = 0;
-  setInterval(() => {
+  const progress = setInterval(() => {
     console.log(`${numLoopsFound} loops found`);
   }, 1000);
 
@@ -29,6 +29,7 @@ async function runSingleThread(numWorkers: number): Promise<void> {
     maxSecondsBetweenLoops: MAX_SECONDS_BETWEEN_LOOPS,
   });
   const cummNumProbes = await threadRunner.runAllWorkers();
+  clearInterval(progress);
   console.log(`Finished ${cummNumProbes} probes using ${numWorkers} workers in a single thread`);
   const stats = threadRunner.getStats();
   if (stats.messagesReceived != stats.messagesSent) {

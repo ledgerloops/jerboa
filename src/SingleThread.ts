@@ -66,14 +66,14 @@ export class SingleThread {
       }
       // this helps flushing the output to stdout and into the solution file:
       await new Promise(resolve => setTimeout(resolve, 0));
-    } while(hadMessagesToDeliver);
+    } while(hadMessagesToDeliver && !this.gettingBored());
   }
   private gettingBored(): boolean {
     if (this.maxSecondsBetweenLoops === undefined) {
       return false;
     }
     const msSinceLastFind = new Date().getTime() - this.lastFindTime;
-    this.debug(`${msSinceLastFind}ms since last find`);
+    this.debug(`${msSinceLastFind}ms since last find, compared to ${1000 * this.maxSecondsBetweenLoops}`);
     return  msSinceLastFind > 1000 * this.maxSecondsBetweenLoops;
   }
   async runAllWorkers(): Promise<number> {
@@ -89,7 +89,7 @@ export class SingleThread {
     } while(this.semaphoreService.getQueueLength() > 0 && !this.gettingBored());
     await new Promise(r => setTimeout(r, 1200));
     const nums = this.workers.map((worker) => worker.getNumProbes());
-
+    this.semaphoreService.shutdown();
     let cumm = 0;
     for (let i = 0; i < nums.length; i++) {
       cumm += nums[i];

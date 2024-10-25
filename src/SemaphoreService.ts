@@ -1,6 +1,8 @@
 export class SemaphoreService {
   private queue: (() => Promise<void>)[] = [];
   private running: boolean = false;
+  private shuttingDown: boolean = false;
+  private timer;
   debug(str: string): void {
     if (process.env.VERBOSE) {
       console.log(str);
@@ -12,6 +14,9 @@ export class SemaphoreService {
     this.maybeRun();
   }
   maybeRun(): void {
+    if (this.shuttingDown) {
+      return;
+    }
     if (this.running) {
       return;
     }
@@ -21,16 +26,23 @@ export class SemaphoreService {
     const currentCallback = this.queue.shift();
     this.debug(`semaphore queue length decreased to ${this.queue.length}`);
     this.running = true;
-    const timer = setTimeout(() => {
+    this.timer = setTimeout(() => {
+      if (this.shuttingDown) {
+        return;
+      }
       throw new Error(`Job is taking too long!`);
     }, 20000);
     currentCallback().then(() => {
-      clearTimeout(timer);
+      clearTimeout(this.timer);
       this.running = false;
       this.maybeRun();
     });
   }
   getQueueLength(): number {
     return this.queue.length;
+  }
+  shutdown(): void {
+    clearTimeout(this.timer);
+    this.shuttingDown = true;
   }
 }
