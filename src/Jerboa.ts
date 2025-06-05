@@ -310,7 +310,7 @@ export class Jerboa {
     this.balances.adjustReceived(sender, bigIntAmount);
   }
   receiveCommit(sender: string, msg: CommitMessage): void {
-    const { probeId, amount, preimage } = msg;
+    const { probeId, amount, preimage, debugInfo } = msg;
     if (typeof this.probes[probeId] === 'undefined') {
       throw new Error('commit message for unknown probe!');
     }
@@ -326,6 +326,7 @@ export class Jerboa {
     this.checkFriendCache(sender);
     if (typeof this.probes[probeId].loops[hash].proposeFrom === 'undefined') {
       // console.log('loop clearing completed');
+      this.solutionCallback(`${debugInfo.loop.slice(0, debugInfo.loop.length - 1).join(' ')} ${amount}`);
     } else {
       this.probes[probeId].loops[hash].commitTo = this.probes[probeId].loops[hash].proposeFrom;
       this.adjustReceived(this.probes[probeId].loops[hash].commitTo, amount);
@@ -355,7 +356,6 @@ export class Jerboa {
     this.probes[probeId].loops[hash] = { preimage,  proposeTo: to, amount };
     // console.log('initiating propose', this.probes[probeId], { to, probeId, amount, hash, debugInfo });
     if (amount > 0) {
-      this.solutionCallback(`${debugInfo.loop.slice(0, debugInfo.loop.length - 1).join(' ')} ${amount}`);
       this.sendProposeMessage(to, { command: 'propose', probeId, maxIncarnation: incarnation, amount, hash, debugInfo });
     }
   }
@@ -573,6 +573,9 @@ export class Jerboa {
     this.debug(`transfer ${this.name} -> ${to}`);
   }
   async startProbe(): Promise<void> {
+    if (this.currentProbeIds.length > 0) {
+      return;
+    }
     const probeId = `${this.name}-${this.probeMinter++}`;
     this.debug(`${this.name} starts probe ${probeId}`);
     const promise = new Promise(resolve => this.whenDone = resolve);
