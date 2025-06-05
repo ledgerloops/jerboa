@@ -645,7 +645,9 @@ export class Jerboa {
   }
   sendScoutMessage(to: string, msg: ScoutMessage): void {
     if (msg.amount > MAX_TRANSFER_AMOUNT) {
-      throw new Error(`Attempt to send scout message with amount ${msg.amount}`);
+      // throw new Error(`Attempt to send scout message with amount ${msg.amount}`);
+      // console.log(`Attempt to send scout message with amount ${msg.amount}`);
+      return;
     }
     this.sendMessage(to, msg);
   }
