@@ -462,6 +462,12 @@ export class Jerboa {
   }
   considerProbe(probeInfo: ProbeInfo): boolean {
     const { sender, probeId, incarnation, debugInfo } = probeInfo;
+    if (this.currentProbeIds.length > 0 && this.currentProbeIds.indexOf(probeInfo.probeId) === -1) {
+      // already busy with another probe
+      this.sendNackMessage(sender, probeId, incarnation, { path: debugInfo.path, backtracked: [] });
+      return false;
+    }
+
     if (this.balances.getBalance(sender) >= 0) {
       this.debug(`${this.name} nacks counter-balance probe ${probeId}:${incarnation} from ${sender}`);
       this.sendNackMessage(sender, probeId, incarnation, { path: debugInfo.path, backtracked: [] });
@@ -569,9 +575,6 @@ export class Jerboa {
     await promise;
   }
   runProbe(probeInfo: ProbeInfo): void {
-    // if (this.currentProbeIds.length > 0 && this.currentProbeIds.indexOf(probeInfo.probeId) === -1) {
-    //   throw new Error(`${this.name} cannot run probe ${this.stringifyProbeInfo(probeInfo)} if other probes [${this.currentProbeIds.join(' ')}] is still running`);
-    // }
     this.currentProbeIds.push(probeInfo.probeId);
 
     if (probeInfo.sender === null) {
