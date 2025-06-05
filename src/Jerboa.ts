@@ -1,7 +1,6 @@
 import { createHash } from "node:crypto";
 import { Balances } from "./Balances.js";
 import { Message, TransferMessage, ProposeMessage, CommitMessage, ScoutMessage, ProbeMessage, NackMessage, stringifyMessage } from "./MessageTypes.js";
-import { SemaphoreService } from "./SemaphoreService.js";
 import { printLine } from "./BirdsEyeWorm.js";
 import { genRanHex } from "./genRanHex.js";
 
@@ -14,7 +13,6 @@ export type JerboaOptions = {
   name: string,
   solutionCallback: (line: string) => void,
   sendMessage: (to: string, message: Message) => void,
-  semaphoreService: SemaphoreService,
 };
 
 function randomStringFromArray(arr: string[]): string {
@@ -76,7 +74,6 @@ export class Jerboa {
   //      followee: string;
   //   }
   // } = {};
-  private semaphoreService: SemaphoreService;
   // probeQueue: ProbeInfo[] = [];
   currentProbeIds: string[] = [];
   private probeMinter: number = 0;
@@ -110,7 +107,6 @@ export class Jerboa {
     this.name = options.name;
     this.solutionCallback = options.solutionCallback;
     this.sendMessageCb = options.sendMessage;
-    this.semaphoreService = options.semaphoreService;
   }
   private debug(str: string): void {
     if (process.env.VERBOSE) {
@@ -565,17 +561,12 @@ export class Jerboa {
     this.sendTransferMessage(to, weight);
     this.debug(`transfer ${this.name} -> ${to}`);
   }
-  startProbe(): void {
-    this.debug(`SEMAPHORE REQ ${this.name}`);
-    this.semaphoreService.joinQueue(async () => {
-      const probeId = `${this.name}-${this.probeMinter++}`;
-      this.debug(`SEMAPHORE GO ${probeId}`);
-      this.debug(`${this.name} starts probe ${probeId}`);
-      const promise = new Promise(resolve => this.whenDone = resolve);
-      this.runProbe({ sender: null, probeId, incarnation: 0, debugInfo: { path: [], backtracked: [] } });
-      await promise;
-      this.debug(`SEMAPHORE DONE ${probeId}`);
-    });
+  async startProbe(): Promise<void> {
+    const probeId = `${this.name}-${this.probeMinter++}`;
+    this.debug(`${this.name} starts probe ${probeId}`);
+    const promise = new Promise(resolve => this.whenDone = resolve);
+    this.runProbe({ sender: null, probeId, incarnation: 0, debugInfo: { path: [], backtracked: [] } });
+    await promise;
   }
   runProbe(probeInfo: ProbeInfo): void {
     // if (this.currentProbeIds.length > 0 && this.currentProbeIds.indexOf(probeInfo.probeId) === -1) {

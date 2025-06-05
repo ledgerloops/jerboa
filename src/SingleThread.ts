@@ -1,20 +1,17 @@
 import { Worker, WorkerOptions } from './Worker.js';
 import { Message } from './MessageTypes.js';
-import { SemaphoreService } from './SemaphoreService.js';
 
 export class SingleThread {
   private workers: Worker[] = [];
   private sarafuFile: string | undefined;
   private debtFile: string | undefined;
   private solutionCallback: (string) => void | undefined;
-  private semaphoreService: SemaphoreService;
   private maxSecondsBetweenLoops?: number;
   private lastFindTime: number = new Date().getTime();
   constructor(options: { numWorkers: number, sarafuFile?: string, debtFile?: string, solutionCallback?: (string) => void, maxSecondsBetweenLoops?: number }) {
     this.debtFile = options.debtFile;
     this.solutionCallback = options.solutionCallback;
     this.sarafuFile = options.sarafuFile;
-    this.semaphoreService = new SemaphoreService();
     this.maxSecondsBetweenLoops = options.maxSecondsBetweenLoops;
     for (let i = 0; i < options.numWorkers; i++) {
       // console.log(`Instantiating worker ${i} of ${numWorkers}`);
@@ -45,7 +42,6 @@ export class SingleThread {
           receivingWorker.queueMessageForLocalDelivery(from, to, message);
           // receivingWorker.deliverMessageToNodeInThisWorker(from, to, message);
         },
-        semaphoreService: this.semaphoreService,
       };
       this.workers[i] = new Worker(workerOptions);
     }
@@ -86,10 +82,9 @@ export class SingleThread {
     do {
       await new Promise(resolve => setTimeout(resolve, 10));
       await this.deliverAllMessages();
-    } while(this.semaphoreService.getQueueLength() > 0 && !this.gettingBored());
+    } while(!this.gettingBored());
     await new Promise(r => setTimeout(r, 1200));
     const nums = this.workers.map((worker) => worker.getNumProbes());
-    this.semaphoreService.shutdown();
     let cumm = 0;
     for (let i = 0; i < nums.length; i++) {
       cumm += nums[i];

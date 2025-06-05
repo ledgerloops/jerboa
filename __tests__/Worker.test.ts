@@ -1,9 +1,8 @@
 import { Worker } from '../src/Worker.js';
 import { Message } from '../src/MessageTypes.js';
-import { SemaphoreService } from '../src/SemaphoreService.js';
 
 function makeWorker(workerNo: number, numWorkers: number, solutionCallback: () => void, sendMessage: (from: string, to: string, message: Message) => void): Worker {
-  return new Worker({ workerNo, numWorkers, solutionCallback, sendMessage, semaphoreService: new SemaphoreService() });
+  return new Worker({ workerNo, numWorkers, solutionCallback, sendMessage });
 }
 describe('addWeight', () => {
   it('adds a link', () => {

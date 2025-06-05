@@ -18,7 +18,7 @@ The `$path`, `$backtracked` and `$loop` variables are mainly for debugging and r
 * `scout $probeId:$maxIncarnation-  $amount $loop`
 * `propose $probeId:$maxIncarnation-  $amount $hash $loop`
 * `commit $probeId:~-  $amount $preimage $loop`
-
+ 
 
 ## Sarafu-Based Netting Challenge
 To test its performance, we have used the [Sarafu-Based Netting Challenge](https://github.com/ledgerloops/strategy-pit?tab=readme-ov-file#sarafu-based-netting-challenge), as follows:
