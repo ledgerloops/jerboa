@@ -259,7 +259,7 @@ export class Jerboa {
     if (incomingBalance === 0) {
       // console.log(this.name, incomingNeighbour, incomingBalance, 'incoming balance not negative enough');
       return;
-    } else {
+    } else if (incomingBalance < 0) {
       // console.log('calling sendScoutMessage');
       this.debug(`Initiator ${this.name} sets scout amount for (${probeId}:${incarnation}-) to incoming balance ${-incomingBalance}`);
       this.sendScoutMessage(incomingNeighbour, { command: 'scout', probeId, maxIncarnation: incarnation,  amount: -incomingBalance, debugInfo: { loop } });
