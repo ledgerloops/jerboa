@@ -279,6 +279,9 @@ export class Jerboa {
   }
   receivePropose(sender: string, msg: ProposeMessage): void {
     const { probeId, maxIncarnation, amount, hash, debugInfo } = msg;
+    if (amount < 0) {
+      return;
+    }
     if (typeof this.probes[probeId] === 'undefined') {
       throw new Error('propose message for unknown probe!');
     }
@@ -351,8 +354,10 @@ export class Jerboa {
     const hash = createHash('sha256').update(preimage).digest('base64');
     this.probes[probeId].loops[hash] = { preimage,  proposeTo: to, amount };
     // console.log('initiating propose', this.probes[probeId], { to, probeId, amount, hash, debugInfo });
-    this.solutionCallback(`${debugInfo.loop.slice(0, debugInfo.loop.length - 1).join(' ')} ${amount}`);
-    this.sendProposeMessage(to, { command: 'propose', probeId, maxIncarnation: incarnation, amount, hash, debugInfo });
+    if (amount > 0) {
+      this.solutionCallback(`${debugInfo.loop.slice(0, debugInfo.loop.length - 1).join(' ')} ${amount}`);
+      this.sendProposeMessage(to, { command: 'propose', probeId, maxIncarnation: incarnation, amount, hash, debugInfo });
+    }
   }
   receiveNack(nackSender: string, msg: NackMessage): void {
     const { probeId, incarnation, debugInfo } = msg;
