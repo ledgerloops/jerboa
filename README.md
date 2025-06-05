@@ -9,6 +9,17 @@ It uses peer-to-peer messaging, [Decentralized Cycle Detection](https://datatrac
 
 NB: this prototype [still uses a centralised semaphore service](https://github.com/ledgerloops/jerboa/issues/57) - an issue we hope to resolve in Q1/Q2 of 2025.
 
+## Messages Types
+The `$path`, `$backtracked` and `$loop` variables are mainly for debugging and reporting, except for [these open issues](https://github.com/ledgerloops/jerboa/issues/32).
+* `transfer $amount`
+* `probe $probeId:$incarnation $path`
+* `follow $probeId:$incarnation $followee $path`
+* `nack $probeId:$incarnation $path / $backtracked`
+* `scout $probeId:$maxIncarnation-  $amount $loop`
+* `propose $probeId:$maxIncarnation-  $amount $hash $loop`
+* `commit $probeId:~-  $amount $preimage $loop`
+
+
 ## Sarafu-Based Netting Challenge
 To test its performance, we have used the [Sarafu-Based Netting Challenge](https://github.com/ledgerloops/strategy-pit?tab=readme-ov-file#sarafu-based-netting-challenge), as follows:
 ```
