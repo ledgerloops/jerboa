@@ -108,6 +108,9 @@ export class Jerboa {
     this.solutionCallback = options.solutionCallback;
     this.sendMessageCb = options.sendMessage;
   }
+  getCurrentProbeIds(): string[] {
+    return this.currentProbeIds;
+  } 
   private debug(str: string): void {
     if (process.env.VERBOSE) {
       console.log(str);

@@ -49,8 +49,11 @@ describe('Jerboa', () => {
     nodes.a.startProbe();
     expectAndDeliver(2);
     expectAndDeliver(3);
-    // Object.keys(callbacks).forEach((name: string) => {
-    //   console.log(callbacks[name].mock.calls);
-    // });
+    expect(nodes.a.getCurrentProbeIds()).toEqual(['a-0']);
+    expect(nodes.b.getCurrentProbeIds()).toEqual(['a-0']);
+    expect(nodes.c.getCurrentProbeIds()).toEqual([]);
+    Object.keys(callbacks).forEach((name: string) => {
+      console.log(callbacks[name].mock.calls);
+    });
   });
 });
