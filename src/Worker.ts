@@ -117,7 +117,6 @@ export class Worker {
     }
     this.ensureNode(from);
     this.ourNodes[from].addWeight(to, weight);
-    this.ourNodes[from].probeStartingTimer();
   }
 
   public hasOutgoingLinks(after: string): boolean {

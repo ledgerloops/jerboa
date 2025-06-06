@@ -31,6 +31,7 @@ export type NackMessage = {
   command: string,
   probeId: string,
   incarnation: number,
+  discardLink: boolean,
   debugInfo: {
     path: string[],
     backtracked: string[],

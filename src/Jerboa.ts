@@ -10,6 +10,8 @@ const MAX_TRANSFER_AMOUNT = 1000000;
 const MAX_INCARNATION = 10000;
 const MIN_PROBE_STARTING_INTERVAL = 5000;
 const MAX_PROBE_STARTING_INTERVAL = 10000;
+const PROBE_START_CHANCE = 0.05;
+
 export type JerboaOptions = {
   name: string,
   solutionCallback: (line: string) => void,
@@ -113,10 +115,12 @@ export class Jerboa {
   probeStartingTimer(): void {
     if (this.balances.haveIncomingAndOutgoingLinks()) {
       this.debug(`transfer receiver ${this.name} starts probe`);
-      this.startProbe();
-      console.log(this.name, 'yes');
+      if (Math.random() < PROBE_START_CHANCE) {
+        this.startProbe();
+      }
+      // console.log(this.name, 'yes');
     } else {
-      console.log(this.name, 'no');
+      // console.log(this.name, 'no');
       return;
     }
     const nextTrigger = MIN_PROBE_STARTING_INTERVAL + Math.random() * (MAX_PROBE_STARTING_INTERVAL - MIN_PROBE_STARTING_INTERVAL);
@@ -285,6 +289,7 @@ export class Jerboa {
     }
   }
   receiveTransfer(sender: string, msg: TransferMessage): void {
+    this.probeStartingTimer();
     // console.log(`${sender}->${this.name}: ${amount}`);
     this.adjustReceived(sender, msg.amount);
     this.checkFriendCache(sender);
@@ -376,8 +381,9 @@ export class Jerboa {
   }
   receiveNack(nackSender: string, msg: NackMessage): void {
     const { probeId, incarnation, debugInfo } = msg;
-    // Not repeating outgoing links is now handled by probeAlreadySent
-    // delete this.outgoingLinks[nackSender];
+    if (msg.discardLink) {
+      delete this.outgoingLinks[nackSender];
+    }
     if (debugInfo.path.length === 0) {
       const nodes = this.getOutgoingLinks().filter(friend => {
         const verdict = (this.probeAlreadySent(probeId, friend) === false);
@@ -485,7 +491,7 @@ export class Jerboa {
     if (this.currentProbeIds.length > 0 && this.currentProbeIds.indexOf(probeInfo.probeId) === -1) {
       // console.log('already busy with another probe');
       if (sender !== null) {
-        this.sendNackMessage(sender, probeId, incarnation, { path: debugInfo.path, backtracked: [] });
+        this.sendNackMessage(sender, probeId, incarnation, false, { path: debugInfo.path, backtracked: [] });
       }
       return false;
     // } else {
@@ -495,7 +501,7 @@ export class Jerboa {
     if (this.balances.getBalance(sender) >= 0) {
       this.debug(`${this.name} nacks counter-balance probe ${probeId}:${incarnation} from ${sender}`);
       if (sender !== null) {
-        this.sendNackMessage(sender, probeId, incarnation, { path: debugInfo.path, backtracked: [] });
+        this.sendNackMessage(sender, probeId, incarnation, false, { path: debugInfo.path, backtracked: [] });
       }
       return false;
     }
@@ -525,7 +531,7 @@ export class Jerboa {
       this.debug(`no outgoing links, so sending nack ${this.name}->${sender} ${probeId}:${incarnation} [${debugInfo.path.join(' ')}] []`);
       this.doneWithCurrentProbe('leaf', probeId);
       if (sender !== null) {
-        this.sendNackMessage(sender, probeId, incarnation, { path: debugInfo.path, backtracked: debugInfo.backtracked || [] });
+        this.sendNackMessage(sender, probeId, incarnation, true, { path: debugInfo.path, backtracked: debugInfo.backtracked || [] });
       }
       // this.debug(`Node ${this.name} is done with probe ${probeId}`);
       return false;
@@ -605,7 +611,7 @@ export class Jerboa {
     if (this.currentProbeIds.filter(id => id !== probeInfo.probeId).length > 0) {
       // console.log('runProbe returns', this.currentProbeIds);
       if (probeInfo.sender !== null) {
-        this.sendNackMessage(probeInfo.sender, probeInfo.probeId, probeInfo.incarnation, { path: probeInfo.debugInfo.path, backtracked: [] });
+        this.sendNackMessage(probeInfo.sender, probeInfo.probeId, probeInfo.incarnation, false, { path: probeInfo.debugInfo.path, backtracked: [] });
       }
       return;
     }
@@ -666,11 +672,11 @@ export class Jerboa {
   //   this.recordProbeTraffic(to, 'out', msg.probeId, msg.incarnation);
   //   this.sendMessage(to, msg);
   // }
-  sendNackMessage(to: string, probeId: string, incarnation: number, debugInfo: { path: string[], backtracked: string[] }): void {
+  sendNackMessage(to: string, probeId: string, incarnation: number, discardLink: boolean, debugInfo: { path: string[], backtracked: string[] }): void {
     if (typeof this.probes[probeId] !== 'undefined') {
       delete this.probes[probeId].in[to];
     }
-    this.sendMessage(to, { command: 'nack', probeId, incarnation, debugInfo });
+    this.sendMessage(to, { command: 'nack', probeId, incarnation, discardLink, debugInfo });
   }
   sendTransferMessage(to: string, amount: number): void {
     if (amount > MAX_TRANSFER_AMOUNT) {
