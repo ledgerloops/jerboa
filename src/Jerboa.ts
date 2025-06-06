@@ -573,9 +573,6 @@ export class Jerboa {
     this.debug(`transfer ${this.name} -> ${to}`);
   }
   async startProbe(): Promise<void> {
-    if (this.currentProbeIds.length > 0) {
-      return;
-    }
     const probeId = `${this.name}-${this.probeMinter++}`;
     this.debug(`${this.name} starts probe ${probeId}`);
     const promise = new Promise(resolve => this.whenDone = resolve);
@@ -583,6 +580,9 @@ export class Jerboa {
     await promise;
   }
   runProbe(probeInfo: ProbeInfo): void {
+    if (this.currentProbeIds.filter(id => id !== probeInfo.probeId).length > 0) {
+      return;
+    }
     this.currentProbeIds.push(probeInfo.probeId);
 
     if (probeInfo.sender === null) {
