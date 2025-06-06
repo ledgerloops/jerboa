@@ -74,11 +74,16 @@ export class SingleThread {
   }
   async runAllWorkers(): Promise<number> {
     if (this.sarafuFile) {
+      console.log('reading sarafu file');
       await Promise.all(this.workers.map(async (worker) => worker.readTransfersFromCsv(this.sarafuFile)));
+      console.log('sarafu file read');
     }
     if (this.debtFile) {
+      console.log('reading debt file');
       await Promise.all(this.workers.map(async (worker) => worker.readDebtFromCsv(this.debtFile)));
+      console.log('debt file read');
     }
+    this.workers.forEach(worker => worker.start());
     do {
       await new Promise(resolve => setTimeout(resolve, 10));
       await this.deliverAllMessages();

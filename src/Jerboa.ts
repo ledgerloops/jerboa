@@ -8,7 +8,6 @@ const RANDOM_NEXT_STEP = false;
 const LEDGER_SCALE = 1000000;
 const MAX_TRANSFER_AMOUNT = 1000000;
 const MAX_INCARNATION = 10000;
-const INITIAL_PROBE_STARTING_DELAY = 500; // give the simulation script some time to load in the credit graph
 const MIN_PROBE_STARTING_INTERVAL = 5000;
 const MAX_PROBE_STARTING_INTERVAL = 10000;
 export type JerboaOptions = {
@@ -109,12 +108,16 @@ export class Jerboa {
     this.name = options.name;
     this.solutionCallback = options.solutionCallback;
     this.sendMessageCb = options.sendMessage;
-    setTimeout(this.probeStartingTimer.bind(this), INITIAL_PROBE_STARTING_DELAY);
   }
+  // will be called first from the worker
   probeStartingTimer(): void {
     if (this.balances.haveIncomingAndOutgoingLinks()) {
       this.debug(`transfer receiver ${this.name} starts probe`);
       this.startProbe();
+      console.log(this.name, 'yes');
+    } else {
+      console.log(this.name, 'no');
+      return;
     }
     const nextTrigger = MIN_PROBE_STARTING_INTERVAL + Math.random() * (MAX_PROBE_STARTING_INTERVAL - MIN_PROBE_STARTING_INTERVAL);
     // console.log(this.name, nextTrigger);
@@ -586,6 +589,7 @@ export class Jerboa {
   addWeight(to: string, weight: number): void {
     this.debug(`Node ${this.name} adjustSent for ${to} to ${this.getBalance(to)}+${weight} while processing addWeight`);
     this.adjustSent(to, weight);
+    // console.log(this.name, this.balances);
     this.checkFriendCache(to);
     this.sendTransferMessage(to, weight);
     this.debug(`transfer ${this.name} -> ${to}`);

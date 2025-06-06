@@ -74,7 +74,8 @@ export class Worker {
     }
     return cumm;
   }
-
+  public start(): void {
+  }
   private nodeIsOurs(name: string) : boolean {
     const nodeNo = parseInt(name);
     if (isNaN(nodeNo)) {
@@ -116,6 +117,7 @@ export class Worker {
     }
     this.ensureNode(from);
     this.ourNodes[from].addWeight(to, weight);
+    this.ourNodes[from].probeStartingTimer();
   }
 
   public hasOutgoingLinks(after: string): boolean {

@@ -3,7 +3,7 @@ import { SingleThread } from "./SingleThread.js";
 
 const SARAFU_FILE = process.argv[2] || '__tests__/fixtures/sarafu-full.csv';
 const SOLUTION_FILE = process.argv[3] || '__tests__/fixtures/sarafu-full.solution';
-const MAX_SECONDS_BETWEEN_LOOPS = 12;
+const MAX_SECONDS_BETWEEN_LOOPS = 300;
 
 const NUM_WORKERS: number = parseInt(process.env.NUM_WORKERS) || 1;
 
