@@ -382,6 +382,7 @@ export class Jerboa {
   receiveNack(nackSender: string, msg: NackMessage): void {
     const { probeId, incarnation, debugInfo } = msg;
     if (msg.discardLink) {
+      console.log('discarding link', this.name, nackSender);
       delete this.outgoingLinks[nackSender];
     }
     if (debugInfo.path.length === 0) {
@@ -602,7 +603,7 @@ export class Jerboa {
   }
   async startProbe(): Promise<void> {
     const probeId = `${this.name}-${this.probeMinter++}`;
-    this.debug(`${this.name} starts probe ${probeId}`);
+    console.log(`${this.name} starts probe ${probeId}`);
     const promise = new Promise(resolve => this.whenDone = resolve);
     this.runProbe({ sender: null, probeId, incarnation: 0, debugInfo: { path: [], backtracked: [] } });
     await promise;
