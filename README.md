@@ -14,7 +14,7 @@ The `$path`, `$backtracked` and `$loop` variables are mainly for debugging and r
 * `transfer $amount`
 * `probe $probeId:$incarnation $path`
 * `follow $probeId:$incarnation $followee $path`
-* `nack $probeId:$incarnation $path / $backtracked`
+* `nack $probeId:$incarnation $discardLink $path / $backtracked`
 * `scout $probeId:$maxIncarnation-  $amount $loop`
 * `propose $probeId:$maxIncarnation-  $amount $hash $loop`
 * `commit $probeId:~-  $amount $preimage $loop`
