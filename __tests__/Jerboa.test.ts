@@ -40,7 +40,7 @@ describe('Jerboa', () => {
       b: makeJerboa(callbacks.b, 'b'),
       c: makeJerboa(callbacks.c, 'c'),
     };
-    function expectAndDeliver(msgNo: number) {
+    function expectAndDeliver(msgNo: number): void {
       expect(callbacks[expected[msgNo].from]).toHaveBeenCalledWith(expected[msgNo].to, expected[msgNo].msg);
       nodes[expected[msgNo].to].receiveMessage(expected[msgNo].from, expected[msgNo].msg);
     }
@@ -84,7 +84,7 @@ describe('Jerboa', () => {
       b: makeJerboa(callbacks.b, 'b'),
       c: makeJerboa(callbacks.c, 'c'),
     };
-    function expectAndDeliver(msgNo: number) {
+    function expectAndDeliver(msgNo: number): void {
       expect(callbacks[expected[msgNo].from]).toHaveBeenCalledWith(expected[msgNo].to, expected[msgNo].msg);
       nodes[expected[msgNo].to].receiveMessage(expected[msgNo].from, expected[msgNo].msg);
     }
