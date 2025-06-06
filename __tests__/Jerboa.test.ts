@@ -21,4 +21,36 @@ describe('Jerboa', () => {
     a.startProbe();
     expect(cb).toHaveBeenCalledWith('1', { command: 'probe', probeId: '0-0', incarnation: 0, debugInfo: {"path":[],"backtracked":[]} });
   });
+  it('forwards a probe if it can', () => {
+    const expected = [
+      { from: 'a', to: 'b', msg: {"amount": 9, "command": "transfer"} },
+      { from: 'b', to: 'c', msg: {"amount": 7, "command": "transfer"} },
+      { from: 'a', to: 'b', msg: { command: 'probe', probeId: 'a-0', incarnation: 0, debugInfo: {"path":[],"backtracked":[]} } },
+      { from: 'b', to: 'c', msg: { command: 'probe', probeId: 'a-0', incarnation: 0, debugInfo: {"path":[ 'a' ]} } },
+    ];
+    const callbacks = {
+      a: jest.fn(),
+      b: jest.fn(),
+      c: jest.fn(),
+    };
+    const nodes = {
+      a: makeJerboa(callbacks.a, 'a'),
+      b: makeJerboa(callbacks.b, 'b'),
+      c: makeJerboa(callbacks.c, 'c'),
+    };
+    function expectAndDeliver(msgNo: number) {
+      expect(callbacks[expected[msgNo].from]).toHaveBeenCalledWith(expected[msgNo].to, expected[msgNo].msg);
+      nodes[expected[msgNo].to].receiveMessage(expected[msgNo].from, expected[msgNo].msg);
+    }
+    nodes.a.addWeight('b', 9); // this will trigger a transfer message from a to b
+    expectAndDeliver(0);
+    nodes.b.addWeight('c', 7); // this will trigger a transfer message from b to c
+    expectAndDeliver(1);
+    nodes.a.startProbe();
+    expectAndDeliver(2);
+    expectAndDeliver(3);
+    // Object.keys(callbacks).forEach((name: string) => {
+    //   console.log(callbacks[name].mock.calls);
+    // });
+  });
 });
