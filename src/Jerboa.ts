@@ -471,9 +471,11 @@ export class Jerboa {
   considerProbe(probeInfo: ProbeInfo): boolean {
     const { sender, probeId, incarnation, debugInfo } = probeInfo;
     if (this.currentProbeIds.length > 0 && this.currentProbeIds.indexOf(probeInfo.probeId) === -1) {
-      // already busy with another probe
+      console.log('already busy with another probe');
       this.sendNackMessage(sender, probeId, incarnation, { path: debugInfo.path, backtracked: [] });
       return false;
+    } else {
+      console.log('considering probe', probeInfo);
     }
 
     if (this.balances.getBalance(sender) >= 0) {
@@ -584,9 +586,12 @@ export class Jerboa {
   }
   runProbe(probeInfo: ProbeInfo): void {
     if (this.currentProbeIds.filter(id => id !== probeInfo.probeId).length > 0) {
+      console.log('runProbe returns', this.currentProbeIds);
+      this.sendNackMessage(probeInfo.sender, probeInfo.probeId, probeInfo.incarnation, { path: probeInfo.debugInfo.path, backtracked: [] });
       return;
     }
     this.currentProbeIds.push(probeInfo.probeId);
+    console.log('runProbe runs', this.currentProbeIds);
 
     if (probeInfo.sender === null) {
       // console.log(`Node ${this.name} starting probe ${probeInfo.probeId}`);
