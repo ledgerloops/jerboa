@@ -8,8 +8,9 @@ const RANDOM_NEXT_STEP = false;
 const LEDGER_SCALE = 1000000;
 const MAX_TRANSFER_AMOUNT = 1000000;
 const MAX_INCARNATION = 10000;
-const MIN_PROBE_STARTING_INTERVAL = 1000;
-const MAX_PROBE_STARTING_INTERVAL = 2000;
+const INITIAL_PROBE_STARTING_DELAY = 500; // give the simulation script some time to load in the credit graph
+const MIN_PROBE_STARTING_INTERVAL = 5000;
+const MAX_PROBE_STARTING_INTERVAL = 10000;
 export type JerboaOptions = {
   name: string,
   solutionCallback: (line: string) => void,
@@ -108,15 +109,15 @@ export class Jerboa {
     this.name = options.name;
     this.solutionCallback = options.solutionCallback;
     this.sendMessageCb = options.sendMessage;
-    this.probeStartingTimer();
+    setTimeout(this.probeStartingTimer.bind(this), INITIAL_PROBE_STARTING_DELAY);
   }
-  probeStartingTimer() {
+  probeStartingTimer(): void {
     if (this.balances.haveIncomingAndOutgoingLinks()) {
       this.debug(`transfer receiver ${this.name} starts probe`);
       this.startProbe();
     }
     const nextTrigger = MIN_PROBE_STARTING_INTERVAL + Math.random() * (MAX_PROBE_STARTING_INTERVAL - MIN_PROBE_STARTING_INTERVAL);
-    console.log(this.name, nextTrigger);
+    // console.log(this.name, nextTrigger);
     setTimeout(this.probeStartingTimer.bind(this), nextTrigger);
 
   }
